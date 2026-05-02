@@ -1,0 +1,650 @@
+DELI GO / DELIFOODS - MASTER CONTEXT ACTUALIZADO
+Fecha de actualización: 26-04-2026
+
+OBJETIVO DE ESTE TXT
+Este archivo sirve para retomar el proyecto DELI sin empezar desde cero.
+Cuando se vuelva a trabajar en DELI, se debe usar este contexto como base y respetar el método de trabajo:
+- Analizar archivos completos.
+- No asumir estructuras.
+- No enviar bloques parciales.
+- Entregar archivos completos en .txt descargables, listos para copiar y pegar.
+- No romper diseño ni funcionalidades existentes.
+- Hacer cambios mínimos, seguros y sobre la versión real del usuario.
+
+============================================================
+ESTADO GENERAL DEL PROYECTO
+============================================================
+
+DELI GO / DELIFOODS es una plataforma de delivery pensada inicialmente para Punto Fijo, Falcón, Venezuela, con intención de escalar luego a otras ciudades.
+
+La idea es construir una plataforma tipo PedidosYa / Uber Eats, con:
+- Clientes.
+- Restaurantes.
+- Repartidores.
+- Administrador del sistema.
+- Pagos adaptados a Venezuela.
+- Ubicación GPS obligatoria para entregas.
+- Flujo especial para enviar comida a otra persona.
+
+Actualmente el frontend está avanzado y funciona en HTML, CSS y JavaScript vanilla.
+
+Estructura base del proyecto:
+- index.html
+- mis-pedidos.html
+- vista pública del restaurante
+- panel-restaurante.html
+- css/styles.css
+- css/restaurant.css
+- css/panel-restaurante.css
+- js/app.js
+- js/auth.js
+- js/budget.js
+- js/restaurants.js
+
+============================================================
+REGLA DE TRABAJO OBLIGATORIA
+============================================================
+
+Cuando se modifique código:
+1. El usuario debe pasar los archivos completos.
+2. Se deben leer y respetar completos.
+3. No se deben eliminar funciones existentes.
+4. No se deben simplificar archivos grandes.
+5. No se deben reemplazar archivos por versiones resumidas.
+6. No se deben enviar fragmentos sueltos.
+7. Se deben generar archivos .txt descargables completos.
+8. Cada archivo debe estar listo para copiar y pegar.
+9. Los cambios deben ser mínimos y seguros.
+10. Se debe preservar todo lo que ya funciona.
+
+El usuario NO quiere:
+- Cambios arbitrarios.
+- Bloques incompletos.
+- “Reemplaza esta función” si no está exactamente ubicada.
+- Archivos recortados.
+- Que se rompa el diseño.
+- Que se cambie la estructura sin pedirlo.
+
+============================================================
+TECNOLOGÍA Y ARQUITECTURA ACTUAL
+============================================================
+
+Frontend actual:
+- HTML
+- CSS
+- JavaScript vanilla
+- localStorage solo como apoyo temporal/caché
+
+Decisión importante:
+DELI debe depender 100% del backend.
+localStorage NO debe ser fuente principal de datos.
+localStorage solo puede usarse como caché temporal.
+
+Datos que NO deben depender definitivamente de localStorage:
+- Usuarios
+- Restaurantes
+- Pedidos
+- Estados de pedidos
+- Pagos
+- Repartidores
+- Comisiones
+- Administración
+
+============================================================
+DISEÑO Y ESTILO VISUAL
+============================================================
+
+Se debe conservar el diseño actual.
+
+Colores importantes:
+- Rojo principal: #ff4d4d
+- Fondo general: #f5f5f5
+- Estilo moderno, limpio, tipo app de delivery
+
+Elementos visuales importantes:
+- Logo DELIFOODS / DELI
+- Pill “DELIVERY”
+- Hero con texto “Pide comida fácil”
+- Ciudad detectada debajo del título
+- Slogan: “Pide fácil, come feliz”
+- Navegación alineada correctamente
+- No duplicar botones del menú
+- Mantener responsive para móvil
+
+============================================================
+FUNCIONES QUE YA EXISTEN / HAN FUNCIONADO
+============================================================
+
+1. Landing principal:
+- Hero principal.
+- Ciudad detectada.
+- Lista de restaurantes.
+- Búsqueda por nombre.
+- Categorías.
+- Ranking / platos destacados.
+- Módulo de presupuesto: “¿Cuánto dispones para ordenar hoy?”
+
+2. Vista pública del restaurante:
+- Carga del restaurante por ID.
+- Lista de platos.
+- Botones para agregar productos.
+- Carrito.
+- Panel/resumen del carrito.
+- Total del pedido.
+
+3. Mis pedidos:
+- Vista del historial/resumen de pedidos del cliente.
+
+4. Login / registro:
+- Roles de cliente y restaurante.
+- Redirección según rol.
+- Protección básica de panel restaurante.
+
+5. Panel restaurante:
+- Vista de restaurante.
+- Gestión de platos.
+- Vista de pedidos.
+- Estados de pedidos.
+- Mejoras recientes en la visualización del panel.
+
+============================================================
+ACTUALIZACIÓN IMPORTANTE DEL PANEL RESTAURANTE
+============================================================
+
+Se trabajó en mejorar la sección del restaurante/panel restaurante.
+
+Problema original:
+La vista estaba saturada con demasiada información junta.
+Había mucho scroll en la parte izquierda.
+El usuario quería una vista más limpia y profesional, sin modal pequeño incómodo.
+
+Solución aplicada:
+- Se eliminó la idea del modal pequeño como vista principal.
+- Se mejoró la distribución para usar mejor la pantalla completa.
+- Se dejó una experiencia más limpia y organizada.
+- La gráfica permite interactuar y ver pedidos del día seleccionado.
+- Al tocar/clickear un día en la gráfica, se muestran los pedidos correspondientes a ese día.
+- La vista quedó mucho más cómoda para revisar pedidos, clientes y detalles.
+- El usuario confirmó que la solución superó sus expectativas.
+
+Estado:
+Esta sección del restaurante quedó considerada lista por ahora.
+No se debe rehacer desde cero.
+Solo se deben hacer mejoras futuras sin romper lo que ya quedó bien.
+
+============================================================
+GRÁFICAS Y ANALÍTICA
+============================================================
+
+Al usuario le gustó la idea de:
+- Gráficas por día.
+- Ver pedidos al tocar un día.
+- Heatmap por días.
+- Predicción de comportamiento.
+- Analítica para saber qué días venden más.
+- Posible predicción de demanda futura.
+
+Esto NO se debe implementar todavía si rompe algo.
+Debe quedar como mejora futura.
+
+Idea futura:
+Un módulo de analítica del restaurante con:
+- Pedidos por día.
+- Ventas por día.
+- Platos más vendidos.
+- Días fuertes y días débiles.
+- Predicción de comportamiento.
+- Recomendaciones para el restaurante.
+
+============================================================
+PANEL ADMINISTRADOR - PENDIENTE FUTURO
+============================================================
+
+Más adelante se debe crear una sección administrativa para el dueño de DELI.
+
+Funciones deseadas:
+- Ver todos los pedidos del sistema.
+- Filtrar pedidos por estado.
+- Filtrar por restaurante.
+- Filtrar por cliente.
+- Asignar repartidor.
+- Ver comisiones.
+- Modificar porcentajes de comisión.
+- Activar/desactivar restaurantes.
+- Aprobar restaurantes antes de que aparezcan en el index.
+- Controlar pagos/liquidaciones.
+
+Importante:
+El usuario pidió dejar para más adelante:
+- Pedidos administrador.
+- Ver todos los pedidos del sistema.
+- Filtrar por estado.
+- Asignar repartidor.
+
+============================================================
+RESTAURANTES Y APROBACIÓN
+============================================================
+
+Regla importante:
+Los restaurantes creados no deben aparecer en el index sin aprobación del administrador.
+
+Problema detectado antes:
+Al crear restaurantes nuevos, aparecían en el index sin permiso del administrador.
+
+Esto debe corregirse o mantenerse corregido según el archivo actual.
+
+Debe existir estado tipo:
+- pending
+- approved
+- rejected
+- inactive
+
+Solo restaurantes approved deben aparecer públicamente.
+
+============================================================
+COMISIONES
+============================================================
+
+El sistema debe permitir comisiones configurables desde administración.
+
+Comisiones base actuales:
+- Comisión al restaurante: 15%
+- Comisión al repartidor: 10%
+
+Importante:
+La comisión del repartidor NO debe mostrarse en el panel restaurante.
+Eso se manejará en el módulo de repartidores o administración.
+
+============================================================
+PAGOS PARA VENEZUELA
+============================================================
+
+Estrategia:
+- Precios internos en USD.
+- Conversión a bolívares al momento del pago.
+- Métodos de pago adaptados a Venezuela:
+  - Pago móvil.
+  - Transferencia.
+  - Zelle.
+  - USDT.
+  - Otros métodos posibles.
+
+Liquidaciones:
+- Semanales o periódicas.
+- Basadas en equivalente USD.
+- Minimizar riesgo por devaluación.
+
+============================================================
+DIRECCIONES Y GPS
+============================================================
+
+Problema:
+En Venezuela las direcciones formales no son confiables.
+Google Maps no siempre ubica casas exactas.
+
+Regla crítica:
+Toda entrega debe tener:
+- Referencia escrita.
+- GPS obligatorio: latitud y longitud.
+
+No depender solo de dirección escrita.
+
+============================================================
+FUNCIÓN “INVITAR COMIDA”
+============================================================
+
+Funcionalidad futura importante:
+Permitir enviar comida pagada a otra persona.
+
+Flujo:
+1. Usuario compra un pedido.
+2. Introduce el número de teléfono de la persona.
+3. DELI genera un link.
+4. La persona recibe un mensaje tipo:
+   “Darlin te envió un pedido con DELI GO. Comparte tu ubicación para recibirlo.”
+5. La persona abre el link.
+6. Comparte ubicación GPS.
+7. El pedido se entrega donde está la persona.
+8. La persona no necesita tener cuenta.
+
+Esta función es muy importante para Venezuela.
+
+============================================================
+MÓDULO DE REPARTIDORES - PENDIENTE FUERTE
+============================================================
+
+Módulo pendiente:
+- Registro de repartidores.
+- Activar/desactivar disponibilidad.
+- Ver pedidos disponibles.
+- Aceptar pedido.
+- Recoger en restaurante.
+- Marcar en camino.
+- Marcar entregado.
+- Ganancias del repartidor.
+- Comisión de plataforma.
+- Historial.
+
+Este será uno de los módulos fuertes después del restaurante/admin.
+
+============================================================
+SIGUIENTE PASO RECOMENDADO
+============================================================
+
+No romper lo que ya funciona.
+
+Siguiente paso sugerido:
+1. Revisar con los archivos reales actuales.
+2. Consolidar el panel restaurante ya mejorado.
+3. Luego avanzar a panel administrador o repartidores.
+
+Orden recomendado:
+A. Primero dejar estable restaurante + pedidos.
+B. Luego crear panel administrador.
+C. Luego módulo de repartidores.
+D. Luego pagos reales.
+E. Luego backend completo y base de datos.
+F. Luego app móvil.
+
+============================================================
+PORCENTAJE ESTIMADO DE AVANCE
+============================================================
+
+Estimación actual aproximada:
+
+Frontend general:
+70% - 80%
+
+Flujo visual cliente/restaurante:
+70% aprox.
+
+Panel restaurante:
+75% - 85% visualmente, según lo último aprobado.
+
+Backend real:
+Pendiente / bajo avance.
+
+Pagos:
+Pendiente.
+
+Repartidores:
+Pendiente.
+
+Panel administrador:
+Pendiente.
+
+Producto total completo tipo plataforma real:
+40% - 50% aproximadamente, porque falta backend, pagos, administración y repartidores.
+
+Producto MVP visual funcional:
+70% - 80% aproximadamente.
+
+============================================================
+RECORDATORIO PARA CONTINUAR
+============================================================
+
+Cuando el usuario diga “continuemos con DELI”:
+- No empezar desde cero.
+- Pedir o usar los archivos completos actuales.
+- Mantener el diseño.
+- No modificar estructura sin necesidad.
+- No usar localStorage como base definitiva.
+- Entregar siempre archivos .txt completos.
+- Respetar exactamente las instrucciones del usuario.
+- Priorizar estabilidad sobre cambios grandes.
+- Si se toca una función, revisar dependencias cruzadas.
+- No asumir que una parte no importa.
+- No recortar archivos.
+- No cambiar nombres de archivos sin avisar.
+- No romper navegación, login, restaurantes, carrito ni pedidos.
+
+TRABAJAMOS CON ESTE MÉTODO:
+
+1. NO crear archivos nuevos
+2. NO recortar código
+3. NO simplificar
+4. NO cambiar estructura
+5. SOLO modificar sobre mi archivo real
+6. DEVOLVER archivo COMPLETO
+7. EN FORMATO TXT
+8. LISTO PARA COPIAR/PEGAR
+9. NO SUPONER NADA
+
+Confirma que entendiste antes de responder.
+
+
+============================================================
+ACTUALIZACIÓN 26-04-2026 - BUSCADOR, CATEGORÍAS Y DATOS
+============================================================
+
+Hoy se resolvió un bloqueo importante relacionado con el index, el buscador y la lectura de platos desde backend.
+
+Problema detectado:
+- El index mostraba restaurantes, pero al buscar platos como “pizza” no aparecían resultados.
+- Las categorías dinámicas no se mostraban completas.
+- Solo aparecían botones como “Todos” y “Comida”.
+- El backend sí tenía endpoint para platos, pero el frontend no podía relacionar correctamente restaurantes con platos cuando los datos estaban inconsistentes.
+
+Causa real encontrada:
+- El problema principal no era el frontend.
+- El problema estaba en la consistencia de datos dentro de dishes.json.
+- Un plato tenía restaurantEmail mal guardado en formato de enlace tipo:
+  "[medanos@gmail.com](mailto:medanos@gmail.com)"
+- El backend compara emails limpios.
+- Por eso /restaurants/medanos@gmail.com/dishes devolvía total 0.
+- Al limpiar el email y dejarlo como "medanos@gmail.com", el plato fue encontrado correctamente.
+
+Resultado logrado:
+- El endpoint de platos por restaurante funciona.
+- El sistema ya puede asociar platos con su restaurante correcto.
+- El index ya puede mostrar resultados de búsqueda por platos.
+- Las categorías dinámicas ya se generan desde los platos reales agregados por los restaurantes.
+- Cuando un restaurante agrega una categoría/plato nuevo, la categoría puede aparecer automáticamente arriba como filtro.
+- El buscador quedó mejorado y funcionando correctamente sobre el archivo real restaurants.js.
+- El usuario confirmó que el buscador quedó perfecto.
+
+Estado actual del buscador:
+- Busca por restaurante.
+- Busca por plato.
+- Busca por descripción del plato.
+- Busca por categoría del plato.
+- Muestra el restaurante y el plato relacionado.
+- Mantiene las categorías dinámicas.
+- Mantiene la estructura visual existente.
+- No se deben rehacer estos cambios desde cero.
+
+Regla importante aprendida:
+- Si un plato no aparece, antes de cambiar código se debe revisar:
+  1. Que el plato exista en dishes.json.
+  2. Que restaurantEmail del plato sea exactamente igual al email del restaurante.
+  3. Que el endpoint /restaurants/:email/dishes devuelva total mayor a 0.
+  4. Que el backend esté leyendo el archivo correcto.
+- No modificar restaurants.js a ciegas si el endpoint devuelve total 0.
+
+Archivos clave involucrados hoy:
+- restaurants.js
+- dishes.json
+- restaurants.json
+- server.js
+- index.html
+- restaurant-page.js
+- panel-restaurante.js
+- auth.js
+
+============================================================
+ESTADO ACTUAL DEL INDEX / LANDING
+============================================================
+
+El index actualmente cuenta con:
+- Hero principal.
+- Ciudad detectada.
+- Slogan.
+- Módulo de presupuesto.
+- Top restaurantes de la semana.
+- Top platos de la semana.
+- Buscador mejorado.
+- Categorías dinámicas.
+- Lista de restaurantes.
+- Búsqueda por platos y restaurantes.
+
+Importante:
+El buscador ya no debe tratarse como buscador solamente de restaurantes.
+Ahora debe considerarse como buscador general de comida:
+- Restaurante.
+- Plato.
+- Categoría.
+- Descripción.
+
+Esto acerca DELI a una experiencia tipo Uber Eats / PedidosYa.
+
+============================================================
+PANEL ADMINISTRADOR - NUEVO PENDIENTE IMPORTANTE
+============================================================
+
+Queda pendiente implementar o mejorar desde el panel administrativo la gestión de datos de usuarios/clientes y restaurantes.
+
+Necesidad planteada:
+- Como dueño/admin de DELI, el usuario quiere poder ayudar a clientes o restaurantes cuando se equivoquen o pierdan datos.
+- Ejemplo: cliente olvidó contraseña, se equivocó en teléfono, correo, dirección, nombre, etc.
+- El administrador debería poder editar ciertos datos desde el panel administrativo.
+- También se debe evaluar permitir que el cliente o restaurante solicite permiso para editar sus datos.
+
+Funciones futuras deseadas para administración de clientes:
+- Ver lista de clientes.
+- Buscar cliente por nombre, teléfono o correo.
+- Editar datos básicos:
+  - Nombre.
+  - Teléfono.
+  - Dirección.
+  - Referencia.
+  - Correo.
+  - Contraseña o reinicio de contraseña.
+- Ver historial de pedidos del cliente.
+- Bloquear o activar cliente si fuese necesario.
+- Registrar motivo de cambios críticos.
+
+Funciones futuras deseadas para administración de restaurantes:
+- Editar datos del restaurante:
+  - Nombre.
+  - Teléfono.
+  - Dirección.
+  - Categoría.
+  - Correo.
+  - Contraseña o reinicio de contraseña.
+  - Estado.
+  - Comisión.
+- Mantener aprobación administrativa.
+- No romper la relación entre restaurante y platos.
+- Cualquier cambio de email debe actualizar o preservar correctamente las relaciones con dishes.json y orders.json.
+
+Advertencia técnica importante:
+- Cambiar email de restaurante es sensible.
+- El email actualmente funciona como clave de relación para:
+  - Platos.
+  - Pedidos.
+  - Panel restaurante.
+  - Búsqueda.
+- Si se permite editar email, debe hacerse con cuidado:
+  - actualizar restaurants.json,
+  - actualizar dishes.json,
+  - actualizar orders.json,
+  - y probablemente sesión/localStorage si el restaurante está logueado.
+- Por seguridad, al principio se recomienda NO editar email libremente sin lógica de migración.
+
+Recomendación de implementación:
+1. Primero crear edición simple de datos NO críticos:
+   - nombre,
+   - teléfono,
+   - dirección,
+   - categoría,
+   - comisión,
+   - estado.
+2. Luego agregar reset de contraseña.
+3. Luego decidir si se permite cambiar email con migración de datos.
+4. Mantener todo en backend, no solo localStorage.
+
+============================================================
+SIGUIENTE PASO RECOMENDADO DESPUÉS DE HOY
+============================================================
+
+Como el index, categorías y buscador quedaron funcionando, el siguiente paso recomendado es:
+
+Opción A:
+- Implementar desde el panel administrativo edición de clientes y restaurantes.
+
+Opción B:
+- Implementar “Pedir directo desde el buscador”:
+  - cuando aparezca un plato encontrado, agregar botón “Pedir ahora”,
+  - abrir restaurante,
+  - agregar plato automáticamente al carrito.
+
+Opción C:
+- Mejorar ranking inteligente:
+  - más vendidos,
+  - promociones,
+  - platos destacados,
+  - restaurantes promocionados por DELI.
+
+Recomendación del estado actual:
+- No tocar el buscador si ya está funcionando.
+- Si se toca, debe ser sobre el archivo real actual y con cambios mínimos.
+- El próximo paso más lógico para control del negocio es el panel administrativo con edición de usuarios/restaurantes.
+
+============================================================
+PORCENTAJE ACTUALIZADO DE AVANCE
+============================================================
+
+Después de los avances de hoy:
+
+Frontend general:
+75% - 85%
+
+Flujo visual cliente/restaurante:
+75% - 80%
+
+Index / Landing:
+80% - 90% visual y funcionalmente, porque ya cuenta con buscador por platos y categorías dinámicas.
+
+Panel restaurante:
+75% - 85% visualmente y funcionalmente para platos/pedidos básicos.
+
+Backend real:
+35% - 45% aproximadamente, porque ya existen rutas para usuarios, restaurantes, platos y pedidos, pero falta robustez, seguridad, base de datos real y administración completa.
+
+Buscador inteligente:
+70% - 80% como MVP inicial.
+
+Pagos:
+Pendiente.
+
+Repartidores:
+Pendiente.
+
+Panel administrador:
+Parcial / pendiente de ampliar.
+
+Producto total completo tipo plataforma real:
+45% - 55% aproximadamente.
+
+Producto MVP visual funcional:
+75% - 85% aproximadamente.
+
+============================================================
+REGLA EXTRA APRENDIDA HOY
+============================================================
+
+Antes de modificar código por problemas de búsqueda o visualización:
+1. Probar endpoint directamente en navegador.
+2. Revisar JSON real.
+3. Confirmar que los emails coinciden.
+4. Confirmar que el backend está leyendo el archivo correcto.
+5. Solo después tocar código.
+
+No repetir el error de cambiar código cuando el problema es de datos.
+
+============================================================
+
+FIN DEL MASTER CONTEXT ACTUALIZADO
+
+
+FIN DEL MASTER CONTEXT ACTUALIZADO

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DELI</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+
+  <header>
+    <div class="header-inner">
+
+      <div class="logo-container">
+        <div class="logo">DELIFOODS</div>
+        <div class="delivery">DELIVERY</div>
+      </div>
+
+      <div id="userNav" class="user-nav"></div>
+
+    </div>
+  </header>
+
+  <section class="hero">
+  <div class="hero-overlay"></div>
+
+  <div class="hero-content">
+    <h1>Pide comida fácil</h1>
+    <p id="city">Detectando ubicación...</p>
+    <p class="hero-slogan">Facil de pedir, Rapido de comer</p>
+  </div>
+</section>
+
+   <!-- BOTON RESETEAR DATOS DE PRUEBA -->
+  <button onclick="resetTestData()" class="reset-btn">
+  Resetear datos de prueba
+</button>
+
+  <section class="section">
+
+    <div class="budget-box">
+      <h2>💸 ¿Cuánto dispones para ordenar hoy?</h2>
+
+      <input id="budget" class="budget-input" type="number" placeholder="Ej: 3000">
+
+      <button class="budget-btn" onclick="generarRecomendacion()">
+        Encontrar mejor opción
+      </button>
+
+      <div id="resultado" class="result-grid"></div>
+    </div>
+
+    <input class="search" placeholder="Buscar...">
+
+    <div class="categories" id="categories"></div>
+
+    <div class="grid" id="restaurantList"></div>
+
+  </section>
+
+  <!-- REGISTRO CLIENTE -->
+  <section class="register-screen" id="registerScreen" style="display: none;">
+    <div class="form-container">
+
+      <div class="close-btn" onclick="closeRegister()">✖</div>
+
+      <h2>Crear cuenta</h2>
+
+      <input id="fullName" placeholder="Nombre completo">
+      <input id="address" placeholder="Dirección">
+      <input id="phone" placeholder="Teléfono">
+      <input id="email" placeholder="Correo">
+      <input id="password" type="password" placeholder="Contraseña">
+      <input id="confirmPassword" type="password" placeholder="Confirmar contraseña">
+
+      <button onclick="registerUser()">Registrarse</button>
+
+      <p id="message"></p>
+
+    </div>
+  </section>
+
+  <!-- LOGIN -->
+  <section class="register-screen" id="loginScreen" style="display: none;">
+    <div class="form-container">
+
+      <div class="close-btn" onclick="closeLogin()">✖</div>
+
+      <h2>Iniciar sesión</h2>
+
+      <select id="loginRole">
+        <option value="customer">Cliente</option>
+        <option value="restaurant">Restaurante</option>
+      </select>
+
+      <input id="loginEmail" type="email" placeholder="Correo">
+      <input id="loginPassword" type="password" placeholder="Contraseña">
+
+      <button onclick="loginUser()">Entrar</button>
+
+      <p id="loginMessage"></p>
+
+    </div>
+  </section>
+
+  <!-- REGISTRO RESTAURANTE -->
+  <section class="register-screen" id="restaurantRegisterScreen" style="display: none;">
+    <div class="form-container">
+
+      <div class="close-btn" onclick="closeRestaurantRegister()">✖</div>
+
+      <h2>Registrar restaurante</h2>
+
+      <input id="restaurantName" placeholder="Nombre del restaurante">
+      <input id="restaurantAddress" placeholder="Dirección o punto de referencia">
+      <input id="restaurantPhone" placeholder="Teléfono">
+      <input id="restaurantEmail" type="email" placeholder="Correo">
+      <input id="restaurantPassword" type="password" placeholder="Contraseña">
+      <input id="restaurantConfirmPassword" type="password" placeholder="Confirmar contraseña">
+
+      <button onclick="registerRestaurant()">Registrar restaurante</button>
+
+      <p id="restaurantMessage"></p>
+
+    </div>
+  </section>
+
+<script src="js/database.js"></script>
+<script src="js/restaurants.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/budget.js"></script>
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+<script src="js/header.js"></script>
+
+
+</body>
+</html>

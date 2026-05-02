@@ -1,0 +1,1386 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deli - Panel Restaurante</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #ff6b35;
+      --primary-dark: #e85b28;
+      --soft: #fff0ea;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --border: #e5e7eb;
+      --shadow: 0 10px 30px rgba(0,0,0,0.08);
+      --radius: 18px;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #fff7f3 0%, var(--bg) 220px);
+      color: var(--text);
+    }
+
+    .topbar {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .topbar-inner {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      font-size: 1.4rem;
+    }
+
+    .brand-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), #ff9a62);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      box-shadow: var(--shadow);
+    }
+
+    .brand small {
+      display: block;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .status-pill {
+      background: #ecfdf5;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    .status-pill.closed {
+      background: #fef2f2;
+      color: #991b1b;
+      border-color: #fecaca;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover { background: var(--primary-dark); }
+
+    .btn-light {
+      background: white;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+
+    .btn-success {
+      background: #22c55e;
+      color: white;
+    }
+
+    .btn-warning {
+      background: #f59e0b;
+      color: white;
+    }
+
+    .layout {
+      max-width: 1400px;
+      margin: 24px auto;
+      display: grid;
+      grid-template-columns: 270px 1fr;
+      gap: 22px;
+      padding: 0 20px 40px;
+    }
+
+    .sidebar {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+      height: fit-content;
+      position: sticky;
+      top: 92px;
+    }
+
+    .store-card {
+      background: linear-gradient(135deg, #fff7f3, #ffffff);
+      border: 1px solid #ffe0d2;
+      border-radius: 20px;
+      padding: 18px;
+      margin-bottom: 22px;
+    }
+
+    .store-card h3 {
+      font-size: 1.15rem;
+      margin-bottom: 6px;
+    }
+
+    .store-card p {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.4;
+    }
+
+    .menu {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .menu a {
+      text-decoration: none;
+      color: var(--text);
+      padding: 13px 14px;
+      border-radius: 14px;
+      font-weight: 700;
+      display: block;
+      transition: 0.2s ease;
+    }
+
+    .menu a:hover,
+    .menu a.active {
+      background: var(--soft);
+      color: var(--primary-dark);
+    }
+
+    .content {
+      min-width: 0;
+    }
+
+    .panel-section {
+      display: none;
+      animation: fadeIn .22s ease;
+    }
+
+    .panel-section.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .section-stack {
+      display: grid;
+      gap: 22px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(255,107,53,0.14), rgba(255,255,255,1));
+      border: 1px solid #ffd8c9;
+      border-radius: 26px;
+      box-shadow: var(--shadow);
+      padding: 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .hero h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    .hero p {
+      color: var(--muted);
+      max-width: 780px;
+      line-height: 1.55;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 18px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    .stat-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    .stat-card strong {
+      font-size: 1.95rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1.3fr 0.95fr;
+      gap: 22px;
+    }
+
+    .grid-2-equal {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+
+    .panel h2 {
+      font-size: 1.3rem;
+    }
+
+    .subtext {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .orders {
+      display: grid;
+      gap: 16px;
+    }
+
+    .order-card {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px;
+      background: #fff;
+    }
+
+    .order-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .order-meta h3 {
+      font-size: 1.05rem;
+      margin-bottom: 5px;
+    }
+
+    .order-meta p,
+    .order-items,
+    .order-footer {
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+
+    .tag {
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      height: fit-content;
+      background: #f3f4f6;
+      color: #111827;
+    }
+
+    .tag-new { background: #eff6ff; color: #1d4ed8; }
+    .tag-prep { background: #fff7ed; color: #c2410c; }
+    .tag-ready { background: #ecfdf5; color: #15803d; }
+
+    .order-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .mini-btn {
+      padding: 10px 13px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .accept { background: #22c55e; color: white; }
+    .secondary { background: #f3f4f6; color: #111827; }
+
+    .dish-list,
+    .promo-list,
+    .category-list {
+      display: grid;
+      gap: 16px;
+    }
+
+    .dish,
+    .promo-card,
+    .category-card {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 14px;
+      background: #fff;
+    }
+
+    .dish {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .dish-image {
+      width: 90px;
+      height: 90px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #ffd7c6, #fff1ea);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+    }
+
+    .dish h3,
+    .promo-card h3,
+    .category-card h3 {
+      margin-bottom: 6px;
+    }
+
+    .dish p,
+    .promo-card p,
+    .category-card p {
+      color: var(--muted);
+      font-size: 0.94rem;
+      margin-bottom: 8px;
+    }
+
+    .dish-bottom,
+    .promo-bottom,
+    .category-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .price {
+      font-weight: 800;
+      color: var(--primary-dark);
+      font-size: 1.02rem;
+    }
+
+    .switch {
+      background: #ecfdf5;
+      color: #166534;
+      font-size: 0.85rem;
+      font-weight: 800;
+      padding: 7px 10px;
+      border-radius: 999px;
+    }
+
+    .switch.no {
+      background: #fef2f2;
+      color: #991b1b;
+    }
+
+    .switch.warn {
+      background: #fff7ed;
+      color: #c2410c;
+    }
+
+    .dish-actions,
+    .promo-actions,
+    .category-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field label {
+      font-weight: 700;
+      font-size: 0.94rem;
+    }
+
+    .field input,
+    .field textarea,
+    .field select {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 13px 14px;
+      font-size: 0.96rem;
+      outline: none;
+      background: #fff;
+    }
+
+    .field textarea {
+      resize: vertical;
+      min-height: 108px;
+    }
+
+    .full { grid-column: 1 / -1; }
+
+    .hours {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .hour-row {
+      display: grid;
+      grid-template-columns: 110px 1fr 1fr 130px 120px;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+      background: #fff;
+    }
+
+    .hour-row span {
+      font-weight: 700;
+    }
+
+    .footer-note {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.92rem;
+      padding-top: 6px;
+    }
+
+    .empty-box {
+      border: 1px dashed var(--border);
+      border-radius: 18px;
+      padding: 20px;
+      text-align: center;
+      color: var(--muted);
+      background: #fff;
+    }
+
+    .order-toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .order-toolbar input,
+    .order-toolbar select {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 11px 12px;
+      font-size: 14px;
+      background: white;
+    }
+
+    .order-toolbar input {
+      min-width: 240px;
+      flex: 1;
+    }
+
+    .menu-note {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 8px;
+      line-height: 1.4;
+    }
+
+    .load-more-wrap {
+      margin-top: 14px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .chip {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: #fff7f3;
+      border: 1px solid #ffd8c9;
+      color: var(--primary-dark);
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .info-list {
+      display: grid;
+      gap: 14px;
+    }
+
+    .info-item {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+    }
+
+    .info-item strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 0.98rem;
+    }
+
+    .config-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .preview-store-card {
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      overflow: hidden;
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .preview-store-cover {
+      height: 180px;
+      background: linear-gradient(135deg, #ff8b5e, #ffd0be);
+      display: flex;
+      align-items: flex-end;
+      padding: 20px;
+      color: white;
+      font-weight: 800;
+      font-size: 1.5rem;
+    }
+
+    .preview-store-body {
+      padding: 20px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .preview-badge-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .preview-badge {
+      background: #fff7ed;
+      color: #c2410c;
+      border: 1px solid #fed7aa;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .section-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 1120px) {
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .grid-2,
+      .grid-2-equal,
+      .grid-3,
+      .config-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 920px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; }
+    }
+
+    @media (max-width: 720px) {
+      .stats { grid-template-columns: 1fr; }
+      .form-grid { grid-template-columns: 1fr; }
+      .hour-row {
+        grid-template-columns: 1fr;
+      }
+      .hero h1 { font-size: 1.6rem; }
+      .topbar-inner { padding: 14px; }
+      .layout { padding: 0 14px 28px; }
+      .order-toolbar input { min-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-badge">D</div>
+        <div>
+          Deli Delivery
+          <small>Panel del restaurante</small>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <div class="status-pill" id="storeStatusPill">● Local abierto</div>
+        <button class="btn btn-light" id="toggleStoreStatusBtn" type="button">Cerrar local</button>
+        <button class="btn btn-light" id="goPublicStore" type="button">Ver mi tienda</button>
+        <button class="btn btn-primary" onclick="logoutRestaurant()">Cerrar sesión</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="sidebar">
+      <div class="store-card" id="profileCard">
+        <h3 id="storeName">Pizza Roma</h3>
+        <p id="storeMeta">Comida rápida · Punto Fijo</p>
+        <p style="margin-top: 10px;"><strong>Calificación:</strong> 4.8 ⭐</p>
+        <p class="menu-note">Desde aquí podrás controlar pedidos, platos, promociones, horarios y si el local está abierto o cerrado.</p>
+      </div>
+
+      <nav class="menu">
+        <a href="#" class="active panel-nav-link" data-target="overviewSection">Inicio</a>
+        <a href="#" class="panel-nav-link" data-target="ordersSection">Pedidos</a>
+        <a href="#" class="panel-nav-link" data-target="misPlatosSection">Mis platos</a>
+        <a href="#" class="panel-nav-link" data-target="categoriesSection">Categorías</a>
+        <a href="#" class="panel-nav-link" data-target="hoursSection">Horarios</a>
+        <a href="#" class="panel-nav-link" data-target="promotionsSection">Promociones</a>
+        <a href="#" class="panel-nav-link" data-target="profileSection">Perfil del local</a>
+        <a href="#" class="panel-nav-link" data-target="settingsSection">Configuración</a>
+      </nav>
+    </aside>
+
+    <section class="content">
+      <!-- INICIO -->
+      <section class="panel-section active" id="overviewSection">
+
+        <section class="stats" id="restaurantBalanceCards">
+  <article class="stat-card">
+    <span>Ventas de hoy</span>
+    <strong id="salesTodayAmount">$0</strong>
+  </article>
+
+  <article class="stat-card">
+    <span>Ventas de la semana</span>
+    <strong id="salesWeekAmount">$0</strong>
+  </article>
+
+  <article class="stat-card">
+    <span>Ventas del mes</span>
+    <strong id="salesMonthAmount">$0</strong>
+  </article>
+
+  <article class="stat-card">
+    <span>Neto restaurante</span>
+    <strong id="restaurantNetAmount">$0</strong>
+  </article>
+</section>
+
+<div class="panel">
+  <div class="panel">
+  <div class="panel-header">
+    <div>
+      <h2>Resumen financiero</h2>
+      <p class="subtext" id="restaurantCommissionInfo">Comisión Deli 15% · $0</p>
+    </div>
+
+    <a href="ventas-restaurante.html">
+      <button class="btn btn-primary" type="button">
+        Ver desglose de ventas
+      </button>
+    </a>
+  </div>
+
+  <p class="subtext" id="restaurantBalanceSummary">
+    Pedidos entregados: 0 · Ventas brutas: $0
+  </p>
+</div>
+
+
+        <div class="section-stack">
+          <div class="hero">
+            <div>
+              <h1 id="welcomeTitle">Bienvenido, Pizza Roma 👋</h1>
+              <p>
+                Administra tus pedidos, tus platos, promociones, horarios y datos del restaurante desde un solo lugar.
+                Ahora el panel está dividido por secciones para evitar scroll largo y hacer más rápida la gestión del local.
+              </p>
+                       <div class="hero-actions">
+                      <button class="btn btn-primary" id="scrollToFormBtn" type="button">+ Agregar plato</button>
+                      <button class="btn btn-light" id="heroGoOrdersBtn" type="button">Ir a pedidos</button>
+                    </div>
+                  </div>
+
+          <section class="stats">
+
+            <article class="stat-card">
+            <span>Pedidos pendientes</span>
+            <strong id="pendingOrdersCount">0</strong>
+            </article>
+
+            <article class="stat-card">
+            <span>En preparación</span>
+            <strong id="preparingOrdersCount">0</strong>
+            </article>
+
+            <article class="stat-card">
+            <span>Pedidos listos</span>
+            <strong id="readyOrdersCount">0</strong>
+            </article>
+
+            <article class="stat-card">
+            <span>En camino</span>
+            <strong id="enRouteOrdersCount">0</strong>
+            </article>
+
+            <article class="stat-card">
+            <span>Entregados</span>
+            <strong id="deliveredOrdersCount">0</strong>
+            </article>
+
+            <article class="stat-card">
+            <span>Platos activos</span>
+            <strong id="activeDishesCount">0</strong>
+            </article>
+
+            </section>
+
+          <section class="grid-2">
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2>Pedidos recientes</h2>
+                  <p class="subtext">Vista rápida del flujo actual</p>
+                </div>
+                <button class="btn btn-light panel-nav-link" data-target="ordersSection" type="button">Ver todos</button>
+              </div>
+
+              <div class="orders" id="overviewOrdersList">
+                <div class="empty-box">Aquí verás un resumen corto de pedidos recientes.</div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2>Mis platos</h2>
+                  <p class="subtext">Accesos rápidos del menú</p>
+                </div>
+                <button class="btn btn-primary panel-nav-link" data-target="misPlatosSection" type="button">Administrar</button>
+              </div>
+
+              <div class="dish-list" id="overviewDishList">
+                <div class="empty-box">Aquí verás tus platos principales.</div>
+              </div>
+            </div>
+          </section>
+
+          <p class="footer-note">Panel restaurante conectado a platos, categorías, promociones y horarios del local.</p>
+        </div>
+      </section>
+
+      <!-- PEDIDOS -->
+      <section class="panel-section" id="ordersSection">
+        <div class="section-stack">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <h2>Pedidos</h2>
+                <p class="subtext">Control del flujo de pedidos del restaurante</p>
+              </div>
+
+              <div class="order-toolbar">
+                <input type="text" id="orderSearchInput" placeholder="Buscar por pedido, cliente o teléfono">
+                <select id="orderStatusFilter">
+                  <option value="todos">Todos</option>
+                  <option value="pendiente">Pendientes</option>
+                  <option value="aceptado">Aceptados</option>
+                  <option value="preparando">En preparación</option>
+                  <option value="listo">Listos</option>
+                  <option value="en-camino">En camino</option>
+                  <option value="entregado">Entregados</option>
+                  <option value="finalizado">Finalizados</option>
+                </select>
+                <button class="btn btn-light" id="clearOrderFiltersBtn" type="button">Limpiar</button>
+              </div>
+            </div>
+
+            <div class="orders" id="restaurantOrdersList"></div>
+            <div class="load-more-wrap" id="ordersLoadMoreWrap"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MIS PLATOS -->
+      <section class="panel-section" id="misPlatosSection">
+        <div class="section-stack">
+          <div class="grid-2">
+            <div class="panel" id="misPlatosPanel">
+              <div class="panel-header">
+                <div>
+                  <h2>Mis platos</h2>
+                  <p class="subtext">Administración rápida del menú</p>
+                </div>
+                <button class="btn btn-primary" id="newDishBtn" type="button">+ Nuevo</button>
+              </div>
+
+              <div class="dish-list" id="dishList"></div>
+            </div>
+
+            <div class="panel" id="dishFormPanel">
+              <div class="panel-header">
+                <div>
+                  <h2 id="formTitle">Agregar / editar plato</h2>
+                  <p class="subtext">Formulario simple para que el restaurante suba sus productos</p>
+                </div>
+              </div>
+
+              <form class="form-grid" id="dishForm">
+                <input type="hidden" id="dishId" />
+
+                <div class="field">
+                  <label for="dishName">Nombre del plato</label>
+                  <input type="text" id="dishName" placeholder="Ej: Hamburguesa Especial" required />
+                </div>
+
+                <div class="field">
+                  <label for="dishPrice">Precio</label>
+                  <input type="number" id="dishPrice" step="0.01" min="0" placeholder="Ej: 7.99" required />
+                </div>
+
+                <div class="field full">
+                  <label for="dishDescription">Descripción</label>
+                  <textarea id="dishDescription" placeholder="Describe el plato" required></textarea>
+                </div>
+
+                <div class="field">
+                  <label for="dishCategory">Categoría</label>
+                  <select id="dishCategory" required>
+                    <option value="">Selecciona una categoría</option>
+                    <option>Hamburguesas</option>
+                    <option>Pizzas</option>
+                    <option>Pollo</option>
+                    <option>Bebidas</option>
+                    <option>Combos</option>
+                    <option>Empanadas</option>
+                    <option>Postres</option>
+                    <option>Otro</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label for="dishPrepTime">Tiempo de preparación</label>
+                  <input type="text" id="dishPrepTime" placeholder="Ej: 20 min" />
+                </div>
+
+                <div class="field">
+                  <label for="dishEmoji">Emoji / imagen visual</label>
+                  <input type="text" id="dishEmoji" placeholder="Ej: 🍔" />
+                </div>
+
+                <div class="field">
+                  <label for="dishAvailable">Disponibilidad</label>
+                  <select id="dishAvailable">
+                    <option value="true">Sí, disponible</option>
+                    <option value="false">No disponible</option>
+                  </select>
+                </div>
+
+                <div class="field full" style="display:flex; gap:10px; flex-wrap:wrap;">
+                  <button class="btn btn-primary" type="submit" style="flex:1; min-width:200px;">Guardar plato</button>
+                  <button class="btn btn-light" type="button" id="cancelEditBtn" style="flex:1; min-width:200px;">Cancelar edición</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CATEGORÍAS -->
+      <section class="panel-section" id="categoriesSection">
+        <div class="section-stack">
+          <div class="grid-2">
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2>Categorías</h2>
+                  <p class="subtext">Gestiona categorías reales vinculadas con tus platos</p>
+                </div>
+              </div>
+
+              <form class="form-grid" id="categoryForm">
+                <input type="hidden" id="categoryEditId" />
+
+                <div class="field">
+                  <label for="categoryNameInput">Nombre de la categoría</label>
+                  <input type="text" id="categoryNameInput" placeholder="Ej: Pizzas artesanales" />
+                </div>
+
+                <div class="field">
+                  <label for="categoryStatusInput">Estado</label>
+                  <select id="categoryStatusInput">
+                    <option value="active">Activa</option>
+                    <option value="inactive">Inactiva</option>
+                  </select>
+                </div>
+
+                <div class="field full">
+                  <label for="categoryDescriptionInput">Descripción</label>
+                  <textarea id="categoryDescriptionInput" placeholder="Describe la categoría"></textarea>
+                </div>
+
+                <div class="field full" style="display:flex; gap:10px; flex-wrap:wrap;">
+                  <button class="btn btn-primary" type="submit" id="saveCategoryBtn" style="flex:1; min-width:200px;">Guardar categoría</button>
+                  <button class="btn btn-light" type="button" id="cancelCategoryEditBtn" style="flex:1; min-width:200px;">Cancelar</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2>Lista de categorías</h2>
+                  <p class="subtext">Aquí aparecerán las categorías con sus platos relacionados</p>
+                </div>
+              </div>
+
+              <div class="category-list" id="categoryList">
+                <div class="empty-box">Aquí verás tus categorías guardadas.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <h2>Asignar platos a categorías</h2>
+                <p class="subtext">Cambia categorías de platos desde esta sección</p>
+              </div>
+            </div>
+
+            <div class="dish-list" id="categoryDishAssignmentList">
+              <div class="empty-box">Aquí aparecerán tus platos para reasignar categoría.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- HORARIOS -->
+      <section class="panel-section" id="hoursSection">
+        <div class="section-stack">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <h2>Horarios del local</h2>
+                <p class="subtext">Controla días activos, horarios de apertura y cierre</p>
+              </div>
+              <div class="section-actions">
+                <button class="btn btn-primary" id="saveHoursBtn" type="button">Guardar horarios</button>
+                <button class="btn btn-light" id="resetHoursBtn" type="button">Restablecer</button>
+              </div>
+            </div>
+
+            <div class="hours" id="hoursList">
+              <div class="hour-row" data-day="lunes">
+                <span>Lunes</span>
+                <input type="text" class="hour-open" value="8:00 am" />
+                <input type="text" class="hour-close" value="10:00 pm" />
+                <button class="btn btn-light toggle-day-status-btn" type="button">Activo</button>
+                <span class="switch">Activo</span>
+              </div>
+
+              <div class="hour-row" data-day="martes">
+                <span>Martes</span>
+                <input type="text" class="hour-open" value="8:00 am" />
+                <input type="text" class="hour-close" value="10:00 pm" />
+                <button class="btn btn-light toggle-day-status-btn" type="button">Activo</button>
+                <span class="switch">Activo</span>
+              </div>
+
+              <div class="hour-row" data-day="miercoles">
+                <span>Miércoles</span>
+                <input type="text" class="hour-open" value="8:00 am" />
+                <input type="text" class="hour-close" value="10:00 pm" />
+                <button class="btn btn-light toggle-day-status-btn" type="button">Activo</button>
+                <span class="switch">Activo</span>
+              </div>
+
+              <div class="hour-row" data-day="jueves">
+                <span>Jueves</span>
+                <input type="text" class="hour-open" value="8:00 am" />
+                <input type="text" class="hour-close" value="10:00 pm" />
+                <button class="btn btn-light toggle-day-status-btn" type="button">Activo</button>
+                <span class="switch">Activo</span>
+              </div>
+
+              <div class="hour-row" data-day="viernes">
+                <span>Viernes</span>
+                <input type="text" class="hour-open" value="8:00 am" />
+                <input type="text" class="hour-close" value="12:00 am" />
+                <button class="btn btn-light toggle-day-status-btn" type="button">Activo</button>
+                <span class="switch">Activo</span>
+              </div>
+
+              <div class="hour-row" data-day="sabado">
+                <span>Sábado</span>
+                <input type="text" class="hour-open" value="10:00 am" />
+                <input type="text" class="hour-close" value="12:00 am" />
+                <button class="btn btn-light toggle-day-status-btn" type="button">Activo</button>
+                <span class="switch">Activo</span>
+              </div>
+
+              <div class="hour-row" data-day="domingo">
+                <span>Domingo</span>
+                <input type="text" class="hour-open" value="Cerrado" />
+                <input type="text" class="hour-close" value="-" />
+                <button class="btn btn-light toggle-day-status-btn" type="button">Inactivo</button>
+                <span class="switch no">Inactivo</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PROMOCIONES -->
+      <section class="panel-section" id="promotionsSection">
+        <div class="section-stack">
+          <div class="grid-2">
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2>Crear / editar promoción</h2>
+                  <p class="subtext">Activa ofertas para mover más pedidos</p>
+                </div>
+              </div>
+
+              <form class="form-grid" id="promotionForm">
+                <input type="hidden" id="promotionId" />
+
+                <div class="field">
+                  <label for="promotionTitle">Título de la promoción</label>
+                  <input type="text" id="promotionTitle" placeholder="Ej: 2x1 en pizzas" />
+                </div>
+
+                <div class="field">
+                  <label for="promotionType">Tipo de promoción</label>
+                  <select id="promotionType">
+                    <option value="discount">Descuento</option>
+                    <option value="combo">Combo</option>
+                    <option value="shipping">Delivery gratis</option>
+                    <option value="special">Especial</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label for="promotionValue">Valor</label>
+                  <input type="text" id="promotionValue" placeholder="Ej: 20% o 2x1" />
+                </div>
+
+                <div class="field">
+                  <label for="promotionStatus">Estado</label>
+                  <select id="promotionStatus">
+                    <option value="active">Activa</option>
+                    <option value="inactive">Inactiva</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label for="promotionStartDate">Inicio</label>
+                  <input type="date" id="promotionStartDate" />
+                </div>
+
+                <div class="field">
+                  <label for="promotionEndDate">Fin</label>
+                  <input type="date" id="promotionEndDate" />
+                </div>
+
+                <div class="field full">
+                  <label for="promotionDescription">Descripción</label>
+                  <textarea id="promotionDescription" placeholder="Describe la promoción"></textarea>
+                </div>
+
+                <div class="field full" style="display:flex; gap:10px; flex-wrap:wrap;">
+                  <button class="btn btn-primary" type="submit" style="flex:1; min-width:200px;">Guardar promoción</button>
+                  <button class="btn btn-light" type="button" id="cancelPromotionEditBtn" style="flex:1; min-width:200px;">Cancelar</button>
+                </div>
+              </form>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2>Promociones guardadas</h2>
+                  <p class="subtext">Lista de promociones activas e inactivas</p>
+                </div>
+              </div>
+
+              <div class="promo-list" id="promotionList">
+                <div class="empty-box">Aquí aparecerán tus promociones guardadas.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PERFIL -->
+      <section class="panel-section" id="profileSection">
+        <div class="section-stack">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <h2>Perfil del local</h2>
+                <p class="subtext">Datos visibles del restaurante</p>
+              </div>
+              <div class="section-actions">
+                <button class="btn btn-primary" id="editProfileBtn" type="button">Editar perfil</button>
+                <button class="btn btn-light hidden" id="cancelProfileEditBtn" type="button">Cancelar</button>
+              </div>
+            </div>
+
+            <div id="profileViewBox" class="config-grid">
+              <div class="info-item">
+                <strong>Nombre del local</strong>
+                <span id="profileStoreName">Pizza Roma</span>
+              </div>
+              <div class="info-item">
+                <strong>Dirección</strong>
+                <span id="profileStoreAddress">Punto Fijo</span>
+              </div>
+              <div class="info-item">
+                <strong>Correo</strong>
+                <span id="profileStoreEmail">restaurant@email.com</span>
+              </div>
+              <div class="info-item">
+                <strong>Teléfono</strong>
+                <span id="profileStorePhone">No definido</span>
+              </div>
+              <div class="info-item">
+                <strong>Descripción</strong>
+                <span id="profileStoreDescription">Sin descripción del local.</span>
+              </div>
+              <div class="info-item">
+                <strong>Estado actual</strong>
+                <span id="profileStoreStatus">Abierto</span>
+              </div>
+            </div>
+
+            <form id="profileForm" class="form-grid hidden" style="margin-top: 16px;">
+              <div class="field">
+                <label for="profileNameInput">Nombre del local</label>
+                <input type="text" id="profileNameInput" placeholder="Nombre del local" />
+              </div>
+
+              <div class="field">
+                <label for="profilePhoneInput">Teléfono</label>
+                <input type="text" id="profilePhoneInput" placeholder="Ej: 0412..." />
+              </div>
+
+              <div class="field full">
+                <label for="profileAddressInput">Dirección</label>
+                <input type="text" id="profileAddressInput" placeholder="Dirección del local" />
+              </div>
+
+              <div class="field">
+                <label for="profileCategoryInput">Tipo de comida</label>
+                <input type="text" id="profileCategoryInput" placeholder="Ej: Pizzas, hamburguesas..." />
+              </div>
+
+              <div class="field">
+                <label for="profileBannerInput">Texto banner / portada</label>
+                <input type="text" id="profileBannerInput" placeholder="Ej: Las mejores pizzas de la ciudad" />
+              </div>
+
+              <div class="field full">
+                <label for="profileDescriptionInput">Descripción</label>
+                <textarea id="profileDescriptionInput" placeholder="Describe tu restaurante"></textarea>
+              </div>
+
+              <div class="field full" style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="btn btn-primary" type="submit" style="flex:1; min-width:200px;">Guardar perfil</button>
+                <button class="btn btn-light" type="button" id="profilePreviewBtn" style="flex:1; min-width:200px;">Vista previa tienda</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- CONFIGURACIÓN -->
+      <section class="panel-section" id="settingsSection">
+        <div class="section-stack">
+          <div class="grid-2">
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2>Configuración</h2>
+                  <p class="subtext">Acciones rápidas del panel</p>
+                </div>
+              </div>
+
+              <div class="config-grid">
+                <div class="info-item">
+                  <strong>Estado del local</strong>
+                  <p class="subtext" style="margin-bottom:12px;">Abre o cierra el restaurante desde aquí.</p>
+                  <button class="btn btn-light" id="settingsToggleStoreBtn" type="button">Cambiar estado</button>
+                </div>
+
+                <div class="info-item">
+                  <strong>Vista pública</strong>
+                  <p class="subtext" style="margin-bottom:12px;">Abre la tienda pública del restaurante.</p>
+                  <button class="btn btn-light" id="settingsGoPublicStoreBtn" type="button">Ver mi tienda</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <h2>Vista previa de tu tienda</h2>
+                  <p class="subtext">Aquí puedes ver una base mejorada de cómo se puede ver tu tienda pública</p>
+                </div>
+              </div>
+
+              <div class="preview-store-card">
+                <div class="preview-store-cover" id="previewStoreCover">
+                  <span id="previewStoreBannerText">Las mejores pizzas de la ciudad</span>
+                </div>
+                <div class="preview-store-body">
+                  <div>
+                    <h3 id="previewStoreName">Pizza Roma</h3>
+                    <p class="subtext" id="previewStoreDescription">Tu descripción del restaurante aparecerá aquí.</p>
+                  </div>
+
+                  <div class="preview-badge-row">
+                    <span class="preview-badge" id="previewStoreCategory">Comida rápida</span>
+                    <span class="preview-badge" id="previewStoreOpenStatus">Local abierto</span>
+                  </div>
+
+                  <div class="info-item">
+                    <strong>Dirección</strong>
+                    <span id="previewStoreAddress">Punto Fijo</span>
+                  </div>
+
+                  <div class="info-item">
+                    <strong>Teléfono</strong>
+                    <span id="previewStorePhone">No definido</span>
+                  </div>
+
+                  <div class="section-actions">
+                    <button class="btn btn-primary" id="openPublicStorePreviewBtn" type="button">Abrir mi tienda</button>
+                    <button class="btn btn-light panel-nav-link" data-target="profileSection" type="button">Editar perfil</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="js/auth.js"></script>
+<script src="js/orders.js"></script>
+<script src="js/panel-restaurante.js"></script>
+<script src="js/panel-alerts.js"></script>
+<script src="js/panel-balance.js"></script>
+</body>
+</html>

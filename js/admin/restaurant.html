@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DELI - Restaurante</title>
+  <link rel="stylesheet" href="css/restaurant.css">
+</head>
+<body>
+
+  <!-- TOP BAR -->
+  <header class="top-user-bar">
+    <div class="top-user-left">
+      <strong class="brand-logo">DELI</strong>
+    </div>
+
+    <div class="top-user-right" id="restaurantUserNav">
+      <div id="userNav" class="user-nav"></div>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="restaurant-hero">
+    <div class="hero-content">
+      <div class="back" onclick="history.back()">← Volver</div>
+
+      <h1 class="hero-title" id="restaurantName">MERAKI</h1>
+
+      <div class="hero-badges">
+        <span class="hero-badge" id="restaurantMeta">Punto Fijo</span>
+        <span class="hero-badge">⭐ 4.7</span>
+        <span class="hero-badge">🛵 Delivery</span>
+        <span class="hero-badge">⏱ 20-35 min</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROMOCIONES -->
+  <section class="promo-section">
+    <div class="section-inner">
+      <h2 class="section-title">Promociones</h2>
+
+      <div class="promotions" id="restaurantPromotions">
+        <div class="promo-card">
+          <div class="promo-title">🔥 2x1 EN PIZZAS</div>
+          <div class="promo-text">Aprovecha el 2x1 en pizzas esta semana</div>
+        </div>
+
+        <div class="promo-card">
+          <div class="promo-title">💸 DELIVERY GRATIS</div>
+          <div class="promo-text">Por tiempo limitado</div>
+        </div>
+
+        <div class="promo-card">
+          <div class="promo-title">🎉 20% DESCUENTO</div>
+          <div class="promo-text">En productos seleccionados</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CATEGORÍAS -->
+  <section class="categories-section">
+    <div class="section-inner">
+      <h2 class="section-title menu-title">Todos</h2>
+      <div class="categories" id="menuCategories"></div>
+    </div>
+  </section>
+
+  <!-- MENÚ -->
+  <main class="container">
+    <div id="menu"></div>
+  </main>
+
+  <!-- CARRITO -->
+  <div class="cart" id="cart"></div>
+  <div class="cart-panel" id="cartPanel"></div>
+
+  <!-- CHECKOUT -->
+  <div class="checkout-modal" id="checkoutModal">
+    <div class="checkout-box">
+      <h2>Confirmar pedido</h2>
+      <p>Revisa tus datos antes de confirmar el pedido.</p>
+
+      <form id="checkoutForm">
+        <div class="checkout-form-group">
+          <label for="checkoutName">Nombre completo</label>
+          <input id="checkoutName" type="text" placeholder="Tu nombre completo">
+        </div>
+
+        <div class="checkout-form-group">
+          <label for="checkoutPhone">Teléfono</label>
+          <input id="checkoutPhone" type="text" placeholder="Tu teléfono">
+        </div>
+
+        <div class="checkout-form-group">
+          <label for="checkoutAddress">Dirección de entrega</label>
+          <textarea id="checkoutAddress" placeholder="Dirección donde recibirás el pedido"></textarea>
+          <button type="button" class="helper-btn" id="restoreAddressBtn">
+            Usar dirección guardada
+          </button>
+        </div>
+
+        <div class="checkout-form-group">
+          <label for="checkoutEmail">Correo</label>
+          <input id="checkoutEmail" type="email" placeholder="Tu correo">
+        </div>
+
+        <div class="checkout-summary">
+          <h3>Resumen del pedido</h3>
+          <div id="checkoutOrderSummary"></div>
+          <div class="checkout-total" id="checkoutTotal"></div>
+        </div>
+
+        <button type="submit" class="modal-btn">Confirmar pedido</button>
+        <button type="button" class="modal-btn-secondary" onclick="closeCheckout()">Cancelar</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- REGISTRO -->
+  <section class="register-screen" id="registerScreen" style="display:none;">
+    <div class="form-container">
+      <div class="close-btn" onclick="closeRegister()">✖</div>
+
+      <h2>Crear cuenta</h2>
+
+      <input id="fullName" placeholder="Nombre completo">
+      <input id="address" placeholder="Dirección">
+      <input id="phone" placeholder="Teléfono">
+      <input id="email" placeholder="Correo">
+      <input id="password" type="password" placeholder="Contraseña">
+      <input id="confirmPassword" type="password" placeholder="Confirmar contraseña">
+
+      <button onclick="registerUser()">Registrarse</button>
+
+      <p id="message"></p>
+    </div>
+  </section>
+
+  <!-- LOGIN -->
+  <section class="register-screen" id="loginScreen" style="display:none;">
+    <div class="form-container">
+      <div class="close-btn" onclick="closeLogin()">✖</div>
+
+      <h2>Iniciar sesión</h2>
+
+      <select id="loginRole">
+        <option value="customer">Cliente</option>
+        <option value="restaurant">Restaurante</option>
+      </select>
+
+      <input id="loginEmail" type="email" placeholder="Correo">
+      <input id="loginPassword" type="password" placeholder="Contraseña">
+
+      <button onclick="loginUser()">Entrar</button>
+
+      <p id="loginMessage"></p>
+    </div>
+  </section>
+
+  <!-- REGISTRO RESTAURANTE -->
+  <section class="register-screen" id="restaurantRegisterScreen" style="display:none;">
+    <div class="form-container">
+      <div class="close-btn" onclick="closeRestaurantRegister()">✖</div>
+
+      <h2>Registrar restaurante</h2>
+
+      <input id="restaurantNameInputField" placeholder="Nombre del restaurante">
+      <input id="restaurantAddressInputField" placeholder="Dirección o punto de referencia">
+      <input id="restaurantPhoneInputField" placeholder="Teléfono">
+      <input id="restaurantEmailInputField" type="email" placeholder="Correo">
+      <input id="restaurantPasswordInputField" type="password" placeholder="Contraseña">
+      <input id="restaurantConfirmPasswordInputField" type="password" placeholder="Confirmar contraseña">
+
+      <button onclick="registerRestaurantFromRestaurantPage()">Registrar restaurante</button>
+
+      <p id="restaurantMessage"></p>
+    </div>
+  </section>
+
+<script src="js/database.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/orders.js"></script>
+<script src="js/restaurant-page.js"></script>
+</body>
+</html>

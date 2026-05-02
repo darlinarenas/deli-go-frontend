@@ -1,0 +1,689 @@
+:root {
+  --color-principal: #ff4d4d;
+  --color-fondo: #f5f5f5;
+  --color-texto: #1f2937;
+  --color-texto-secundario: #6b7280;
+  --color-borde: #ececec;
+  --sombra-suave: 0 8px 24px rgba(0, 0, 0, 0.08);
+  --sombra-hover: 0 14px 34px rgba(0, 0, 0, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-fondo);
+  color: var(--color-texto);
+}
+
+/* HEADER */
+
+header {
+  background: var(--color-principal);
+  color: white;
+  padding: 15px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.header-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo {
+  font-size: 24px;
+  font-weight: bold;
+  letter-spacing: 0.4px;
+}
+
+.delivery {
+  background: white;
+  color: var(--color-principal);
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+/* NAV ANTIGUO (LO DEJAMOS POR SEGURIDAD) */
+
+.nav {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.nav a {
+  color: white;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.user-name {
+  font-weight: bold;
+}
+
+/* NUEVO NAV DINÁMICO DEL HEADER */
+
+.user-nav {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  justify-content: flex-end;
+  text-align: right;
+}
+
+.user-nav a {
+  color: white;
+  text-decoration: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: opacity 0.2s ease;
+}
+
+.user-nav a:hover {
+  opacity: 0.85;
+}
+
+.user-greeting {
+  font-weight: bold;
+  color: white;
+}
+
+/* HERO */
+
+.hero {
+  position: relative;
+  min-height: 420px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 40px 60px;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,0.60) 0%, rgba(0,0,0,0.45) 35%, rgba(0,0,0,0.18) 60%, rgba(0,0,0,0.05) 100%),
+    url("../assets/image/logo-deli.jpeg") no-repeat right center;
+  background-size: contain;
+  color: white;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,77,77,0.10), rgba(0,0,0,0.12));
+  pointer-events: none;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 480px;
+}
+
+.hero h1 {
+  margin: 0 0 12px;
+  font-size: 52px;
+  line-height: 1.05;
+  font-weight: 800;
+  text-shadow: 0 3px 12px rgba(0,0,0,0.35);
+}
+
+.hero #city {
+  margin: 0 0 10px;
+  font-size: 22px;
+  font-weight: 600;
+  color: #ffe3e3;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.35);
+}
+
+.hero-slogan {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 0 3px 12px rgba(0,0,0,0.40);
+}
+
+@media (max-width: 1024px) {
+  .hero {
+    min-height: 380px;
+    padding: 30px 35px;
+    background:
+      linear-gradient(90deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.48) 45%, rgba(0,0,0,0.18) 100%),
+      url("../assets/image/logo-deli.jpeg") no-repeat right center;
+    background-size: 85%;
+  }
+
+  .hero h1 {
+    font-size: 42px;
+  }
+
+  .hero #city {
+    font-size: 20px;
+  }
+
+  .hero-slogan {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero {
+    min-height: 320px;
+    padding: 24px 20px;
+    justify-content: center;
+    text-align: center;
+    background:
+      linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.45) 100%),
+      url("../assets/image/logo-deli.jpeg") no-repeat center center;
+    background-size: cover;
+  }
+
+  .hero-content {
+    max-width: 100%;
+  }
+
+  .hero h1 {
+    font-size: 34px;
+  }
+
+  .hero #city {
+    font-size: 18px;
+  }
+
+  .hero-slogan {
+    font-size: 20px;
+  }
+}
+
+/* SECTION */
+
+.section {
+  padding: 30px;
+  max-width: 1100px;
+  margin: auto;
+}
+
+/* TITULOS Y TEXTOS DE BLOQUES */
+
+.section h2 {
+  color: var(--color-texto);
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+
+.section p {
+  color: var(--color-texto-secundario);
+}
+
+/* BLOQUE PRESUPUESTO */
+
+.budget-box {
+  background: white;
+  padding: 22px;
+  border-radius: 18px;
+  box-shadow: var(--sombra-suave);
+  margin-bottom: 25px;
+  border: 1px solid rgba(0,0,0,0.03);
+}
+
+.budget-input {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  margin-bottom: 10px;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.budget-input:focus {
+  border-color: var(--color-principal);
+  box-shadow: 0 0 0 4px rgba(255, 77, 77, 0.12);
+}
+
+.budget-btn {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: var(--color-principal);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+}
+
+.budget-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(255, 77, 77, 0.22);
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(250px,1fr));
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.result-card {
+  background: white;
+  padding: 18px;
+  border-radius: 16px;
+  box-shadow: var(--sombra-suave);
+  border: 1px solid rgba(0,0,0,0.03);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.result-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--sombra-hover);
+}
+
+.result-card h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.result-card button {
+  margin-top: 14px;
+  width: 100%;
+  padding: 11px;
+  border: none;
+  border-radius: 10px;
+  background: var(--color-principal);
+  color: white;
+  cursor: pointer;
+  font-weight: 700;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.result-card button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(255, 77, 77, 0.20);
+}
+
+/* BUSCADOR */
+
+.search {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  margin-bottom: 20px;
+  background: white;
+  box-shadow: var(--sombra-suave);
+  outline: none;
+  font-size: 15px;
+}
+
+.search:focus {
+  border-color: var(--color-principal);
+  box-shadow: 0 0 0 4px rgba(255, 77, 77, 0.12);
+}
+
+/* CATEGORÍAS */
+
+.categories {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  margin-bottom: 20px;
+  padding-bottom: 4px;
+}
+
+.category-btn {
+  background: white;
+  border: 1px solid #ededed;
+  padding: 10px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  transition: all 0.18s ease;
+}
+
+.category-btn:hover {
+  transform: translateY(-1px);
+  border-color: #ffd0d0;
+}
+
+.category-btn.active {
+  background: var(--color-principal);
+  color: white;
+  border-color: var(--color-principal);
+}
+
+/* GRID RESTAURANTES */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill,minmax(240px,1fr));
+  gap: 18px;
+}
+
+.restaurant {
+  background: white;
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: var(--sombra-suave);
+  cursor: pointer;
+  position: relative;
+  border: 1px solid rgba(0,0,0,0.03);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.restaurant:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--sombra-hover);
+}
+
+.restaurant b {
+  display: block;
+  font-size: 18px;
+  color: var(--color-texto);
+  margin-bottom: 8px;
+  padding-right: 48px;
+}
+
+.restaurant button {
+  margin-top: 14px;
+  width: 100%;
+  padding: 11px;
+  border: none;
+  border-radius: 12px;
+  background: var(--color-principal);
+  color: white;
+  cursor: pointer;
+  font-weight: 700;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.restaurant button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(255, 77, 77, 0.20);
+}
+
+.tag {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: #ffcc00;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+/* REGISTRO */
+
+.register-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(245, 245, 245, 0.95);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(3px);
+}
+
+.form-container {
+  background: white;
+  padding: 30px;
+  border-radius: 18px;
+  width: 350px;
+  max-width: 90%;
+  position: relative;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.14);
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  cursor: pointer;
+}
+
+.form-container input,
+.form-container select {
+  width: 100%;
+  margin: 10px 0;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  outline: none;
+}
+
+.form-container input:focus,
+.form-container select:focus {
+  border-color: var(--color-principal);
+  box-shadow: 0 0 0 4px rgba(255, 77, 77, 0.12);
+}
+
+.form-container button {
+  width: 100%;
+  padding: 12px;
+  background: var(--color-principal);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 768px) {
+  .header-inner {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+
+  .nav {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .user-nav {
+    flex-wrap: wrap;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .hero {
+    height: 300px;
+  }
+
+  .section {
+    padding: 20px;
+  }
+
+  .section h2 {
+    font-size: 24px;
+  }
+}
+
+/* BOTON RESETEAR */
+.reset-btn{
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #ff4d4d;
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  box-shadow: 0 10px 18px rgba(255, 77, 77, 0.24);
+}
+
+/* ==========================================
+   ESTADO RESTAURANTE
+========================================== */
+
+.restaurant-status {
+  font-size: 13px;
+  font-weight: bold;
+  margin: 4px 0;
+}
+
+.status-open {
+  color: #16a34a;
+}
+
+.status-closed {
+  color: #dc2626;
+}
+
+/* ==========================================
+   PEDIDOS - PANEL RESTAURANTE
+========================================== */
+
+.orders-tabs{
+  display:flex;
+  gap:10px;
+  margin-bottom:20px;
+  flex-wrap:wrap;
+}
+
+.order-tab{
+  padding:8px 14px;
+  border-radius:20px;
+  border:none;
+  cursor:pointer;
+  background:#e5e7eb;
+  font-weight:500;
+}
+
+.order-tab.active{
+  background:var(--color-principal);
+  color:white;
+}
+
+/* ==========================================
+   TARJETAS DE PEDIDOS
+========================================== */
+
+.orders-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:16px;
+}
+
+.order-card{
+  background:white;
+  border-radius:14px;
+  padding:16px;
+  box-shadow:0 4px 14px rgba(0,0,0,0.08);
+}
+
+.order-header{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:10px;
+  font-weight:bold;
+}
+
+.order-items{
+  font-size:14px;
+  margin-bottom:10px;
+}
+
+.order-total{
+  font-weight:bold;
+  margin-top:6px;
+}
+
+.order-actions{
+  margin-top:10px;
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.order-btn{
+  border:none;
+  padding:6px 10px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:12px;
+}
+
+.btn-accept{
+  background:#22c55e;
+  color:white;
+}
+
+.btn-preparing{
+  background:#f59e0b;
+  color:white;
+}
+
+.btn-ready{
+  background:#3b82f6;
+  color:white;
+}
+
+.btn-finish{
+  background:#6b7280;
+  color:white;
+}
+
+/* ==========================================
+   BADGES ESTADO PEDIDO
+========================================== */
+
+.status-pendiente{
+  background:#fde68a;
+  padding:4px 8px;
+  border-radius:6px;
+  font-size:12px;
+}
+
+.status-aceptado{
+  background:#bbf7d0;
+  padding:4px 8px;
+  border-radius:6px;
+  font-size:12px;
+}
+
+.status-preparando{
+  background:#fed7aa;
+  padding:4px 8px;
+  border-radius:6px;
+  font-size:12px;
+}
+
+.status-listo{
+  background:#bfdbfe;
+  padding:4px 8px;
+  border-radius:6px;
+  font-size:12px;
+}
+
+.status-finalizado{
+  background:#e5e7eb;
+  padding:4px 8px;
+  border-radius:6px;
+  font-size:12px;
+}
