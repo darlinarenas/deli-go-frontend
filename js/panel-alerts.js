@@ -125,7 +125,7 @@ async function fetchOrders() {
 
   try {
 
-    const res = await fetch("http://127.0.0.1:3000/orders");
+    const res = await fetch("https://deligo-backend-i554.onrender.com");
 
     const data = await res.json();
 

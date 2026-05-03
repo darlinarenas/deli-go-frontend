@@ -1,7 +1,7 @@
 /* ======================================================
    DELI - restaurants.js
    Página principal de restaurantes conectada al backend
-   - Lee restaurantes reales desde http://localhost:3000/restaurants
+   - Lee restaurantes reales desde https://deligo-backend-i554.onrender.com
    - Oculta restaurantes cerrados usando estado del panel
    - Mantiene búsqueda, categorías y navegación
    - Agrega Top 6 restaurantes más pedidos de la semana

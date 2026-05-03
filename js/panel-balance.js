@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     El panel administrativo guarda la comisión individual en restaurants.json.
     Por eso el panel del restaurante debe leer su propio restaurante desde:
-    GET http://localhost:3001/restaurants
+    GET https://deligo-backend-i554.onrender.com
 
     Si no se puede conectar al backend, se mantiene fallback 15%
     para no romper la vista del balance.
