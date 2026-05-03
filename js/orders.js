@@ -16,9 +16,7 @@
    CONFIGURACIÓN BACKEND
 ====================================================== */
 const DELI_ORDERS_API_URL = "https://deligo-backend-i554.onrender.com"; // CAMBIO: conectar frontend con backend Render
-// IMPORTANTE: Los pedidos NO se guardan en localStorage.
 // La única fuente real de pedidos es el backend Node + JSON.
-const ORDERS_KEY = "deliOrders"; // Se conserva solo por compatibilidad, no se usa como fuente de datos.
 
 /* ======================================================
    BLOQUE 1
@@ -41,12 +39,11 @@ function normalizeText(value) {
    SESIÓN ACTUAL
 ====================================================== */
 function getCurrentUser() {
-  return (
-    ordersSafeParse(localStorage.getItem("deliCurrentUser"), null) ||
-    ordersSafeParse(localStorage.getItem("deliUser"), null) ||
-    ordersSafeParse(localStorage.getItem("user"), null) ||
-    null
-  );
+  if (typeof window.getCurrentUser === "function") {
+    return window.getCurrentUser();
+  }
+
+  return window.DELI_CURRENT_USER || null;
 }
 
 /* ======================================================
@@ -164,14 +161,14 @@ function getStatusClass(status) {
 ====================================================== */
 function getLocalOrders() {
   // Backend puro:
-  // No se leen pedidos desde localStorage para evitar datos viejos,
+  // No se leen pedidos desde backend para evitar datos viejos,
   // pedidos fantasmas o diferencias entre dispositivos.
   return [];
 }
 
 function saveLocalOrders(orders) {
   // Backend puro:
-  // No se guardan pedidos en localStorage.
+  // No se guardan pedidos en backend.
   // Se deja la función para no romper llamadas existentes dentro del proyecto.
   return orders;
 }
@@ -291,7 +288,7 @@ async function createOrder(order) {
 
     // IMPORTANTE:
     // El pedido ya fue guardado por el backend en orders.json.
-    // No duplicamos el pedido en localStorage.
+    // No duplicamos el pedido en backend.
     return savedOrder;
   } catch (error) {
     console.error("No se pudo conectar con el backend al crear pedido:", error);
@@ -321,7 +318,7 @@ async function getOrdersByRestaurant(email) {
     console.warn("No se pudo leer pedidos del restaurante desde backend:", error);
   }
 
-  // CAMBIO: conectar frontend con backend Render - no usar localStorage como fuente principal si falla el backend
+  // CAMBIO: conectar frontend con backend Render - no usar backend como fuente principal si falla el backend
   return [];
 }
 
@@ -347,7 +344,7 @@ async function getOrdersByCustomer(email) {
     console.warn("No se pudo leer pedidos del cliente desde backend:", error);
   }
 
-  // CAMBIO: conectar frontend con backend Render - no usar localStorage como fuente principal si falla el backend
+  // CAMBIO: conectar frontend con backend Render - no usar backend como fuente principal si falla el backend
   return [];
 }
 
@@ -428,6 +425,7 @@ window.DELI_ORDERS = {
   getStatusClass,
   normalizeOrderStatus
 };
+
 
 
 

@@ -6,14 +6,14 @@
    - Registro cliente
    - Registro restaurante
    - Login
-   - Sesión usuario actual
-   - Logout compatible con archivos viejos del proyecto
+   - Sesión actual validada por backend con cookie HTTP-only
+   - Logout centralizado
 ========================================================= */
 
 /* =========================================================
    CONFIGURACIÓN BACKEND
 ========================================================= */
-const AUTH_API_URL = "https://deligo-backend-i554.onrender.com"; // CAMBIO: conectar frontend con backend Render
+const AUTH_API_URL = "https://deligo-backend-i554.onrender.com";
 
 /* =========================================================
    ELEMENTOS DOM
@@ -47,30 +47,62 @@ const restaurantConfirmPasswordInput = document.getElementById("restaurantConfir
 const restaurantMessageEl = document.getElementById("restaurantMessage");
 
 /* =========================================================
-   SESIÓN USUARIO
+   SESIÓN EN MEMORIA DE LA PÁGINA
 ========================================================= */
-const CURRENT_USER_KEY = "deliCurrentUser";
+window.DELI_CURRENT_USER = null;
+window.DELI_SESSION_READY = false;
 
-function getCurrentUser() {
-  try {
-    return JSON.parse(localStorage.getItem(CURRENT_USER_KEY));
-  } catch {
-    return null;
-  }
+function emitSessionReady() {
+  window.dispatchEvent(
+    new CustomEvent("deli:session-ready", {
+      detail: {
+        user: window.DELI_CURRENT_USER
+      }
+    })
+  );
 }
 
-function saveCurrentUser(user) {
-  localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+function getCurrentUser() {
+  return window.DELI_CURRENT_USER || null;
+}
 
-  /* Compatibilidad con archivos viejos del proyecto */
-  localStorage.setItem("user", JSON.stringify(user));
-  localStorage.setItem("deliUser", JSON.stringify(user));
+function setCurrentUser(user) {
+  window.DELI_CURRENT_USER = user || null;
+  window.DELI_SESSION_READY = true;
+  emitSessionReady();
 }
 
 function clearCurrentUser() {
-  localStorage.removeItem(CURRENT_USER_KEY);
-  localStorage.removeItem("user");
-  localStorage.removeItem("deliUser");
+  window.DELI_CURRENT_USER = null;
+  window.DELI_SESSION_READY = true;
+  emitSessionReady();
+}
+
+async function loadCurrentSession() {
+  try {
+    const res = await fetch(`${AUTH_API_URL}/session`, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (!res.ok) {
+      clearCurrentUser();
+      return null;
+    }
+
+    const data = await res.json();
+    const user = data.user || data.admin || null;
+
+    setCurrentUser(user);
+    return user;
+  } catch (error) {
+    console.warn("No se pudo validar la sesión contra backend:", error);
+    clearCurrentUser();
+    return null;
+  }
 }
 
 /* =========================================================
@@ -111,6 +143,7 @@ function isRestaurantPanelPage() {
 async function postToBackend(endpoint, payload) {
   const res = await fetch(`${AUTH_API_URL}${endpoint}`, {
     method: "POST",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json"
     },
@@ -135,6 +168,7 @@ async function getRestaurantsFromBackendSafe() {
   try {
     const res = await fetch(`${AUTH_API_URL}/restaurants`, {
       method: "GET",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json"
       }
@@ -168,12 +202,6 @@ async function getRestaurantApprovalStatusByEmail(email) {
     return normalizeEmail(item?.email) === normalizedEmail;
   });
 
-  /*
-    REGLA SEGURA:
-    Si no encontramos el restaurante o el backend no devuelve status,
-    se considera PENDIENTE. Así ningún restaurante nuevo entra al panel
-    ni aparece públicamente sin aprobación administrativa.
-  */
   if (!restaurant) return "pending";
 
   return normalizeStatus(restaurant.status);
@@ -267,12 +295,20 @@ async function registerUser() {
       return;
     }
 
-    const user = {
-      ...data.user,
-      role: "customer"
-    };
+    const loginResult = await postToBackend("/login", {
+      role: "customer",
+      email,
+      password
+    });
 
-    saveCurrentUser(user);
+    if (loginResult.res.ok) {
+      const user = {
+        ...loginResult.data.user,
+        role: "customer"
+      };
+      setCurrentUser(user);
+    }
+
     closeRegister();
     window.location.reload();
   } catch (err) {
@@ -325,18 +361,6 @@ async function registerRestaurant() {
       return;
     }
 
-    const restaurant = {
-      ...data.restaurant,
-      role: "restaurant",
-      status: data.restaurant?.status || "pending",
-      commission: data.restaurant?.commission ?? 15
-    };
-
-    /*
-      IMPORTANTE:
-      El restaurante queda registrado, pero NO entra automáticamente al panel.
-      Primero debe ser aprobado desde el panel administrativo.
-    */
     if (restaurantMessageEl) {
       restaurantMessageEl.textContent = "Restaurante registrado correctamente. Queda pendiente de aprobación administrativa.";
     }
@@ -387,16 +411,11 @@ async function loginUser() {
       role
     };
 
-    /*
-      SEGURIDAD FRONTEND:
-      Antes de permitir el panel, validamos el status REAL del restaurante
-      contra /restaurants. No confiamos únicamente en /login porque algunos
-      backends devuelven el usuario sin status.
-    */
     if (role === "restaurant") {
       const approvalStatus = await getRestaurantApprovalStatusByEmail(email);
 
       if (approvalStatus !== "approved") {
+        await postToBackend("/logout", {});
         clearCurrentUser();
 
         if (loginMessageEl) {
@@ -412,7 +431,7 @@ async function loginUser() {
       user.status = approvalStatus;
     }
 
-    saveCurrentUser(user);
+    setCurrentUser(user);
     closeLogin();
 
     if (role === "restaurant") {
@@ -432,7 +451,13 @@ async function loginUser() {
 /* =========================================================
    LOGOUT
 ========================================================= */
-function logout() {
+async function logout() {
+  try {
+    await postToBackend("/logout", {});
+  } catch (error) {
+    console.warn("No se pudo cerrar la sesión en backend:", error);
+  }
+
   clearCurrentUser();
 
   if (isRestaurantPanelPage()) {
@@ -497,7 +522,10 @@ function protectRestaurantPanel() {
   }
 }
 
-protectRestaurantPanel();
+async function initAuth() {
+  await loadCurrentSession();
+  protectRestaurantPanel();
+}
 
 /* =========================================================
    FUNCIONES GLOBALES
@@ -523,6 +551,10 @@ window.getSavedRestaurant = getSavedRestaurant;
 window.isCustomerLoggedIn = isCustomerLoggedIn;
 window.isRestaurantLoggedIn = isRestaurantLoggedIn;
 window.loadUser = loadUser;
+window.loadCurrentSession = loadCurrentSession;
+
+initAuth();
+
 
 
 

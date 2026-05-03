@@ -17,18 +17,14 @@ let adminOrdersSourceCache = [];
 let adminOrdersFilteredCache = [];
 let adminOrdersSelectedIndex = 0;
 
-const ADMIN_ORDERS_VIEW_STATE_KEY = "deliAdminOrdersViewState";
+let adminOrdersViewStateMemory = {};
 
 /*
-  Estado persistente interno de Pedidos.
+  Estado interno de Pedidos mientras el panel está abierto.
   Guarda filtros como: pendiente, aceptado, preparando, listo, en camino, entregado.
 */
 function adminOrdersReadViewState() {
-  try {
-    return JSON.parse(localStorage.getItem(ADMIN_ORDERS_VIEW_STATE_KEY)) || {};
-  } catch (error) {
-    return {};
-  }
+  return adminOrdersViewStateMemory || {};
 }
 
 function adminOrdersSaveViewState() {
@@ -41,11 +37,11 @@ function adminOrdersSaveViewState() {
     selectedOrderId: adminOrdersFilteredCache[adminOrdersSelectedIndex]?.id || ""
   };
 
-  localStorage.setItem(ADMIN_ORDERS_VIEW_STATE_KEY, JSON.stringify(state));
+  adminOrdersViewStateMemory = state;
 }
 
 function adminOrdersClearViewState() {
-  localStorage.removeItem(ADMIN_ORDERS_VIEW_STATE_KEY);
+  adminOrdersViewStateMemory = {};
 }
 
 /* =====================================================
@@ -1104,6 +1100,7 @@ window.refrescarPedidosAdminManual = refrescarPedidosAdminManual;
 
 
 inyectarEstilosAdminOrders();
+
 
 
 

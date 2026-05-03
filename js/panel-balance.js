@@ -17,33 +17,16 @@
 ========================================= */
 
 document.addEventListener("DOMContentLoaded", () => {
-  const COMMISSION_CONFIG_KEY = "deliCommissionConfig";
-  const FALLBACK_ORDERS_KEY = "deliOrders";
   const RESTAURANTS_API_URL = "https://deligo-backend-i554.onrender.com";
 
   /* =========================================
      CONFIGURACIÓN BASE DE COMISIONES
   ========================================= */
   function getCommissionConfig() {
-    const fallback = {
+    return {
       restaurantCommission: 15,
       courierCommission: 10
     };
-
-    try {
-      const saved = JSON.parse(localStorage.getItem(COMMISSION_CONFIG_KEY));
-
-      return {
-        restaurantCommission: Number(
-          saved?.restaurantCommission ?? fallback.restaurantCommission
-        ),
-        courierCommission: Number(
-          saved?.courierCommission ?? fallback.courierCommission
-        )
-      };
-    } catch {
-      return fallback;
-    }
   }
 
   /*
@@ -53,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
     Por eso el panel del restaurante debe leer su propio restaurante desde:
     GET http://localhost:3001/restaurants
 
-    Si no se puede conectar al backend, se mantiene fallback local/15%
+    Si no se puede conectar al backend, se mantiene fallback 15%
     para no romper la vista del balance.
   */
   async function getRestaurantCommissionPercent(restaurantEmail) {
@@ -345,15 +328,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    const localOrders =
-      safeJsonParse(localStorage.getItem(FALLBACK_ORDERS_KEY), []) || [];
-
-    if (!Array.isArray(localOrders)) return [];
-
-    return localOrders.filter((order) => {
-      const email = getOrderRestaurantEmail(order);
-      return email === normalizedRestaurantEmail;
-    });
+    return [];
   }
 
   /* =========================================
@@ -458,6 +433,7 @@ document.addEventListener("DOMContentLoaded", () => {
   /* Refresco automático suave */
   setInterval(refreshRestaurantBalances, 10000);
 });
+
 
 
 

@@ -102,9 +102,8 @@ async function loginAdmin() {
 
     try {
         const response = await fetch("https://deligo-backend-i554.onrender.com/admin/login", { 
-        // CAMBIO PARA CONECTAR FRONTEND CON BACKEND
-
             method: "POST",
+            credentials: "include",
             headers: {
                 "Content-Type": "application/json"
             },
@@ -118,10 +117,6 @@ async function loginAdmin() {
             return;
         }
 
-        // Guardar sesión (SOLO CACHE TEMPORAL)
-        localStorage.setItem("deliAdmin", JSON.stringify(data.admin));
-
-        // Ir al panel
         window.location.href = "panel-administrativo.html";
 
     } catch (error) {
@@ -133,3 +128,4 @@ async function loginAdmin() {
 
 </body>
 </html>
+

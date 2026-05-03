@@ -11,52 +11,73 @@ let adminData = {
   orders: []
 };
 
-const ADMIN_ACTIVE_SECTION_KEY = "deliAdminActiveSection";
+let adminCurrentUser = null;
+let adminActiveSection = "resumenSection";
 
-document.addEventListener("DOMContentLoaded", () => {
-  protegerPanelAdministrador();
+document.addEventListener("DOMContentLoaded", async () => {
+  const protegido = await protegerPanelAdministrador();
+  if (!protegido) return;
+
   prepararMenuAdministrador();
-
-  /*
-    Restaurar vista guardada desde el primer momento.
-    Esto evita que, al recargar la página completa, el HTML vuelva visualmente
-    al Resumen antes de que lleguen los datos del backend.
-  */
-  const savedSection = localStorage.getItem(ADMIN_ACTIVE_SECTION_KEY);
-  if (savedSection) {
-    abrirSeccionAdministrador(savedSection, { silentScroll: true });
-  }
-
+  abrirSeccionAdministrador(adminActiveSection, { silentScroll: true });
   cargarDatosAdministrador();
 });
 
 /* =====================================================
    PROTECCIÓN DE SESIÓN
 ====================================================== */
-function protegerPanelAdministrador() {
-  const admin = obtenerAdminCache();
-
-  if (!admin || admin.role !== "admin") {
-    window.location.href = "acceso-administrativo.html";
-    return;
-  }
-
-  const sessionText = document.getElementById("adminSessionText");
-  if (sessionText) {
-    sessionText.textContent = admin.email || "Administrador";
-  }
-}
-
-function obtenerAdminCache() {
+async function protegerPanelAdministrador() {
   try {
-    return JSON.parse(localStorage.getItem("deliAdmin")) || null;
+    const response = await fetch(`${API_URL}/session`, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      window.location.href = "acceso-administrativo.html";
+      return false;
+    }
+
+    const data = await response.json();
+    const admin = data.admin || data.user || null;
+
+    if (!admin || admin.role !== "admin") {
+      window.location.href = "acceso-administrativo.html";
+      return false;
+    }
+
+    adminCurrentUser = admin;
+
+    const sessionText = document.getElementById("adminSessionText");
+    if (sessionText) {
+      sessionText.textContent = admin.email || "Administrador";
+    }
+
+    return true;
   } catch (error) {
-    return null;
+    console.error("No se pudo validar la sesión administrativa:", error);
+    window.location.href = "acceso-administrativo.html";
+    return false;
   }
 }
 
-function cerrarSesionAdministrador() {
-  localStorage.removeItem("deliAdmin");
+async function cerrarSesionAdministrador() {
+  try {
+    await fetch(`${API_URL}/logout`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+  } catch (error) {
+    console.warn("No se pudo cerrar sesión en backend:", error);
+  }
+
+  adminCurrentUser = null;
   window.location.href = "acceso-administrativo.html";
 }
 
@@ -80,12 +101,7 @@ function prepararMenuAdministrador() {
 function abrirSeccionAdministrador(target, options = {}) {
   if (!target) return;
 
-  /*
-    Guardamos SIEMPRE la sección activa.
-    Así, aunque la página se recargue completa, el panel vuelve a la vista
-    donde el administrador estaba trabajando.
-  */
-  localStorage.setItem(ADMIN_ACTIVE_SECTION_KEY, target);
+  adminActiveSection = target;
 
   const buttons = document.querySelectorAll(".admin-menu-btn");
   const sections = document.querySelectorAll(".admin-section");
@@ -107,14 +123,8 @@ function abrirSeccionAdministrador(target, options = {}) {
    CARGA DE DATOS DESDE BACKEND
 ====================================================== */
 async function cargarDatosAdministrador() {
-  /*
-    IMPORTANTE:
-    En una recarga completa, el HTML marca por defecto Resumen como activo.
-    Por eso NO usamos primero ".admin-section.active".
-    Primero usamos lo guardado en localStorage.
-  */
   const sectionToRestore =
-    localStorage.getItem(ADMIN_ACTIVE_SECTION_KEY) ||
+    adminActiveSection ||
     document.querySelector(".admin-section.active")?.id ||
     "resumenSection";
 
@@ -469,7 +479,7 @@ async function eliminarRestaurante(encodedRestaurantId, restaurantName) {
 
 /* =====================================================
    EDICIÓN ADMINISTRATIVA DE USUARIOS Y RESTAURANTES
-   - No usa localStorage como fuente de datos.
+   - No usa backend como fuente de datos.
    - Guarda cambios reales en backend / JSON.
    - Se inyecta el formulario por JS para no tocar HTML.
 ====================================================== */
@@ -1371,7 +1381,7 @@ inyectarEstilosAdmin();
 */
 async function refrescarPanelAdministradorManual() {
   const activeSection = document.querySelector(".admin-section.active")?.id || "pedidosSection";
-  localStorage.setItem(ADMIN_ACTIVE_SECTION_KEY, activeSection);
+  adminActiveSection = activeSection;
 
   if (window.adminOrdersSaveViewState) {
     window.adminOrdersSaveViewState();
@@ -1389,7 +1399,7 @@ window.refrescarPanelAdministradorManual = refrescarPanelAdministradorManual;
 window.addEventListener("beforeunload", () => {
   const activeSection = document.querySelector(".admin-section.active")?.id;
   if (activeSection) {
-    localStorage.setItem(ADMIN_ACTIVE_SECTION_KEY, activeSection);
+    adminActiveSection = activeSection;
   }
 });
 
@@ -2188,6 +2198,7 @@ window.cerrarDetalleRestaurante = cerrarDetalleRestaurante;
 window.verDetalleRestaurante = verDetalleRestaurante;
 
 // FIN administrador.js corregido sobre administrador(12).js - vista integrada
+
 
 
 

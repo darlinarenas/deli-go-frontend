@@ -6,7 +6,7 @@
    - Mantiene búsqueda, categorías y navegación
    - Agrega Top 6 restaurantes más pedidos de la semana
    - Agrega Top 6 platos más pedidos de la semana
-   - CORREGIDO 02-05-2026: no usa localStorage para restaurantes/estados
+   - CORREGIDO 02-05-2026: no usa almacenamiento del navegador para restaurantes/estados
 ====================================================== */
 
 /* ==========================================
@@ -66,7 +66,7 @@ function escapeHtml(text) {
 /* ==========================================
    ESTADO DEL RESTAURANTE DESDE BACKEND
    IMPORTANTE:
-   - Este archivo NO usa localStorage como fuente de datos.
+   - Este archivo NO usa almacenamiento del navegador como fuente de datos.
    - El estado abierto/cerrado debe venir del backend/JSON.
    - Si el backend no envía estado de apertura, asumimos abierto para
      no romper restaurantes antiguos ya aprobados.
@@ -837,6 +837,7 @@ async function initRestaurantsPage() {
 }
 
 initRestaurantsPage();
+
 
 
 

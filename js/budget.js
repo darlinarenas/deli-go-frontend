@@ -4,7 +4,7 @@
 
   /*
     IMPORTANTE:
-    Este archivo ya NO usa localStorage como fuente de platos/restaurantes.
+    Este archivo ya NO usa almacenamiento del navegador como fuente de platos/restaurantes.
     Ahora toma los platos reales desde:
     1) window.allDishes / window.restaurants, cargados por restaurants.js
     2) Backend Render como respaldo seguro si todavía no terminaron de cargar
@@ -326,6 +326,7 @@
   window.generarRecomendacion = generarRecomendacion;
   window.pedir = pedir;
 })();
+
 
 
 

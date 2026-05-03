@@ -5,7 +5,7 @@
    Página pública del restaurante
    - Carga restaurante desde URL
    - Carga restaurante real desde backend cuando viene por email
-   - NO usa localStorage como fuente de restaurantes, perfiles, estados, promociones ni platos
+   - NO usa almacenamiento del navegador como fuente de restaurantes, perfiles, estados, promociones ni platos
    - Carga platos reales
    - Muestra categorías
    - Maneja carrito
@@ -42,10 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
      BLOQUE 2
      CLAVES
   ====================================================== */
-  // ÚNICO uso permitido de localStorage en esta página:
-  // mantener datos puntuales de sesión del usuario actual.
-  // Restaurantes, platos, promociones, estados y pedidos deben venir del backend.
-  const CURRENT_USER_KEY = "deliCurrentUser";
+  // Restaurantes, platos, promociones, estados, sesión y pedidos deben venir del backend.
   const API_URL = "https://deligo-backend-i554.onrender.com";
 
   /* ======================================================
@@ -109,11 +106,11 @@ document.addEventListener("DOMContentLoaded", () => {
       return getCurrentUser();
     }
 
-    return safeParse(localStorage.getItem(CURRENT_USER_KEY), null);
+    return window.DELI_CURRENT_USER || null;
   }
 
   function getProfilesMap() {
-    // Backend puro: no leer perfiles desde localStorage.
+    // Backend puro: no leer perfiles desde almacenamiento del navegador.
     // Se conserva la función para no romper referencias internas existentes.
     return {};
   }
@@ -157,7 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
       Backend puro:
       - Si la URL trae ?restaurant=email, intenta primero la ruta directa.
       - Si la URL trae ?id=... o ?name=..., consulta /restaurants y filtra en backend data.
-      - NO usa localStorage ni datos semilla como respaldo.
+      - NO usa almacenamiento del navegador ni datos semilla como respaldo.
     */
     try {
       if (restaurantParam) {
@@ -212,7 +209,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function findRestaurantLocalFallback() {
     // Desactivado por regla nueva del proyecto:
-    // ningún restaurante debe cargarse desde localStorage ni datos locales.
+    // ningún restaurante debe cargarse desde almacenamiento del navegador ni datos locales.
     // Si el backend no devuelve el restaurante, se muestra error real.
     return null;
   }
@@ -241,7 +238,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function getRestaurantOpenStatus(restaurant) {
-    // Backend puro: no usar deliRestaurantStatus de localStorage.
+    // Backend puro: no usar deliRestaurantStatus de almacenamiento del navegador.
     // Si el backend no tiene campo abierto/cerrado, se asume abierto para no romper la venta.
     const status = String(restaurant?.status || "approved").toLowerCase();
 
@@ -283,7 +280,7 @@ document.addEventListener("DOMContentLoaded", () => {
   async function fetchDishesFromBackend(restaurant) {
     // CAMBIO: backend puro conectado a Render.
     // En cualquier dispositivo el menú debe cargar desde el backend real.
-    // No se usa localStorage como respaldo de platos.
+    // No se usa almacenamiento del navegador como respaldo de platos.
     try {
       const email = normalizeText(restaurant?.email);
 
@@ -323,7 +320,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function getRestaurantDishes(restaurant) {
-    // Backend puro: no leer platos desde deliRestaurantDishes/localStorage.
+    // Backend puro: no leer platos desde deliRestaurantDishes/almacenamiento del navegador.
     // Se permite únicamente un menú que venga dentro del propio objeto restaurante del backend,
     // para no romper compatibilidad si server.js/JSON ya trae restaurant.menu.
     let dishes = [];
@@ -957,7 +954,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // CAMBIO: backend puro.
     // Primero intentamos cargar los platos reales desde backend.
     // Si el backend no devuelve platos, solo se permite restaurant.menu si viene desde backend.
-    // No se usa localStorage como respaldo.
+    // No se usa almacenamiento del navegador como respaldo.
     const backendDishes = await fetchDishesFromBackend(selectedRestaurant);
 
     if (Array.isArray(backendDishes) && backendDishes.length) {
@@ -998,6 +995,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   init();
 });
+
 
 
 

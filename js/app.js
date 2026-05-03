@@ -46,16 +46,7 @@ const confirmReset = confirm("¿Seguro que quieres borrar todos los datos de pru
 
 if (!confirmReset) return;
 
-localStorage.removeItem("deliUsers");
-localStorage.removeItem("deliRestaurantAccounts");
-localStorage.removeItem("deliCurrentUser");
-localStorage.removeItem("user");
-localStorage.removeItem("deliUser");
 
-localStorage.removeItem("deliRestaurantDishes");
-localStorage.removeItem("deliOrders");
-localStorage.removeItem("deliCustomerOrders");
-localStorage.removeItem("deliPublicRestaurant");
 
 alert("Datos de prueba eliminados");
 

@@ -7,6 +7,10 @@
 
 document.addEventListener("DOMContentLoaded", async () => {
 
+  if (!window.DELI_SESSION_READY && typeof loadCurrentSession === "function") {
+    await loadCurrentSession();
+  }
+
   const ordersList = document.getElementById("ordersList");
   const totalOrdersElement = document.getElementById("totalOrders");
   const totalSpentElement = document.getElementById("totalSpent");
@@ -69,11 +73,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       return window.DELI_ORDERS.getCurrentUser();
     }
 
-    try {
-      return JSON.parse(localStorage.getItem("deliCurrentUser"));
-    } catch {
-      return null;
+    if (typeof window.getCurrentUser === "function") {
+      return window.getCurrentUser();
     }
+
+    return window.DELI_CURRENT_USER || null;
 
   }
 
@@ -202,3 +206,4 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadUserOrders();
 
 });
+

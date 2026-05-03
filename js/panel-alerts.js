@@ -12,10 +12,6 @@ let audio = null;
 
 function createSoundActivator() {
 
-  if (localStorage.getItem("deliSoundEnabled") === "true") {
-    audioEnabled = true;
-    return;
-  }
 
   const box = document.createElement("div");
   box.style.position = "fixed";
@@ -42,7 +38,6 @@ function createSoundActivator() {
 
     audioEnabled = true;
 
-    localStorage.setItem("deliSoundEnabled", "true");
 
     box.remove();
   };

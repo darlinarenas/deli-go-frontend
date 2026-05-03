@@ -1,4 +1,8 @@
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  if (!window.DELI_SESSION_READY && typeof loadCurrentSession === "function") {
+    await loadCurrentSession();
+  }
+
   const restaurant =
     (typeof getSavedRestaurant === "function" && getSavedRestaurant()) ||
     (typeof getCurrentUser === "function" && getCurrentUser()) ||
@@ -33,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /*
     BACKEND COMO FUENTE PRINCIPAL:
-    Los platos y pedidos ya no se guardan en localStorage.
+    Los platos y pedidos se trabajan desde backend.
     - Platos: se cargan/crean/editan/eliminan desde backend.
     - Pedidos: se cargan/actualizan desde backend mediante orders.js.
     Este cache solo vive en memoria mientras la página está abierta.
@@ -152,12 +156,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  const memoryStore = {};
+  let activeSectionMemory = "ordersSection";
+
   function saveJSON(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
+    memoryStore[key] = value;
   }
 
   function readJSON(key, fallback) {
-    return safeParse(localStorage.getItem(key), fallback);
+    return Object.prototype.hasOwnProperty.call(memoryStore, key) ? memoryStore[key] : fallback;
   }
 
   function escapeHtml(text) {
@@ -224,14 +231,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     if (targetId) {
-      localStorage.setItem(ACTIVE_SECTION_KEY, targetId);
+      activeSectionMemory = targetId;
     }
 
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function getSavedActiveSection() {
-    return localStorage.getItem(ACTIVE_SECTION_KEY) || "ordersSection";
+    return activeSectionMemory || "ordersSection";
   }
 
   function bindPanelNavigation() {
@@ -425,8 +432,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function getAllDishesMap() {
     /*
       Compatibilidad:
-      Antes los platos se guardaban en localStorage con DISHES_KEY.
-      Ahora NO se leen desde localStorage para evitar datos viejos o distintos por navegador.
+      Antes los platos se guardaban en backend o memoria temporal con DISHES_KEY.
+      Ahora NO se leen desde backend o memoria temporal para evitar datos viejos o distintos por navegador.
     */
     return {};
   }
@@ -434,7 +441,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function saveAllDishesMap(map) {
     /*
       Backend puro:
-      No se guardan platos en localStorage.
+      No se guardan platos en backend o memoria temporal.
       Se conserva esta función para no romper llamadas antiguas dentro del archivo.
     */
     return map;
@@ -444,7 +451,7 @@ document.addEventListener("DOMContentLoaded", () => {
     /*
       Fuente real: backend.
       Fuente temporal de pantalla: myDishesCache.
-      No se lee localStorage.
+      No se lee backend o memoria temporal.
     */
     return Array.isArray(myDishesCache) ? myDishesCache : [];
   }
@@ -452,7 +459,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function saveMyDishes(dishes) {
     /*
       Cache visual temporal:
-      Permite que el panel responda rápido sin guardar datos operativos en localStorage.
+      Permite que el panel responda rápido sin guardar datos operativos en backend o memoria temporal.
       La persistencia real ocurre en createDishInBackend / updateDishInBackend / deleteDishInBackend.
     */
     myDishesCache = Array.isArray(dishes) ? dishes : [];
@@ -742,7 +749,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /* Cache temporal en memoria para que el panel responda rápido.
-       NO se guarda en localStorage. La fuente real queda en backend. */
+       NO se guarda en backend o memoria temporal. La fuente real queda en backend. */
     saveMyDishes(dishes);
     clearDishForm();
     renderDishList();
@@ -1377,7 +1384,7 @@ function detectNewOrders(orders) {
   function getAllLocalOrders() {
     /*
       Backend puro:
-      El panel restaurante ya no lee pedidos desde localStorage.
+      El panel restaurante ya no lee pedidos desde backend o memoria temporal.
       Esta función se conserva solo para no romper dependencias antiguas.
     */
     return [];
@@ -1486,7 +1493,7 @@ function detectNewOrders(orders) {
   function saveUpdatedOrderLocally(orderId, newStatus) {
     /*
       Backend puro:
-      El estado de un pedido no se actualiza en localStorage.
+      El estado de un pedido no se actualiza en backend o memoria temporal.
       La única actualización válida ocurre mediante window.DELI_ORDERS.updateOrderStatus().
       Se conserva la función para compatibilidad si algún flujo antiguo la llama.
     */
@@ -1953,6 +1960,7 @@ window.updateRestaurantOrderStatus = async function (orderId, newStatus) {
 
   init();
 });
+
 
 
 

@@ -21,7 +21,7 @@ let adminRestaurantsSelectedOrderId = "";
 let adminRestaurantsSelectedChartDay = "";
 let adminRestaurantsActiveDetailTab = "resumen";
 
-const ADMIN_RESTAURANTS_VIEW_STATE_KEY = "deliAdminRestaurantsViewState";
+let adminRestaurantsViewStateMemory = {};
 
 /* =====================================================
    UTILIDADES SEGURAS
@@ -517,11 +517,7 @@ function seleccionarPedidoRestauranteAdmin(orderId) {
    ESTADO DE VISTA
 ====================================================== */
 function adminRestaurantsReadViewState() {
-  try {
-    return JSON.parse(localStorage.getItem(ADMIN_RESTAURANTS_VIEW_STATE_KEY)) || {};
-  } catch (error) {
-    return {};
-  }
+  return adminRestaurantsViewStateMemory || {};
 }
 
 function adminRestaurantsSaveViewState() {
@@ -534,7 +530,7 @@ function adminRestaurantsSaveViewState() {
       : ""
   };
 
-  localStorage.setItem(ADMIN_RESTAURANTS_VIEW_STATE_KEY, JSON.stringify(state));
+  adminRestaurantsViewStateMemory = state;
 }
 
 /* =====================================================
@@ -620,7 +616,7 @@ function limpiarFiltrosRestaurantesAdmin() {
   if (statusInput) statusInput.value = "todos";
   if (salesInput) salesInput.value = "todos";
 
-  localStorage.removeItem(ADMIN_RESTAURANTS_VIEW_STATE_KEY);
+  adminRestaurantsViewStateMemory = {};
 
   adminRestaurantsFilteredCache = [...adminRestaurantsSourceCache];
   adminRestaurantsSelectedIndex = 0;
@@ -1723,6 +1719,7 @@ window.seleccionarDiaRestauranteAdmin = seleccionarDiaRestauranteAdmin;
 window.refrescarRestaurantesAdminManual = refrescarRestaurantesAdminManual;
 
 inyectarEstilosAdminRestaurants();
+
 
 
 
