@@ -14,6 +14,7 @@
    CONFIGURACIÓN BACKEND
 ========================================================= */
 const AUTH_API_URL = "https://deligo-backend-i554.onrender.com";
+const AUTH_SESSION_KEY = "deliCurrentUserSession";
 
 /* =========================================================
    ELEMENTOS DOM
@@ -68,12 +69,36 @@ function getCurrentUser() {
 
 function setCurrentUser(user) {
   window.DELI_CURRENT_USER = user || null;
+
+  /*
+    CACHÉ TEMPORAL DE SESIÓN:
+    - No guarda restaurantes, pedidos ni datos principales.
+    - Solo conserva el usuario autenticado durante la sesión del navegador.
+    - Permite que al recargar o entrar al panel no se pierda el login.
+  */
+  try {
+    if (user) {
+      sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(user));
+    } else {
+      sessionStorage.removeItem(AUTH_SESSION_KEY);
+    }
+  } catch (error) {
+    console.warn("No se pudo guardar la sesión temporal:", error);
+  }
+
   window.DELI_SESSION_READY = true;
   emitSessionReady();
 }
 
 function clearCurrentUser() {
   window.DELI_CURRENT_USER = null;
+
+  try {
+    sessionStorage.removeItem(AUTH_SESSION_KEY);
+  } catch (error) {
+    console.warn("No se pudo limpiar la sesión temporal:", error);
+  }
+
   window.DELI_SESSION_READY = true;
   emitSessionReady();
 }
@@ -82,9 +107,21 @@ async function loadCurrentSession() {
   /*
     PRODUCCIÓN ACTUAL:
     El backend real todavía no tiene ruta /session.
-    No consultamos /session para no romper login/registro.
-    La sesión queda en memoria durante la página actual.
+    Mientras se implementa sesión 100% backend, se restaura SOLO la sesión
+    temporal del usuario para no expulsarlo al recargar o entrar al panel.
   */
+  try {
+    const saved = sessionStorage.getItem(AUTH_SESSION_KEY);
+
+    if (saved) {
+      const user = JSON.parse(saved);
+      window.DELI_CURRENT_USER = user || null;
+    }
+  } catch (error) {
+    console.warn("No se pudo restaurar la sesión temporal:", error);
+    window.DELI_CURRENT_USER = null;
+  }
+
   window.DELI_SESSION_READY = true;
   emitSessionReady();
   return getCurrentUser();
@@ -128,6 +165,7 @@ function isRestaurantPanelPage() {
 async function postToBackend(endpoint, payload) {
   const res = await fetch(`${AUTH_API_URL}${endpoint}`, {
     method: "POST",
+    credentials: "include",
     headers: {
       "Content-Type": "application/json"
     },
@@ -152,6 +190,7 @@ async function getRestaurantsFromBackendSafe() {
   try {
     const res = await fetch(`${AUTH_API_URL}/restaurants`, {
       method: "GET",
+      credentials: "include",
       headers: {
         "Content-Type": "application/json"
       }
@@ -534,6 +573,7 @@ window.loadUser = loadUser;
 window.loadCurrentSession = loadCurrentSession;
 
 initAuth();
+
 
 
 
