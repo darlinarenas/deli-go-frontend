@@ -1,23 +1,22 @@
 /* =========================================================
-DELI FOODS
-AUTH.JS
+   DELI FOODS
+   AUTH.JS
 
-AUTENTICACIÓN CON BACKEND
-
-* Registro cliente
-* Registro restaurante
-* Login
-* Sesión actual validada por backend con cookie HTTP-only
-* Logout centralizado
-  ========================================================= */
+   AUTENTICACIÓN CON BACKEND
+   - Registro cliente
+   - Registro restaurante
+   - Login
+   - Sesión actual validada por backend con cookie HTTP-only
+   - Logout centralizado
+========================================================= */
 
 /* =========================================================
-CONFIGURACIÓN BACKEND
+   CONFIGURACIÓN BACKEND
 ========================================================= */
 const AUTH_API_URL = "https://deligo-backend-i554.onrender.com";
 
 /* =========================================================
-ELEMENTOS DOM
+   ELEMENTOS DOM
 ========================================================= */
 const registerScreen = document.getElementById("registerScreen");
 const loginScreen = document.getElementById("loginScreen");
@@ -48,514 +47,468 @@ const restaurantConfirmPasswordInput = document.getElementById("restaurantConfir
 const restaurantMessageEl = document.getElementById("restaurantMessage");
 
 /* =========================================================
-SESIÓN EN MEMORIA DE LA PÁGINA
+   SESIÓN EN MEMORIA DE LA PÁGINA
 ========================================================= */
 window.DELI_CURRENT_USER = null;
 window.DELI_SESSION_READY = false;
 
 function emitSessionReady() {
-window.dispatchEvent(
-new CustomEvent("deli:session-ready", {
-detail: {
-user: window.DELI_CURRENT_USER
-}
-})
-);
+  window.dispatchEvent(
+    new CustomEvent("deli:session-ready", {
+      detail: {
+        user: window.DELI_CURRENT_USER
+      }
+    })
+  );
 }
 
 function getCurrentUser() {
-return window.DELI_CURRENT_USER || null;
+  return window.DELI_CURRENT_USER || null;
 }
 
 function setCurrentUser(user) {
-window.DELI_CURRENT_USER = user || null;
-window.DELI_SESSION_READY = true;
-emitSessionReady();
+  window.DELI_CURRENT_USER = user || null;
+  window.DELI_SESSION_READY = true;
+  emitSessionReady();
 }
 
 function clearCurrentUser() {
-window.DELI_CURRENT_USER = null;
-window.DELI_SESSION_READY = true;
-emitSessionReady();
+  window.DELI_CURRENT_USER = null;
+  window.DELI_SESSION_READY = true;
+  emitSessionReady();
 }
 
 async function loadCurrentSession() {
-try {
-const res = await fetch(`${AUTH_API_URL}/session`, {
-method: "GET",
-credentials: "include",
-headers: {
-"Content-Type": "application/json"
-}
-});
-
-```
-if (!res.ok) {
-  clearCurrentUser();
-  return null;
-}
-
-const data = await res.json();
-const user = data.user || data.admin || null;
-
-setCurrentUser(user);
-return user;
-```
-
-} catch (error) {
-console.warn("No se pudo validar la sesión contra backend:", error);
-clearCurrentUser();
-return null;
-}
+  /*
+    PRODUCCIÓN ACTUAL:
+    El backend real todavía no tiene ruta /session.
+    No consultamos /session para no romper login/registro.
+    La sesión queda en memoria durante la página actual.
+  */
+  window.DELI_SESSION_READY = true;
+  emitSessionReady();
+  return getCurrentUser();
 }
 
 /* =========================================================
-HELPERS
+   HELPERS
 ========================================================= */
 function normalizeEmail(email) {
-return (email || "").trim().toLowerCase();
+  return (email || "").trim().toLowerCase();
 }
 
 function normalizeRole(role) {
-const value = String(role || "").trim().toLowerCase();
+  const value = String(role || "").trim().toLowerCase();
 
-if (value === "restaurant" || value === "restaurante") {
-return "restaurant";
-}
+  if (value === "restaurant" || value === "restaurante") {
+    return "restaurant";
+  }
 
-if (value === "customer" || value === "cliente") {
-return "customer";
-}
+  if (value === "customer" || value === "cliente") {
+    return "customer";
+  }
 
-return "customer";
+  return "customer";
 }
 
 function getRestaurantPanelUrl() {
-return "panel-restaurant.html";
+  return "panel-restaurant.html";
 }
 
 function getPageName() {
-const path = window.location.pathname.split("/").pop();
-return path || "index.html";
+  const path = window.location.pathname.split("/").pop();
+  return path || "index.html";
 }
 
 function isRestaurantPanelPage() {
-const page = getPageName();
-return page === "panel-restaurant.html" || page === "panel-restaurante.html";
+  const page = getPageName();
+  return page === "panel-restaurant.html" || page === "panel-restaurante.html";
 }
 
 async function postToBackend(endpoint, payload) {
-const res = await fetch(`${AUTH_API_URL}${endpoint}`, {
-method: "POST",
-credentials: "include",
-headers: {
-"Content-Type": "application/json"
-},
-body: JSON.stringify(payload)
-});
+  const res = await fetch(`${AUTH_API_URL}${endpoint}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload)
+  });
 
-const raw = await res.text();
-let data = {};
+  const raw = await res.text();
+  let data = {};
 
-try {
-data = raw ? JSON.parse(raw) : {};
-} catch {
-data = {
-message: raw || "Respuesta no válida del backend"
-};
-}
+  try {
+    data = raw ? JSON.parse(raw) : {};
+  } catch {
+    data = {
+      message: raw || "Respuesta no válida del backend"
+    };
+  }
 
-return { res, data };
+  return { res, data };
 }
 
 async function getRestaurantsFromBackendSafe() {
-try {
-const res = await fetch(`${AUTH_API_URL}/restaurants`, {
-method: "GET",
-credentials: "include",
-headers: {
-"Content-Type": "application/json"
-}
-});
+  try {
+    const res = await fetch(`${AUTH_API_URL}/restaurants`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
 
-```
-if (!res.ok) return [];
+    if (!res.ok) return [];
 
-const data = await res.json();
+    const data = await res.json();
 
-if (Array.isArray(data)) return data;
-if (data && Array.isArray(data.restaurants)) return data.restaurants;
+    if (Array.isArray(data)) return data;
+    if (data && Array.isArray(data.restaurants)) return data.restaurants;
 
-return [];
-```
-
-} catch (error) {
-console.warn("No se pudo validar el restaurante contra backend:", error);
-return [];
-}
+    return [];
+  } catch (error) {
+    console.warn("No se pudo validar el restaurante contra backend:", error);
+    return [];
+  }
 }
 
 function normalizeStatus(status) {
-return String(status || "pending").trim().toLowerCase();
+  return String(status || "pending").trim().toLowerCase();
 }
 
 async function getRestaurantApprovalStatusByEmail(email) {
-const normalizedEmail = normalizeEmail(email);
-if (!normalizedEmail) return "pending";
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail) return "pending";
 
-const backendRestaurants = await getRestaurantsFromBackendSafe();
+  const backendRestaurants = await getRestaurantsFromBackendSafe();
 
-const restaurant = backendRestaurants.find((item) => {
-return normalizeEmail(item?.email) === normalizedEmail;
-});
+  const restaurant = backendRestaurants.find((item) => {
+    return normalizeEmail(item?.email) === normalizedEmail;
+  });
 
-if (!restaurant) return "pending";
+  if (!restaurant) return "pending";
 
-return normalizeStatus(restaurant.status);
+  return normalizeStatus(restaurant.status);
 }
 
 /* =========================================================
-MODALES
+   MODALES
 ========================================================= */
 function showRegister() {
-if (registerScreen) {
-registerScreen.style.display = "flex";
-}
+  if (registerScreen) {
+    registerScreen.style.display = "flex";
+  }
 }
 
 function closeRegister() {
-if (registerScreen) {
-registerScreen.style.display = "none";
-}
+  if (registerScreen) {
+    registerScreen.style.display = "none";
+  }
 }
 
 function showLogin(role = "customer") {
-if (loginScreen) {
-loginScreen.style.display = "flex";
-}
+  if (loginScreen) {
+    loginScreen.style.display = "flex";
+  }
 
-if (loginRoleInput) {
-loginRoleInput.value = normalizeRole(role);
-}
+  if (loginRoleInput) {
+    loginRoleInput.value = normalizeRole(role);
+  }
 
-if (loginMessageEl) {
-loginMessageEl.textContent = "";
-}
+  if (loginMessageEl) {
+    loginMessageEl.textContent = "";
+  }
 }
 
 function closeLogin() {
-if (loginScreen) {
-loginScreen.style.display = "none";
-}
+  if (loginScreen) {
+    loginScreen.style.display = "none";
+  }
 }
 
 function showRestaurantRegister() {
-if (restaurantRegisterScreen) {
-restaurantRegisterScreen.style.display = "flex";
-}
+  if (restaurantRegisterScreen) {
+    restaurantRegisterScreen.style.display = "flex";
+  }
 }
 
 function closeRestaurantRegister() {
-if (restaurantRegisterScreen) {
-restaurantRegisterScreen.style.display = "none";
-}
+  if (restaurantRegisterScreen) {
+    restaurantRegisterScreen.style.display = "none";
+  }
 }
 
 /* =========================================================
-REGISTRO CLIENTE
+   REGISTRO CLIENTE
 ========================================================= */
 async function registerUser() {
-const fullName = fullNameInput ? fullNameInput.value.trim() : "";
-const address = addressInput ? addressInput.value.trim() : "";
-const phone = phoneInput ? phoneInput.value.trim() : "";
-const email = emailInput ? normalizeEmail(emailInput.value) : "";
-const password = passwordInput ? passwordInput.value : "";
-const confirm = confirmPasswordInput ? confirmPasswordInput.value : "";
+  const fullName = fullNameInput ? fullNameInput.value.trim() : "";
+  const address = addressInput ? addressInput.value.trim() : "";
+  const phone = phoneInput ? phoneInput.value.trim() : "";
+  const email = emailInput ? normalizeEmail(emailInput.value) : "";
+  const password = passwordInput ? passwordInput.value : "";
+  const confirm = confirmPasswordInput ? confirmPasswordInput.value : "";
 
-if (!fullName || !address || !phone || !email || !password || !confirm) {
-if (messageEl) {
-messageEl.textContent = "Completa todos los campos";
-}
-return;
-}
-
-if (password !== confirm) {
-if (messageEl) {
-messageEl.textContent = "Las contraseñas no coinciden";
-}
-return;
-}
-
-try {
-const { res, data } = await postToBackend("/register", {
-fullName,
-address,
-phone,
-email,
-password
-});
-
-```
-if (!res.ok) {
-  if (messageEl) {
-    messageEl.textContent = data.message || "Error al registrar";
-  }
-  return;
-}
-
-const loginResult = await postToBackend("/login", {
-  role: "customer",
-  email,
-  password
-});
-
-if (loginResult.res.ok) {
-  const user = {
-    ...loginResult.data.user,
-    role: "customer"
-  };
-  setCurrentUser(user);
-}
-
-closeRegister();
-window.location.reload();
-```
-
-} catch (err) {
-console.error(err);
-
-```
-if (messageEl) {
-  messageEl.textContent = "No se pudo conectar con el backend";
-}
-```
-
-}
-}
-
-/* =========================================================
-REGISTRO RESTAURANTE
-========================================================= */
-async function registerRestaurant() {
-const name = restaurantNameInput ? restaurantNameInput.value.trim() : "";
-const address = restaurantAddressInput ? restaurantAddressInput.value.trim() : "";
-const phone = restaurantPhoneInput ? restaurantPhoneInput.value.trim() : "";
-const email = restaurantEmailInput ? normalizeEmail(restaurantEmailInput.value) : "";
-const password = restaurantPasswordInput ? restaurantPasswordInput.value : "";
-const confirm = restaurantConfirmPasswordInput ? restaurantConfirmPasswordInput.value : "";
-
-if (!name || !address || !phone || !email || !password || !confirm) {
-if (restaurantMessageEl) {
-restaurantMessageEl.textContent = "Completa todos los campos";
-}
-return;
-}
-
-if (password !== confirm) {
-if (restaurantMessageEl) {
-restaurantMessageEl.textContent = "Las contraseñas no coinciden";
-}
-return;
-}
-
-try {
-const { res, data } = await postToBackend("/register-restaurant", {
-name,
-address,
-phone,
-email,
-password
-});
-
-```
-if (!res.ok) {
-  if (restaurantMessageEl) {
-    restaurantMessageEl.textContent = data.message || "Error al registrar restaurante";
-  }
-  return;
-}
-
-if (restaurantMessageEl) {
-  restaurantMessageEl.textContent = "Restaurante registrado correctamente. Queda pendiente de aprobación administrativa.";
-}
-
-setTimeout(() => {
-  closeRestaurantRegister();
-}, 1200);
-```
-
-} catch (err) {
-console.error(err);
-
-```
-if (restaurantMessageEl) {
-  restaurantMessageEl.textContent = "Error de conexión";
-}
-```
-
-}
-}
-
-/* =========================================================
-LOGIN
-========================================================= */
-async function loginUser() {
-const role = normalizeRole(loginRoleInput ? loginRoleInput.value : "customer");
-const email = loginEmailInput ? normalizeEmail(loginEmailInput.value) : "";
-const password = loginPasswordInput ? loginPasswordInput.value : "";
-
-if (!email || !password) {
-if (loginMessageEl) {
-loginMessageEl.textContent = "Completa correo y contraseña";
-}
-return;
-}
-
-try {
-const { res, data } = await postToBackend("/login", {
-role,
-email,
-password
-});
-
-```
-if (!res.ok) {
-  if (loginMessageEl) {
-    loginMessageEl.textContent = data.message || "Error al iniciar sesión";
-  }
-  return;
-}
-
-const user = {
-  ...data.user,
-  role
-};
-
-if (role === "restaurant") {
-  const approvalStatus = await getRestaurantApprovalStatusByEmail(email);
-
-  if (approvalStatus !== "approved") {
-    await postToBackend("/logout", {});
-    clearCurrentUser();
-
-    if (loginMessageEl) {
-      loginMessageEl.textContent =
-        approvalStatus === "blocked"
-          ? "Tu restaurante está bloqueado. Contacta con DELI GO."
-          : "Tu restaurante está pendiente de aprobación administrativa.";
+  if (!fullName || !address || !phone || !email || !password || !confirm) {
+    if (messageEl) {
+      messageEl.textContent = "Completa todos los campos";
     }
-
     return;
   }
 
-  user.status = approvalStatus;
-}
+  if (password !== confirm) {
+    if (messageEl) {
+      messageEl.textContent = "Las contraseñas no coinciden";
+    }
+    return;
+  }
 
-setCurrentUser(user);
-closeLogin();
+  try {
+    const { res, data } = await postToBackend("/register", {
+      fullName,
+      address,
+      phone,
+      email,
+      password
+    });
 
-if (role === "restaurant") {
-  window.location.href = getRestaurantPanelUrl();
-} else {
-  window.location.reload();
-}
-```
+    if (!res.ok) {
+      if (messageEl) {
+        messageEl.textContent = data.message || "Error al registrar";
+      }
+      return;
+    }
 
-} catch (err) {
-console.error(err);
+    const loginResult = await postToBackend("/login", {
+      role: "customer",
+      email,
+      password
+    });
 
-```
-if (loginMessageEl) {
-  loginMessageEl.textContent = "No se pudo conectar con el backend";
-}
-```
+    if (loginResult.res.ok) {
+      const user = {
+        ...loginResult.data.user,
+        role: "customer"
+      };
+      setCurrentUser(user);
+    }
 
-}
+    closeRegister();
+    window.location.reload();
+  } catch (err) {
+    console.error(err);
+
+    if (messageEl) {
+      messageEl.textContent = "No se pudo conectar con el backend";
+    }
+  }
 }
 
 /* =========================================================
-LOGOUT
+   REGISTRO RESTAURANTE
+========================================================= */
+async function registerRestaurant() {
+  const name = restaurantNameInput ? restaurantNameInput.value.trim() : "";
+  const address = restaurantAddressInput ? restaurantAddressInput.value.trim() : "";
+  const phone = restaurantPhoneInput ? restaurantPhoneInput.value.trim() : "";
+  const email = restaurantEmailInput ? normalizeEmail(restaurantEmailInput.value) : "";
+  const password = restaurantPasswordInput ? restaurantPasswordInput.value : "";
+  const confirm = restaurantConfirmPasswordInput ? restaurantConfirmPasswordInput.value : "";
+
+  if (!name || !address || !phone || !email || !password || !confirm) {
+    if (restaurantMessageEl) {
+      restaurantMessageEl.textContent = "Completa todos los campos";
+    }
+    return;
+  }
+
+  if (password !== confirm) {
+    if (restaurantMessageEl) {
+      restaurantMessageEl.textContent = "Las contraseñas no coinciden";
+    }
+    return;
+  }
+
+  try {
+    const { res, data } = await postToBackend("/register-restaurant", {
+      name,
+      address,
+      phone,
+      email,
+      password
+    });
+
+    if (!res.ok) {
+      if (restaurantMessageEl) {
+        restaurantMessageEl.textContent = data.message || "Error al registrar restaurante";
+      }
+      return;
+    }
+
+    if (restaurantMessageEl) {
+      restaurantMessageEl.textContent = "Restaurante registrado correctamente. Queda pendiente de aprobación administrativa.";
+    }
+
+    setTimeout(() => {
+      closeRestaurantRegister();
+    }, 1200);
+  } catch (err) {
+    console.error(err);
+
+    if (restaurantMessageEl) {
+      restaurantMessageEl.textContent = "Error de conexión";
+    }
+  }
+}
+
+/* =========================================================
+   LOGIN
+========================================================= */
+async function loginUser() {
+  const role = normalizeRole(loginRoleInput ? loginRoleInput.value : "customer");
+  const email = loginEmailInput ? normalizeEmail(loginEmailInput.value) : "";
+  const password = loginPasswordInput ? loginPasswordInput.value : "";
+
+  if (!email || !password) {
+    if (loginMessageEl) {
+      loginMessageEl.textContent = "Completa correo y contraseña";
+    }
+    return;
+  }
+
+  try {
+    const { res, data } = await postToBackend("/login", {
+      role,
+      email,
+      password
+    });
+
+    if (!res.ok) {
+      if (loginMessageEl) {
+        loginMessageEl.textContent = data.message || "Error al iniciar sesión";
+      }
+      return;
+    }
+
+    const user = {
+      ...data.user,
+      role
+    };
+
+    if (role === "restaurant") {
+      const approvalStatus = await getRestaurantApprovalStatusByEmail(email);
+
+      if (approvalStatus !== "approved") {
+        clearCurrentUser();
+
+        if (loginMessageEl) {
+          loginMessageEl.textContent =
+            approvalStatus === "blocked"
+              ? "Tu restaurante está bloqueado. Contacta con DELI GO."
+              : "Tu restaurante está pendiente de aprobación administrativa.";
+        }
+
+        return;
+      }
+
+      user.status = approvalStatus;
+    }
+
+    setCurrentUser(user);
+    closeLogin();
+
+    if (role === "restaurant") {
+      window.location.href = getRestaurantPanelUrl();
+    } else {
+      window.location.reload();
+    }
+  } catch (err) {
+    console.error(err);
+
+    if (loginMessageEl) {
+      loginMessageEl.textContent = "No se pudo conectar con el backend";
+    }
+  }
+}
+
+/* =========================================================
+   LOGOUT
 ========================================================= */
 async function logout() {
-try {
-await postToBackend("/logout", {});
-} catch (error) {
-console.warn("No se pudo cerrar la sesión en backend:", error);
-}
+  /*
+    El backend real no tiene /logout todavía.
+    Logout local seguro sin llamar rutas inexistentes.
+  */
+  clearCurrentUser();
 
-clearCurrentUser();
+  if (isRestaurantPanelPage()) {
+    window.location.href = "index.html";
+    return;
+  }
 
-if (isRestaurantPanelPage()) {
-window.location.href = "index.html";
-return;
-}
-
-window.location.reload();
+  window.location.reload();
 }
 
 function logoutRestaurant() {
-logout();
+  logout();
 }
 
 /* =========================================================
-HELPERS DE COMPATIBILIDAD
+   HELPERS DE COMPATIBILIDAD
 ========================================================= */
 function getSavedUser() {
-const currentUser = getCurrentUser();
+  const currentUser = getCurrentUser();
 
-if (currentUser && currentUser.role === "customer") {
-return currentUser;
-}
+  if (currentUser && currentUser.role === "customer") {
+    return currentUser;
+  }
 
-return null;
+  return null;
 }
 
 function getSavedRestaurant() {
-const currentUser = getCurrentUser();
+  const currentUser = getCurrentUser();
 
-if (currentUser && currentUser.role === "restaurant") {
-return currentUser;
-}
+  if (currentUser && currentUser.role === "restaurant") {
+    return currentUser;
+  }
 
-return null;
+  return null;
 }
 
 function isCustomerLoggedIn() {
-const currentUser = getCurrentUser();
-return !!(currentUser && currentUser.role === "customer");
+  const currentUser = getCurrentUser();
+  return !!(currentUser && currentUser.role === "customer");
 }
 
 function isRestaurantLoggedIn() {
-const currentUser = getCurrentUser();
-return !!(currentUser && currentUser.role === "restaurant");
+  const currentUser = getCurrentUser();
+  return !!(currentUser && currentUser.role === "restaurant");
 }
 
 function loadUser() {
-return getCurrentUser();
+  return getCurrentUser();
 }
 
 /* =========================================================
-PROTEGER PANEL RESTAURANTE
+   PROTEGER PANEL RESTAURANTE
 ========================================================= */
 function protectRestaurantPanel() {
-if (!isRestaurantPanelPage()) return;
+  if (!isRestaurantPanelPage()) return;
 
-const currentUser = getCurrentUser();
+  const currentUser = getCurrentUser();
 
-if (!currentUser || currentUser.role !== "restaurant") {
-window.location.href = "index.html";
+  if (!currentUser || currentUser.role !== "restaurant") {
+    window.location.href = "index.html";
+  }
 }
-}
 
-/* =========================================================
-🔴 CAMBIO ÚNICO AQUÍ
-========================================================= */
 async function initAuth() {
-protectRestaurantPanel();
+  await loadCurrentSession();
+  protectRestaurantPanel();
 }
 
 /* =========================================================
-FUNCIONES GLOBALES
+   FUNCIONES GLOBALES
 ========================================================= */
 window.showRegister = showRegister;
 window.closeRegister = closeRegister;
@@ -581,6 +534,7 @@ window.loadUser = loadUser;
 window.loadCurrentSession = loadCurrentSession;
 
 initAuth();
+
 
 
 
