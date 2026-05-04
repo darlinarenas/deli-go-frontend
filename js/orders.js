@@ -269,6 +269,7 @@ async function createOrder(order) {
       headers: {
         "Content-Type": "application/json"
       },
+      credentials: "include",
       body: JSON.stringify(normalizedOrder)
     });
 
@@ -425,6 +426,7 @@ window.DELI_ORDERS = {
   getStatusClass,
   normalizeOrderStatus
 };
+
 
 
 
