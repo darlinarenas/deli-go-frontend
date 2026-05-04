@@ -39,7 +39,16 @@ function normalizeText(value) {
    SESIÓN ACTUAL
 ====================================================== */
 function getCurrentUser() {
-  if (typeof window.getCurrentUser === "function") {
+  /*
+    CORRECCIÓN SEGURA:
+    En navegador, esta función también puede quedar expuesta como window.getCurrentUser.
+    Si llamamos window.getCurrentUser() desde aquí, puede llamarse a sí misma infinitamente
+    y provocar: RangeError: Maximum call stack size exceeded.
+  */
+  if (
+    typeof window.getCurrentUser === "function" &&
+    window.getCurrentUser !== getCurrentUser
+  ) {
     return window.getCurrentUser();
   }
 
@@ -269,7 +278,6 @@ async function createOrder(order) {
       headers: {
         "Content-Type": "application/json"
       },
-      credentials: "include",
       body: JSON.stringify(normalizedOrder)
     });
 
@@ -426,6 +434,7 @@ window.DELI_ORDERS = {
   getStatusClass,
   normalizeOrderStatus
 };
+
 
 
 
