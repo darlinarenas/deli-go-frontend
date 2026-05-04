@@ -42,7 +42,7 @@ async function protegerPanelAdministrador() {
     }
 
     const data = await response.json();
-    const admin = data.admin || data.user || null;
+    const admin = data.admin || data.user || data || null;
 
     if (!admin || admin.role !== "admin") {
       window.location.href = "acceso-administrativo.html";
@@ -2198,6 +2198,7 @@ window.cerrarDetalleRestaurante = cerrarDetalleRestaurante;
 window.verDetalleRestaurante = verDetalleRestaurante;
 
 // FIN administrador.js corregido sobre administrador(12).js - vista integrada
+
 
 
 
