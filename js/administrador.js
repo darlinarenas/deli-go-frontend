@@ -14,6 +14,23 @@ let adminData = {
 let adminCurrentUser = null;
 let adminActiveSection = "resumenSection";
 
+function getAdminSessionToken() {
+  return sessionStorage.getItem("deliAdminSessionToken") || "";
+}
+
+function getAdminAuthHeaders() {
+  const token = getAdminSessionToken();
+
+  return token
+    ? {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      }
+    : {
+        "Content-Type": "application/json"
+      };
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   const protegido = await protegerPanelAdministrador();
   if (!protegido) return;
@@ -31,9 +48,7 @@ async function protegerPanelAdministrador() {
     const response = await fetch(`${API_URL}/session`, {
       method: "GET",
       credentials: "include",
-      headers: {
-        "Content-Type": "application/json"
-      }
+      headers: getAdminAuthHeaders()
     });
 
     if (!response.ok) {
@@ -42,7 +57,7 @@ async function protegerPanelAdministrador() {
     }
 
     const data = await response.json();
-    const admin = data.admin || data.user || data || null;
+    const admin = data.admin || data.user || null;
 
     if (!admin || admin.role !== "admin") {
       window.location.href = "acceso-administrativo.html";
@@ -69,15 +84,14 @@ async function cerrarSesionAdministrador() {
     await fetch(`${API_URL}/logout`, {
       method: "POST",
       credentials: "include",
-      headers: {
-        "Content-Type": "application/json"
-      }
+      headers: getAdminAuthHeaders()
     });
   } catch (error) {
     console.warn("No se pudo cerrar sesión en backend:", error);
   }
 
   adminCurrentUser = null;
+  sessionStorage.removeItem("deliAdminSessionToken");
   window.location.href = "acceso-administrativo.html";
 }
 
@@ -2198,6 +2212,7 @@ window.cerrarDetalleRestaurante = cerrarDetalleRestaurante;
 window.verDetalleRestaurante = verDetalleRestaurante;
 
 // FIN administrador.js corregido sobre administrador(12).js - vista integrada
+
 
 
 

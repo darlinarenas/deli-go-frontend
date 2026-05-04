@@ -117,6 +117,10 @@ async function loginAdmin() {
             return;
         }
 
+        if (data.sessionToken) {
+            sessionStorage.setItem("deliAdminSessionToken", data.sessionToken);
+        }
+
         window.location.href = "panel-administrativo.html";
 
     } catch (error) {
@@ -128,4 +132,5 @@ async function loginAdmin() {
 
 </body>
 </html>
+
 
