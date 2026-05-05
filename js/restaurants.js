@@ -455,12 +455,31 @@ function getRestaurantSearchScore(restaurant) {
 }
 
 async function refreshRestaurantData() {
-  const [backendRestaurants, backendOrders] = await Promise.all([
+  const [
+    backendRestaurants,
+    backendOrders,
+    backendTopRestaurants,
+    backendTopDishes
+  ] = await Promise.all([
     fetchRestaurantsFromBackend(),
-    fetchOrdersFromBackend()
+    fetchOrdersFromBackend(),
+    fetchTopRestaurantsFromBackend(),
+    fetchTopDishesFromBackend()
   ]);
 
   allOrders = Array.isArray(backendOrders) ? backendOrders : [];
+
+  topRestaurantsFromBackend = Array.isArray(backendTopRestaurants?.restaurants)
+    ? backendTopRestaurants.restaurants
+    : [];
+
+  topRestaurantsLabel = backendTopRestaurants?.label || "registrado";
+
+  topDishesFromBackend = Array.isArray(backendTopDishes?.dishes)
+    ? backendTopDishes.dishes
+    : [];
+
+  topDishesLabel = backendTopDishes?.label || "registrado";
 
   /*
     CONTROL ADMINISTRATIVO SEGURO Y COMPATIBLE:
@@ -864,6 +883,7 @@ async function initRestaurantsPage() {
 }
 
 initRestaurantsPage();
+
 
 
 
