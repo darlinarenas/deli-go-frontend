@@ -104,6 +104,22 @@ function isWithinLast7Days(order) {
   return diff >= 0 && diff <= sevenDays;
 }
 
+function getOrdersForRanking() {
+  const weeklyOrders = allOrders.filter(isWithinLast7Days);
+
+  if (weeklyOrders.length) {
+    return {
+      orders: weeklyOrders,
+      label: "esta semana"
+    };
+  }
+
+  return {
+    orders: allOrders,
+    label: "registrado"
+  };
+}
+
 /* ==========================================
    MAPEO DE RESTAURANTE BACKEND
 ========================================== */
@@ -255,8 +271,9 @@ function getDishWeeklySales(restaurantEmail, dish) {
 
   let total = 0;
 
-  allOrders
-    .filter(isWithinLast7Days)
+  const rankingData = getOrdersForRanking();
+
+  rankingData.orders
     .forEach((order) => {
       const orderRestaurantEmail = normalizeText(order.restaurantEmail || order.restaurant?.email || "");
 
@@ -486,8 +503,9 @@ function renderTopRestaurants() {
 
   const countsByRestaurant = {};
 
-  allOrders
-    .filter(isWithinLast7Days)
+  const rankingData = getOrdersForRanking();
+
+  rankingData.orders
     .forEach((order) => {
       const email = normalizeText(order.restaurantEmail || order.restaurant?.email || "");
       if (!email) return;
@@ -522,7 +540,7 @@ function renderTopRestaurants() {
       <b>${escapeHtml(restaurant.name)}</b><br>
       <span class="restaurant-status status-open">🟢 Abierto</span><br>
       ${escapeHtml(restaurant.type)}<br>
-      🛒 ${restaurant.weeklyOrders} pedido(s) esta semana<br>
+      🛒 ${restaurant.weeklyOrders} pedido(s) ${rankingData.label}<br>
       ⭐ ${escapeHtml(restaurant.rating)} · 🚚 ${escapeHtml(restaurant.delivery)} · ⏱ ${escapeHtml(restaurant.time)}
     </div>
   `).join("");
@@ -609,7 +627,7 @@ function renderTopDishes() {
       <div class="tag">🍔 Top plato</div>
       <b>${escapeHtml(dish.dishName)}</b><br>
       📍 ${escapeHtml(dish.restaurantName)}<br>
-      🛒 ${dish.totalQty} pedido(s) esta semana<br>
+      🛒 ${dish.totalQty} pedido(s) ${rankingData.label}<br>
       <button
         type="button"
         class="budget-btn"
@@ -837,6 +855,7 @@ async function initRestaurantsPage() {
 }
 
 initRestaurantsPage();
+
 
 
 
