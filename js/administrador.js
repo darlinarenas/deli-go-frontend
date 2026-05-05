@@ -143,8 +143,12 @@ async function cargarDatosAdministrador() {
     "resumenSection";
 
   try {
-    const response = await fetch(`${API_URL}/admin/datos`);
-    const data = await response.json();
+    const response = await fetch(`${API_URL}/admin/datos`, {
+      method: "GET",
+      credentials: "include",
+      headers: getAdminAuthHeaders()
+    });
+    const data = await leerRespuestaBackend(response);
 
     if (!data.ok) {
       alert(data.message || "No se pudieron cargar los datos administrativos");
@@ -444,9 +448,8 @@ async function actualizarEstadoRestaurante(encodedRestaurantId, status) {
     */
     const response = await fetch(`${API_URL}/admin/restaurantes/${encodeURIComponent(restaurantId)}/estado`, {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      credentials: "include",
+      headers: getAdminAuthHeaders(),
       body: JSON.stringify({ status })
     });
 
@@ -473,7 +476,9 @@ async function eliminarRestaurante(encodedRestaurantId, restaurantName) {
 
   try {
     const response = await fetch(`${API_URL}/admin/restaurantes/${encodeURIComponent(restaurantId)}`, {
-      method: "DELETE"
+      method: "DELETE",
+      credentials: "include",
+      headers: getAdminAuthHeaders()
     });
 
     const data = await leerRespuestaBackend(response);
@@ -687,9 +692,8 @@ async function guardarEdicionUsuario(event, encodedUserId) {
   try {
     const response = await fetch(`${API_URL}/admin/users/${encodeURIComponent(userId)}`, {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      credentials: "include",
+      headers: getAdminAuthHeaders(),
       body: JSON.stringify(payload)
     });
 
@@ -836,9 +840,8 @@ async function guardarEdicionRestaurante(event, encodedRestaurantId) {
   try {
     const response = await fetch(`${API_URL}/admin/restaurantes/${encodeURIComponent(restaurantId)}`, {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      credentials: "include",
+      headers: getAdminAuthHeaders(),
       body: JSON.stringify(payload)
     });
 
@@ -1159,9 +1162,8 @@ async function guardarComisionRestaurante(encodedRestaurantId, inputId) {
   try {
     const response = await fetch(`${API_URL}/admin/restaurantes/${encodeURIComponent(restaurantId)}/comision`, {
       method: "PATCH",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      credentials: "include",
+      headers: getAdminAuthHeaders(),
       body: JSON.stringify({ commissionPercent })
     });
 
@@ -2212,6 +2214,7 @@ window.cerrarDetalleRestaurante = cerrarDetalleRestaurante;
 window.verDetalleRestaurante = verDetalleRestaurante;
 
 // FIN administrador.js corregido sobre administrador(12).js - vista integrada
+
 
 
 
