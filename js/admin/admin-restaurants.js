@@ -941,6 +941,7 @@ function renderAdminSelectedRestaurantDetail(restaurant) {
           <h4>Control operativo</h4>
 
           <div class="admin-restaurant-actions">
+            <button type="button" class="admin-restaurants-btn save" onclick="abrirEditorRestaurante('${encodedId}')">Editar datos</button>
             <button type="button" class="admin-restaurants-btn approve" onclick="actualizarEstadoRestaurante('${encodedId}', 'approved')">Aprobar</button>
             <button type="button" class="admin-restaurants-btn block" onclick="actualizarEstadoRestaurante('${encodedId}', 'blocked')">Bloquear</button>
             <button type="button" class="admin-restaurants-btn danger" onclick="eliminarRestaurante('${encodedId}', '${encodedName}')">Eliminar</button>
