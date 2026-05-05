@@ -4,8 +4,8 @@
    - Lee restaurantes reales desde https://deligo-backend-i554.onrender.com
    - Oculta restaurantes cerrados usando estado del panel
    - Mantiene búsqueda, categorías y navegación
-   - Agrega Top 6 restaurantes más pedidos de la semana
-   - Agrega Top 6 platos más pedidos de la semana
+   - Renderiza Top 6 restaurantes más pedidos calculado por backend
+   - Renderiza Top 6 platos más pedidos calculado por backend
    - CORREGIDO 02-05-2026: no usa almacenamiento del navegador para restaurantes/estados
 ====================================================== */
 
@@ -22,6 +22,8 @@ conectar frontend con backend
 const API_URL = window.DELI_API_URL || "https://deligo-backend-i554.onrender.com";
 const RESTAURANTS_API_URL = `${API_URL}/restaurants`;
 const ORDERS_API_URL = `${API_URL}/orders`;
+const TOP_RESTAURANTS_API_URL = `${API_URL}/stats/top-restaurants`;
+const TOP_DISHES_API_URL = `${API_URL}/stats/top-dishes`;
 
 /* ==========================================
    REFERENCIAS DEL HTML
@@ -42,6 +44,10 @@ let cats = [];
 let active = "Todos";
 let allOrders = [];
 let allDishes = [];
+let topRestaurantsFromBackend = [];
+let topDishesFromBackend = [];
+let topRestaurantsLabel = "registrado";
+let topDishesLabel = "registrado";
 
 window.restaurants = restaurants;
 window.cats = cats;
@@ -196,6 +202,58 @@ async function fetchOrdersFromBackend() {
   }
 
   return [];
+}
+
+async function fetchTopRestaurantsFromBackend() {
+  try {
+    const response = await fetch(`${TOP_RESTAURANTS_API_URL}?t=${Date.now()}`, {
+      method: "GET",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      return { restaurants: [], label: "registrado" };
+    }
+
+    const data = await response.json();
+
+    return {
+      restaurants: Array.isArray(data?.restaurants) ? data.restaurants : [],
+      label: data?.label || "registrado"
+    };
+  } catch (error) {
+    console.warn("No se pudo cargar ranking de restaurantes desde backend:", error);
+    return { restaurants: [], label: "registrado" };
+  }
+}
+
+async function fetchTopDishesFromBackend() {
+  try {
+    const response = await fetch(`${TOP_DISHES_API_URL}?t=${Date.now()}`, {
+      method: "GET",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      return { dishes: [], label: "registrado" };
+    }
+
+    const data = await response.json();
+
+    return {
+      dishes: Array.isArray(data?.dishes) ? data.dishes : [],
+      label: data?.label || "registrado"
+    };
+  } catch (error) {
+    console.warn("No se pudo cargar ranking de platos desde backend:", error);
+    return { dishes: [], label: "registrado" };
+  }
 }
 
 /* ==========================================
@@ -501,26 +559,9 @@ function renderCategories() {
 function renderTopRestaurants() {
   if (!topRestaurantsContainer) return;
 
-  const countsByRestaurant = {};
-
-  const rankingData = getOrdersForRanking();
-
-  rankingData.orders
-    .forEach((order) => {
-      const email = normalizeText(order.restaurantEmail || order.restaurant?.email || "");
-      if (!email) return;
-
-      countsByRestaurant[email] = (countsByRestaurant[email] || 0) + 1;
-    });
-
-  const topRestaurants = restaurants
-    .map((restaurant) => ({
-      ...restaurant,
-      weeklyOrders: countsByRestaurant[normalizeText(restaurant.email)] || 0
-    }))
-    .filter((restaurant) => restaurant.weeklyOrders > 0)
-    .sort((a, b) => b.weeklyOrders - a.weeklyOrders)
-    .slice(0, 6);
+  const topRestaurants = Array.isArray(topRestaurantsFromBackend)
+    ? topRestaurantsFromBackend.slice(0, 6)
+    : [];
 
   if (!topRestaurants.length) {
     if (topRestaurantsSection) {
@@ -539,9 +580,9 @@ function renderTopRestaurants() {
       <div class="tag">🔥 Popular</div>
       <b>${escapeHtml(restaurant.name)}</b><br>
       <span class="restaurant-status status-open">🟢 Abierto</span><br>
-      ${escapeHtml(restaurant.type)}<br>
-      🛒 ${restaurant.weeklyOrders} pedido(s) ${rankingData.label}<br>
-      ⭐ ${escapeHtml(restaurant.rating)} · 🚚 ${escapeHtml(restaurant.delivery)} · ⏱ ${escapeHtml(restaurant.time)}
+      ${escapeHtml(restaurant.type || restaurant.category || "Comida")}<br>
+      🛒 ${Number(restaurant.totalOrders || 0)} pedido(s) ${escapeHtml(topRestaurantsLabel)}<br>
+      ⭐ ${escapeHtml(restaurant.rating || "Nuevo")} · 🚚 ${escapeHtml(restaurant.delivery || "A convenir")} · ⏱ ${escapeHtml(restaurant.time || "20-40 min")}
     </div>
   `).join("");
 
@@ -558,7 +599,7 @@ function renderTopRestaurants() {
         return;
       }
 
-      window.location.href = `restaurant.html?id=${encodeURIComponent(restaurant.id)}`;
+      window.location.href = `restaurant.html?id=${encodeURIComponent(restaurant.id || "")}`;
     });
   });
 }
@@ -569,46 +610,9 @@ function renderTopRestaurants() {
 function renderTopDishes() {
   if (!topDishesContainer) return;
 
-  const countsByDish = {};
-
-  allOrders
-    .filter(isWithinLast7Days)
-    .forEach((order) => {
-      const restaurantEmail = normalizeText(order.restaurantEmail || order.restaurant?.email || "");
-      const restaurant = restaurants.find((item) => normalizeText(item.email) === restaurantEmail);
-
-      if (!restaurant) return;
-
-      const items = Array.isArray(order.items) ? order.items : [];
-
-      items.forEach((item) => {
-        const dishId = String(item.id || "").trim();
-        const dishName = item.name || "Plato";
-        const dishPrice = Number(item.price || item.unitPrice || item.subtotal / item.qty || 0);
-        const qty = Number(item.qty || 0);
-
-        if (!dishId || qty <= 0) return;
-
-        const key = `${restaurantEmail}__${dishId}`;
-
-        if (!countsByDish[key]) {
-          countsByDish[key] = {
-            dishId,
-            dishName,
-            dishPrice,
-            restaurantEmail,
-            restaurantName: restaurant.name,
-            totalQty: 0
-          };
-        }
-
-        countsByDish[key].totalQty += qty;
-      });
-    });
-
-  const topDishes = Object.values(countsByDish)
-    .sort((a, b) => b.totalQty - a.totalQty)
-    .slice(0, 6);
+  const topDishes = Array.isArray(topDishesFromBackend)
+    ? topDishesFromBackend.slice(0, 6)
+    : [];
 
   if (!topDishes.length) {
     if (topDishesSection) {
@@ -625,17 +629,18 @@ function renderTopDishes() {
   topDishesContainer.innerHTML = topDishes.map((dish) => `
     <div class="restaurant">
       <div class="tag">🍔 Top plato</div>
-      <b>${escapeHtml(dish.dishName)}</b><br>
+      <b>${escapeHtml(dish.dishEmoji || "🍽️")} ${escapeHtml(dish.dishName)}</b><br>
       📍 ${escapeHtml(dish.restaurantName)}<br>
-      🛒 ${dish.totalQty} pedido(s) ${rankingData.label}<br>
+      🛒 ${Number(dish.totalQty || 0)} pedido(s) ${escapeHtml(topDishesLabel)}<br>
+      ${Number(dish.dishPrice || 0) > 0 ? `💵 $${Number(dish.dishPrice || 0).toLocaleString("es-CL")}` : ""}
       <button
         type="button"
         class="budget-btn"
         style="margin-top:12px;"
-        data-dish-id="${escapeHtml(dish.dishId)}"
-        data-dish-name="${escapeHtml(dish.dishName)}"
-        data-dish-price="${escapeHtml(dish.dishPrice)}"
-        data-restaurant-email="${escapeHtml(dish.restaurantEmail)}"
+        data-dish-id="${escapeHtml(dish.dishId || "")}" 
+        data-dish-name="${escapeHtml(dish.dishName || "")}" 
+        data-dish-price="${escapeHtml(dish.dishPrice || 0)}" 
+        data-restaurant-email="${escapeHtml(dish.restaurantEmail || "")}" 
       >
         Pedir ahora
       </button>
@@ -846,6 +851,10 @@ async function initRestaurantsPage() {
     cats = [];
     allOrders = [];
     allDishes = [];
+    topRestaurantsFromBackend = [];
+    topDishesFromBackend = [];
+    topRestaurantsLabel = "registrado";
+    topDishesLabel = "registrado";
     window.restaurants = restaurants;
     window.cats = cats;
     window.allDishes = allDishes;
