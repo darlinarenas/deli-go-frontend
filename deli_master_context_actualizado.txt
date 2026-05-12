@@ -647,4 +647,1287 @@ No repetir el error de cambiar código cuando el problema es de datos.
 FIN DEL MASTER CONTEXT ACTUALIZADO
 
 
+
+
+
+
+============================================================
+ACTUALIZACIÓN 03-05-2026 - RECUPERACIÓN PRODUCCIÓN, BACKEND, LOGIN, PEDIDOS Y ADMIN
+============================================================
+
+Hoy se trabajó intensamente para recuperar DELI GO después de varios problemas causados por cambios incorrectos, archivos recortados y confusión entre frontend y backend.
+
+REGLA CRÍTICA REFORZADA:
+A partir de ahora, cuando se trabaje código de DELI GO:
+- SIEMPRE trabajar sobre el archivo real completo que el usuario pase.
+- NUNCA simplificar archivos grandes.
+- NUNCA recortar código.
+- NUNCA reemplazar archivos grandes por versiones resumidas.
+- NUNCA mostrar el código completo en el chat.
+- SIEMPRE entregar un archivo .txt descargable listo para copiar y pegar.
+- SIEMPRE conservar lo que ya funciona.
+- SIEMPRE hacer cambios mínimos y seguros.
+- SIEMPRE distinguir entre frontend y backend antes de indicar comandos.
+- SIEMPRE verificar en qué carpeta se está trabajando antes de hacer git add / commit / push.
+
+============================================================
+ESTADO ACTUAL DE REPOSITORIOS Y DEPLOY
+============================================================
+
+Frontend:
+- Repositorio: deli-go-frontend
+- Carpeta local: C:\Users\Darling Arenas\Desktop\Deli-go
+- Hosting: Vercel
+- URL usada durante pruebas:
+  https://deli-go-frontend-wheat.vercel.app
+
+Backend:
+- Repositorio: deligo-backend
+- Carpeta local dentro del proyecto:
+  C:\Users\Darling Arenas\Desktop\Deli-go\deligo-backend
+- Hosting: Render
+- URL backend:
+  https://deligo-backend-i554.onrender.com
+
+IMPORTANTE:
+- Deli-go es el frontend.
+- deligo-backend es el backend real.
+- No intentar modificar server.js dentro del frontend si el cambio corresponde al backend.
+- Si se modifica server.js, se debe entrar a deligo-backend, hacer commit y push ahí, y luego hacer Manual Deploy en Render.
+- Si se modifica HTML/CSS/JS del frontend, se debe hacer commit y push desde Deli-go, y Vercel se actualiza automáticamente.
+
+============================================================
+PROBLEMAS RESUELTOS HOY
+============================================================
+
+1. Se eliminó y volvió a conectar el frontend en Vercel.
+2. Se corrigió el problema de CORS entre Vercel y Render.
+3. Se confirmó que el backend respondía correctamente en:
+   https://deligo-backend-i554.onrender.com/restaurants
+4. Se corrigió el login de clientes/restaurantes después de que el frontend no pudiera conectar bien con el backend.
+5. Se corrigió el problema donde el botón de login dejó de funcionar por un auth.js recortado incorrectamente.
+6. Se recuperó el flujo de login correctamente.
+7. Se corrigió el error en orders.js:
+   RangeError: Maximum call stack size exceeded
+   causado por una recursión en getCurrentUser.
+8. Se corrigió el flujo para confirmar pedidos.
+9. Se logró que los pedidos vuelvan a funcionar correctamente.
+10. Se corrigió el acceso al panel administrativo.
+11. Se corrigió el problema donde el admin entraba al panel y luego era expulsado.
+12. Se trabajó con una solución de token administrativo temporal usando sessionStorage para mantener el acceso admin mientras el backend implementa sesión real.
+13. El panel administrativo finalmente permitió entrar correctamente.
+
+============================================================
+ARCHIVOS CLAVE TOCADOS / REVISADOS HOY
+============================================================
+
+Frontend:
+- js/auth.js
+- js/orders.js
+- js/restaurant-page.js
+- restaurant.html
+- acceso-administrativo.html
+- panel-administrativo.html
+- js/administrador.js
+
+Backend:
+- server.js
+- admins.json
+- users.json
+- restaurants.json
+- dishes.json
+- orders.json
+
+IMPORTANTE:
+Los archivos corregidos fueron generados como .txt descargables para copiar y pegar, siguiendo la regla del usuario.
+
+============================================================
+ESTADO ACTUAL CONFIRMADO AL CIERRE DEL DÍA
+============================================================
+
+Funciona:
+- El backend en Render está activo.
+- El frontend en Vercel carga.
+- Los restaurantes cargan desde backend.
+- El login de cliente/restaurante vuelve a funcionar.
+- La vista de restaurante carga platos.
+- El carrito funciona.
+- Confirmar pedido funciona.
+- El panel administrativo permite entrar.
+- El admin ya no es expulsado inmediatamente.
+
+Pendiente inmediato:
+- Hacer que el panel administrativo actualice correctamente los datos de usuarios/clientes.
+- Hacer que el panel administrativo actualice correctamente los datos de restaurantes.
+- Verificar que las ediciones guarden realmente en backend/JSON.
+- Verificar que los datos editados se reflejen en frontend, panel admin, panel restaurante e index.
+
+============================================================
+PENDIENTE PRINCIPAL PARA MAÑANA
+============================================================
+
+Objetivo 1:
+Hacer que el panel administrativo actualice datos de usuarios/clientes y restaurantes.
+
+Se debe revisar y corregir:
+- Edición de usuarios/clientes.
+- Edición de restaurantes.
+- Cambio de teléfono, dirección, nombre, referencia, contraseña, categoría, comisión y estado.
+- Que los cambios se guarden en el backend real.
+- Que los cambios se reflejen al recargar.
+- Que no se rompa el panel ni el login.
+- Que el email del restaurante se maneje con mucho cuidado porque relaciona platos y pedidos.
+
+Ya quedó preparado un archivo de backend para esto:
+- server_actualizar_usuarios_restaurantes_completo.txt
+
+Ese archivo agrega rutas backend para:
+- PATCH /admin/users/:id
+- PATCH /admin/restaurantes/:id
+
+Estas rutas deben permitir:
+- Actualizar usuarios reales en users.json.
+- Actualizar restaurantes reales en restaurants.json.
+- Si cambia el email del restaurante, migrar relaciones en dishes.json y orders.json.
+
+IMPORTANTE:
+Antes de aplicar el archivo mañana, revisar el server.js real actual que está en deligo-backend para no perder las correcciones de sesión/admin/CORS ya aplicadas.
+
+============================================================
+PENDIENTE ESTRUCTURAL GRANDE
+============================================================
+
+Objetivo 2:
+Eliminar dependencia de localStorage como fuente principal de datos.
+
+Regla:
+DELI GO debe depender 100% del backend.
+localStorage solo puede usarse como:
+- caché temporal,
+- estado visual momentáneo,
+- token/session temporal mientras se implementa sesión real,
+- preferencias no críticas.
+
+NO debe usarse localStorage como fuente principal para:
+- usuarios,
+- restaurantes,
+- platos,
+- pedidos,
+- estados,
+- pagos,
+- aprobaciones,
+- comisiones,
+- admin,
+- repartidores.
+
+Plan recomendado:
+1. Auditar todos los archivos JS reales actuales.
+2. Buscar usos de:
+   - localStorage
+   - sessionStorage
+   - JSON.parse(localStorage...)
+   - localStorage.setItem
+   - localStorage.getItem
+3. Clasificar cada uso:
+   A. permitido temporalmente,
+   B. debe migrarse al backend,
+   C. eliminar.
+4. Migrar uno por uno, sin romper nada.
+5. Probar después de cada archivo.
+6. Entregar siempre archivo completo .txt descargable.
+
+Archivos a revisar primero:
+- js/auth.js
+- js/orders.js
+- js/restaurants.js
+- js/restaurant-page.js
+- js/panel-restaurante.js
+- js/administrador.js
+- js/admin/admin-orders.js
+- js/admin/admin-restaurants.js
+- js/budget.js
+- js/database.js
+- mis-pedidos.html y su JS asociado
+
+============================================================
+ADVERTENCIA SOBRE SESIÓN ADMIN ACTUAL
+============================================================
+
+Hoy se usó una solución práctica para que el admin no sea expulsado:
+- El backend devuelve un sessionToken.
+- acceso-administrativo.html guarda ese token en sessionStorage.
+- administrador.js envía ese token por Authorization Bearer.
+- server.js acepta cookie o Bearer token para /session.
+
+Esto funciona como solución temporal.
+Más adelante se debe implementar sesión real más robusta, idealmente con:
+- cookie HTTP-only,
+- SameSite=None,
+- Secure,
+- expiración,
+- validación de rol,
+- logout real,
+- persistencia si se reinicia Render.
+
+IMPORTANTE:
+Render puede reiniciar el servidor y borrar sesiones en memoria.
+Más adelante se debe migrar sesión a base de datos o JWT firmado.
+
+============================================================
+RECORDATORIO OPERATIVO GIT
+============================================================
+
+Para frontend:
+1. Estar en:
+   C:\Users\Darling Arenas\Desktop\Deli-go
+2. Comandos:
+   git status
+   git add .
+   git commit -m "mensaje"
+   git push
+3. Vercel redeploya solo.
+
+Para backend:
+1. Estar en:
+   C:\Users\Darling Arenas\Desktop\Deli-go\deligo-backend
+2. Comandos:
+   git status
+   git add .
+   git commit -m "mensaje"
+   git push
+3. Render:
+   Manual Deploy -> Deploy latest commit
+
+No usar:
+- git add ..
+porque genera errores o intenta agregar cosas fuera del repo.
+
+============================================================
+ESTADO EMOCIONAL / METODOLOGÍA
+============================================================
+
+El usuario estuvo muy frustrado porque se rompieron cosas que ya funcionaban.
+Para evitar repetirlo:
+- No improvisar.
+- No asumir.
+- No explicar demasiado si el usuario pide directo.
+- Ir paso a paso.
+- Un problema a la vez.
+- Primero diagnosticar.
+- Luego modificar.
+- Siempre archivo .txt descargable.
+- Nunca código recortado en el chat.
+- Nunca decir que el archivo está completo si no lo está.
+- Si no se sabe algo, decirlo claramente.
+
+============================================================
+PRÓXIMO INICIO RECOMENDADO
+============================================================
+
+Cuando se retome mañana, empezar con:
+
+1. Confirmar que:
+   - frontend carga,
+   - login cliente funciona,
+   - pedidos funcionan,
+   - admin entra.
+
+2. Luego aplicar o revisar:
+   - server_actualizar_usuarios_restaurantes_completo.txt
+   sobre el server.js REAL actual del backend.
+
+3. Probar:
+   - editar usuario desde panel admin,
+   - editar restaurante desde panel admin,
+   - cambiar comisión,
+   - cambiar estado,
+   - aprobar/bloquear,
+   - recargar y confirmar persistencia.
+
+4. Después iniciar auditoría localStorage:
+   - buscar uso por archivo,
+   - migrar de forma controlada al backend.
+
+============================================================
+FIN ACTUALIZACIÓN 03-05-2026
+============================================================
+
+
 FIN DEL MASTER CONTEXT ACTUALIZADO
+
+
+============================================================
+ACTUALIZACIÓN 04-05-2026 - ADMIN GUARDA EN BACKEND, RANKINGS REALES Y DECISIÓN POSTGRESQL
+============================================================
+
+Hoy se trabajó con el proyecto completo comprimido del usuario:
+- DeliGoBackend.zip
+- DeliGoFrontend.zip
+
+El usuario pidió revisar todo con mucho cuidado, como auditoría, porque el proyecto ya está avanzado y no se pueden repetir errores de archivos recortados, cambios improvisados o modificaciones sobre suposiciones.
+
+REGLA REFORZADA HOY:
+- Revisar archivos reales completos antes de modificar.
+- No cambiar varios archivos a la vez sin probar.
+- Aplicar cambios uno por uno.
+- Probar después de cada cambio.
+- Backend primero si el cambio depende de rutas/datos.
+- Frontend después.
+- Siempre entregar archivos completos en .txt descargables.
+- No mostrar código completo en el chat.
+
+============================================================
+ARCHIVOS GENERADOS / CORREGIDOS HOY
+============================================================
+
+Se prepararon archivos completos en formato .txt para copiar y pegar.
+
+Backend:
+- server.js.txt
+
+Frontend:
+- js/administrador.js.txt
+- js/admin/admin-restaurants.js.txt
+- js/restaurants.js.txt
+- js/app.js.txt
+
+Posteriormente, para rankings reales, se generó una segunda corrección:
+- server.js.txt con endpoints de estadísticas reales
+- js/restaurants.js.txt conectado a estadísticas reales
+
+IMPORTANTE:
+Los archivos fueron aplicados paso a paso. No todos juntos.
+
+============================================================
+CORRECCIONES REALIZADAS Y CONFIRMADAS
+============================================================
+
+1. PANEL ADMINISTRATIVO - USUARIOS
+
+Se corrigió el flujo para que el panel administrativo pueda guardar cambios reales de usuarios/clientes contra el backend.
+
+Estado confirmado por el usuario:
+- Los cambios de usuarios guardan correctamente.
+- Se probó después de reemplazar js/administrador.js.
+- El usuario confirmó: “ya guarda correctamente”.
+
+2. PANEL ADMINISTRATIVO - RESTAURANTES
+
+Se corrigió la gestión de restaurantes desde el panel administrativo.
+
+Se aplicó el archivo:
+- js/admin/admin-restaurants.js
+
+Estado confirmado por el usuario:
+- Los cambios de restaurantes guardan correctamente.
+- El usuario confirmó: “restaurantes también guardan”.
+
+3. BACKEND - SESIÓN ADMIN Y GUARDADO
+
+Se corrigió/confirmó que el backend maneja correctamente:
+- sesión admin temporal,
+- token/sessionToken,
+- autorización Bearer,
+- rutas para actualizar usuarios,
+- rutas para actualizar restaurantes,
+- CORS compatible con frontend desplegado.
+
+IMPORTANTE:
+El backend se subió correctamente a GitHub y luego se hizo deploy manual en Render.
+
+4. INDEX - RESTAURANTES MÁS PEDIDOS
+
+Se corrigió el index para que no oculte rankings cuando no haya pedidos exactamente dentro de los últimos 7 días.
+
+Problema detectado:
+- El ranking solo aparecía si había pedidos dentro de una ventana corta.
+- Si no había pedidos recientes, las secciones quedaban vacías.
+
+Solución:
+- Usar pedidos recientes cuando existan.
+- Usar historial general como respaldo.
+- Evitar que el index quede vacío.
+
+5. INDEX - PLATOS MÁS PEDIDOS REALES
+
+El usuario eligió la opción correcta/profesional:
+- No mostrar platos aleatorios.
+- No hacer ranking falso.
+- Crear lógica real desde backend.
+
+Se agregó lógica para rankings reales usando pedidos:
+- Endpoint backend para restaurantes más pedidos.
+- Endpoint backend para platos más pedidos.
+- Frontend conectado a esos endpoints.
+
+Endpoints importantes agregados/probados:
+- /stats/top-restaurants
+- /stats/top-dishes
+
+Problema intermedio detectado:
+- Una versión de restaurants.js tenía las funciones para consumir /stats/top-restaurants y /stats/top-dishes, pero no las estaba llamando dentro de la carga principal.
+- Resultado: desaparecieron ambas secciones del index.
+
+Corrección final:
+- Se corrigió restaurants.js para llamar correctamente los rankings reales durante la carga del index.
+
+Estado confirmado por el usuario:
+- El index volvió a funcionar.
+- Los rankings ya se muestran correctamente.
+- El usuario confirmó: “Excelente, ya funciona.”
+
+============================================================
+ARCHIVOS A CONSIDERAR ESTABLES DESPUÉS DE HOY
+============================================================
+
+Backend:
+- server.js con rutas admin y estadísticas reales.
+
+Frontend:
+- js/administrador.js con guardado admin funcional.
+- js/admin/admin-restaurants.js con edición de restaurantes funcional.
+- js/restaurants.js con rankings reales conectados al backend.
+
+IMPORTANTE:
+Si mañana se vuelve a tocar alguno de estos archivos, debe hacerse sobre la versión real actual del usuario, no sobre una versión vieja.
+
+============================================================
+PROBLEMA ESTRUCTURAL CONFIRMADO: JSON EN RENDER NO ES BASE DE DATOS REAL
+============================================================
+
+Hoy se aclaró un problema crítico:
+
+Aunque el panel admin ya guarda cambios en backend, actualmente los datos siguen guardándose en archivos JSON dentro del servidor:
+- users.json
+- restaurants.json
+- dishes.json
+- orders.json
+- admins.json
+
+Esto NO es suficiente para producción.
+
+Problema:
+- Render puede reiniciar el servidor.
+- Render puede redeployar.
+- El filesystem puede no ser persistente para cambios dinámicos.
+- Los datos guardados en JSON pueden perderse.
+
+Síntoma visto por el usuario:
+- Al agregar nuevos usuarios o restaurantes, después desaparecen.
+
+Conclusión técnica:
+- No es principalmente problema de frontend.
+- No es localStorage solamente.
+- El problema real es que JSON no debe ser la fuente definitiva en producción.
+
+JSON debe quedar solo como:
+- respaldo temporal,
+- datos iniciales,
+- migración,
+- backup,
+- desarrollo local.
+
+============================================================
+DECISIÓN IMPORTANTE: MIGRAR A POSTGRESQL
+============================================================
+
+Hoy el usuario decidió migrar DELI GO a PostgreSQL como base de datos real.
+
+Motivo:
+- DELI GO tiene relaciones claras:
+  - usuarios,
+  - restaurantes,
+  - platos,
+  - pedidos,
+  - pagos,
+  - repartidores,
+  - comisiones,
+  - estadísticas.
+- PostgreSQL evita una migración futura desde MongoDB.
+- Es más sólido para una plataforma tipo delivery.
+- Permite mejores reportes, estadísticas, liquidaciones y relaciones.
+
+Decisión final:
+- Usar PostgreSQL.
+- Preferiblemente iniciar con opción gratuita en la nube.
+- Posibles opciones: Supabase o Neon.
+- Se elegirá/creará mañana paso a paso.
+
+IMPORTANTE:
+El usuario quiere dejar de depender de:
+- JSON como base real,
+- localStorage como fuente de datos,
+- almacenamiento efímero de Render.
+
+La arquitectura deseada será:
+Frontend -> Backend -> PostgreSQL
+
+El frontend solo mostrará información recibida del backend.
+El backend será quien lea y escriba en PostgreSQL.
+PostgreSQL será la fuente única de verdad.
+
+============================================================
+LOCALSTORAGE DESPUÉS DE POSTGRESQL
+============================================================
+
+localStorage NO debe desaparecer necesariamente al 100%, pero debe quedar limitado a usos no críticos.
+
+Permitido:
+- token temporal,
+- sesión visual temporal,
+- preferencias pequeñas,
+- caché no crítico.
+
+NO permitido como fuente principal:
+- usuarios,
+- restaurantes,
+- platos,
+- pedidos,
+- estados,
+- pagos,
+- aprobaciones,
+- comisiones,
+- administración,
+- repartidores.
+
+Objetivo:
+- Backend + PostgreSQL como única verdad.
+
+============================================================
+PLAN PARA MAÑANA - MIGRACIÓN A POSTGRESQL
+============================================================
+
+Objetivo principal:
+Crear base de datos PostgreSQL real y conectar el backend sin romper lo que ya funciona.
+
+MUY IMPORTANTE:
+No migrar todo de golpe.
+No tocar todos los endpoints a la vez.
+No romper login, pedidos, admin ni index.
+
+Orden recomendado para mañana:
+
+1. CONFIRMAR ESTADO ACTUAL
+- Frontend carga.
+- Login cliente/restaurante funciona.
+- Panel admin entra.
+- Guardado de usuarios funciona.
+- Guardado de restaurantes funciona.
+- Index muestra restaurantes más pedidos.
+- Index muestra platos más pedidos.
+
+2. ELEGIR Y CREAR POSTGRESQL GRATIS
+Opciones recomendadas:
+- Supabase
+- Neon
+
+Criterios:
+- Plan gratuito.
+- Fácil conexión desde Render.
+- String de conexión PostgreSQL disponible.
+- Persistencia real.
+
+3. CONECTAR BACKEND A POSTGRESQL
+Agregar conexión segura con variables de entorno.
+
+Probable variable necesaria:
+- DATABASE_URL
+
+No poner claves directamente en el código.
+Usar .env local y variables en Render.
+
+4. CREAR TABLAS BASE
+Tablas iniciales sugeridas:
+- users
+- restaurants
+- dishes
+- orders
+- order_items
+- admins
+- admin_sessions o sessions
+
+Más adelante:
+- drivers
+- payments
+- commissions
+- settlements
+- delivery_locations
+- restaurant_payouts
+
+5. MIGRAR DATOS ACTUALES DESDE JSON
+Migrar cuidadosamente:
+- users.json -> users
+- restaurants.json -> restaurants
+- dishes.json -> dishes
+- orders.json -> orders / order_items
+- admins.json -> admins
+
+No borrar JSON inmediatamente.
+Mantenerlos como respaldo temporal.
+
+6. CAMBIAR ENDPOINTS UNO POR UNO
+No cambiar todo de golpe.
+
+Orden sugerido:
+A. Lectura de restaurantes.
+B. Lectura de platos.
+C. Login/usuarios.
+D. Registro de usuarios.
+E. Registro/edición de restaurantes.
+F. Pedidos.
+G. Estadísticas / rankings.
+H. Admin.
+
+7. PROBAR DESPUÉS DE CADA CAMBIO
+Después de cada endpoint:
+- probar en navegador o Postman,
+- probar frontend,
+- probar persistencia,
+- reiniciar si es necesario,
+- confirmar que no desaparecen datos.
+
+============================================================
+TABLAS INICIALES SUGERIDAS
+============================================================
+
+users:
+- id
+- name
+- email
+- password_hash o password temporal actual
+- phone
+- address
+- reference
+- role
+- status
+- created_at
+- updated_at
+
+restaurants:
+- id
+- name
+- email
+- password_hash o password temporal actual
+- phone
+- address
+- category
+- status
+- commission_percent
+- delivery_time
+- delivery_price
+- rating
+- created_at
+- updated_at
+
+dishes:
+- id
+- restaurant_id
+- name
+- description
+- price
+- category
+- image
+- available
+- created_at
+- updated_at
+
+orders:
+- id
+- user_id
+- restaurant_id
+- status
+- total
+- delivery_address
+- delivery_reference
+- latitude
+- longitude
+- payment_status
+- payment_method
+- created_at
+- updated_at
+
+order_items:
+- id
+- order_id
+- dish_id
+- name_snapshot
+- price_snapshot
+- quantity
+- subtotal
+
+admins:
+- id
+- name
+- email
+- password_hash o password temporal actual
+- role
+- status
+- created_at
+
+IMPORTANTE:
+No cambiar inmediatamente todas las contraseñas a hash si eso puede romper login.
+Se puede hacer en fase controlada.
+
+============================================================
+ADVERTENCIAS TÉCNICAS PARA LA MIGRACIÓN
+============================================================
+
+1. EMAIL DE RESTAURANTE
+Actualmente el email del restaurante funciona como relación para platos y pedidos.
+En PostgreSQL se debe migrar hacia restaurant_id como clave principal.
+
+Durante transición:
+- conservar email,
+- mapear email -> restaurant_id,
+- no permitir cambios libres de email sin migración.
+
+2. PEDIDOS Y PLATOS
+Los pedidos deben conservar snapshot de nombre/precio del plato, porque si el restaurante cambia el precio mañana, el pedido viejo debe mantener el precio original.
+
+Por eso se recomienda order_items con:
+- name_snapshot,
+- price_snapshot.
+
+3. RANKINGS
+Los rankings reales deben salir de orders/order_items, no de datos falsos.
+
+4. SESIONES
+La sesión admin actual con sessionStorage/token es temporal.
+Con PostgreSQL se puede mejorar después con:
+- JWT firmado,
+- sesiones persistentes,
+- expiración,
+- cookies seguras.
+
+5. RENDER
+El backend seguirá en Render, pero los datos deben vivir en PostgreSQL externo, no en archivos locales.
+
+============================================================
+ESTADO ACTUAL DESPUÉS DEL 04-05-2026
+============================================================
+
+Funciona confirmado:
+- Backend desplegado en Render.
+- Frontend desplegado en Vercel.
+- Panel admin entra.
+- Admin guarda usuarios.
+- Admin guarda restaurantes.
+- Index muestra rankings.
+- Restaurantes más pedidos funciona.
+- Platos más pedidos reales funciona.
+- Endpoints /stats/top-restaurants y /stats/top-dishes funcionan.
+
+Pendiente crítico:
+- PostgreSQL real.
+- Migración desde JSON.
+- Reducir dependencia de localStorage.
+- Reemplazar JSON como almacenamiento principal.
+
+============================================================
+PORCENTAJE ACTUALIZADO DESPUÉS DEL 04-05-2026
+============================================================
+
+Frontend general:
+80% - 88% como MVP visual/funcional.
+
+Index / Landing:
+85% - 92%, porque ya muestra rankings reales conectados al backend.
+
+Panel administrativo:
+55% - 65%, porque ya edita usuarios/restaurantes, pero falta base de datos real, control avanzado, pedidos, pagos y repartidores.
+
+Backend:
+45% - 55%, porque ya tiene rutas funcionales, admin, pedidos y estadísticas, pero aún depende de JSON.
+
+Persistencia real:
+Pendiente hasta PostgreSQL.
+
+Producto MVP funcional:
+80% aprox.
+
+Producto completo tipo plataforma real:
+50% - 60%, porque falta PostgreSQL, pagos, repartidores, seguridad robusta y liquidaciones.
+
+============================================================
+PRÓXIMO INICIO RECOMENDADO
+============================================================
+
+Cuando se retome mañana:
+
+1. No empezar desde cero.
+2. Usar este máster.
+3. Pedir el backend real actual si se va a tocar server.js.
+4. Confirmar que el estado actual funciona.
+5. Crear PostgreSQL gratis.
+6. Configurar DATABASE_URL.
+7. Crear tablas base.
+8. Migrar JSON a PostgreSQL.
+9. Cambiar endpoints uno por uno.
+10. Probar después de cada paso.
+
+REGLA DE ORO PARA MAÑANA:
+No romper lo que ya funciona.
+La migración debe ser gradual, controlada y reversible.
+
+============================================================
+FIN ACTUALIZACIÓN 04-05-2026
+============================================================
+
+
+
+============================================================
+ACTUALIZACIÓN 10-05-2026 - POSTGRESQL FUNCIONANDO PARA USUARIOS, RESTAURANTES, PLATOS, PEDIDOS Y ORDER_ITEMS
+============================================================
+
+Hoy se completó una fase crítica del backend real de DELI GO.
+
+OBJETIVO DEL DÍA:
+Migrar las partes principales del sistema desde JSON hacia PostgreSQL real, sin romper el frontend actual, el panel administrativo, el panel restaurante ni el flujo de cliente.
+
+RESULTADO CONFIRMADO POR EL USUARIO:
+El usuario confirmó que todo funciona correctamente después de copiar, pegar, subir a GitHub y desplegar el backend corregido.
+
+Funciona correctamente:
+- PostgreSQL conectado.
+- Usuarios funcionando correctamente.
+- Restaurantes funcionando correctamente.
+- Panel administrativo funcionando correctamente.
+- Login de administrador funcionando correctamente.
+- Login de usuario funcionando correctamente.
+- Login de restaurante funcionando correctamente.
+- Platos funcionando correctamente con PostgreSQL.
+- Pedidos funcionando correctamente con PostgreSQL.
+- order_items funcionando correctamente con PostgreSQL.
+- Creación de platos desde panel restaurante.
+- Edición de platos desde panel restaurante.
+- Eliminación de platos desde panel restaurante.
+- Creación de pedidos desde cliente.
+- Lectura de pedidos desde panel restaurante.
+- Cambio de estados de pedidos.
+- Visualización de datos desde panel administrativo.
+
+============================================================
+CAMBIOS TÉCNICOS IMPORTANTES REALIZADOS
+============================================================
+
+Se trabajó sobre el server.js real completo del usuario.
+
+Se corrigió el backend para que las siguientes áreas usen PostgreSQL real:
+
+1. PLATOS / DISHES
+- Crear platos en PostgreSQL.
+- Leer platos desde PostgreSQL.
+- Editar platos en PostgreSQL.
+- Eliminar platos en PostgreSQL.
+- Mantener respuesta compatible con el frontend actual.
+- Mantener restaurantEmail durante transición para no romper relaciones existentes.
+- Mantener restaurant_id para ir avanzando hacia relaciones reales.
+
+2. PEDIDOS / ORDERS
+- Crear pedidos en PostgreSQL.
+- Leer pedidos desde PostgreSQL.
+- Filtrar pedidos por restaurante.
+- Filtrar pedidos por cliente.
+- Actualizar estado de pedidos en PostgreSQL.
+- Mantener compatibilidad con los estados existentes:
+  - pendiente
+  - aceptado
+  - preparando
+  - listo
+  - en_camino
+  - entregado
+  - finalizado como compatibilidad mapeada a entregado
+
+3. ITEMS DE PEDIDO / ORDER_ITEMS
+- Guardar cada producto del pedido en order_items.
+- Conservar snapshot del producto:
+  - name_snapshot
+  - price_snapshot
+  - quantity
+  - subtotal
+- Esto es importante porque si mañana cambia el precio o nombre de un plato, los pedidos viejos deben conservar los datos originales.
+
+4. ADMIN
+- El panel administrativo ahora puede leer datos de usuarios, restaurantes y pedidos desde PostgreSQL.
+- Se mantiene compatibilidad con las rutas existentes para no romper el frontend.
+- Los datos ya no dependen de JSON como fuente principal en esta fase.
+
+5. ESTADÍSTICAS / RANKINGS
+- Rankings y estadísticas deben tomar información desde PostgreSQL cuando corresponda.
+- Los rankings reales deben seguir basándose en pedidos y order_items, no en datos inventados.
+
+============================================================
+ESTADO ACTUAL DE LA BASE DE DATOS
+============================================================
+
+PostgreSQL ya funciona como fuente real para:
+
+- users
+- restaurants
+- dishes
+- orders
+- order_items
+- admins
+
+JSON ya no debe considerarse fuente principal para estas áreas.
+
+Los archivos JSON pueden quedar temporalmente como:
+- respaldo,
+- migración,
+- referencia histórica,
+- emergencia local,
+pero NO como base real de producción.
+
+============================================================
+REGLA IMPORTANTE DESPUÉS DE ESTA FASE
+============================================================
+
+A partir de ahora, antes de tocar algo relacionado con datos, se debe recordar:
+
+Frontend -> Backend -> PostgreSQL
+
+La fuente de verdad debe ser PostgreSQL.
+
+NO volver a guardar como fuente principal en:
+- users.json
+- restaurants.json
+- dishes.json
+- orders.json
+- localStorage
+
+localStorage solo puede usarse como:
+- sesión temporal,
+- token temporal,
+- cache visual no crítica,
+- preferencias pequeñas.
+
+============================================================
+PRÓXIMO PASO PRINCIPAL: SEPARAR EL BACKEND POR MÓDULOS
+============================================================
+
+El usuario dejó claro que el server.js ya está muy grande y no quiere seguir dándole más volumen al mismo archivo.
+
+Decisión:
+Mañana se debe comenzar a separar el backend por módulos.
+
+OBJETIVO:
+Hacer el backend más profesional, mantenible y seguro, sin romper nada de lo que ya funciona.
+
+Motivo:
+El server.js ya tiene demasiadas líneas.
+Si se sigue agregando ahí:
+- será difícil corregir errores,
+- será difícil agregar pagos,
+- será difícil agregar repartidores,
+- será difícil agregar notificaciones,
+- será difícil agregar IA,
+- será más riesgoso modificar cualquier cosa.
+
+============================================================
+ESTRUCTURA PROPUESTA PARA MODULARIZAR BACKEND
+============================================================
+
+Estructura técnica recomendada:
+
+backend/
+│
+├── server.js
+│
+├── db/
+│   └── postgres.js
+│
+├── routes/
+│   ├── auth.routes.js
+│   ├── users.routes.js
+│   ├── restaurants.routes.js
+│   ├── dishes.routes.js
+│   ├── orders.routes.js
+│   ├── admin.routes.js
+│   └── stats.routes.js
+│
+├── controllers/
+│
+├── middleware/
+│
+├── utils/
+│
+└── services/
+
+IMPORTANTE:
+Aunque los nombres técnicos puedan estar en inglés por convención, el usuario pidió trabajar también con español para guiarse mejor.
+
+============================================================
+REGLA DE IDIOMA / NOMENCLATURA PARA EL BACKEND
+============================================================
+
+El usuario pidió que se utilicen más palabras en español cuando sea posible.
+
+Regla:
+- Si una palabra es reservada, estándar técnico o convención necesaria, se puede usar inglés.
+- Si no es obligatorio usar inglés, preferir español o comentarios claros en español.
+- El usuario necesita poder guiarse fácilmente dentro del proyecto.
+
+Ejemplos aceptables:
+- users puede comentarse como usuarios.
+- restaurants puede comentarse como restaurantes.
+- orders puede comentarse como pedidos.
+- dishes puede comentarse como platos.
+- admin puede mantenerse como admin.
+- stats puede comentarse como estadísticas.
+
+Posible alternativa más guiada en español para carpetas o archivos, si no rompe nada:
+- routes/usuarios.routes.js
+- routes/restaurantes.routes.js
+- routes/platos.routes.js
+- routes/pedidos.routes.js
+- routes/admin.routes.js
+- routes/estadisticas.routes.js
+- db/postgres.js
+- utils/normalizadores.js
+- middleware/sesion.middleware.js
+- services/pedidos.service.js
+
+IMPORTANTE:
+No cambiar nombres por capricho.
+Si se renombra un archivo, se deben actualizar correctamente sus imports/requires.
+Hacerlo paso a paso y con pruebas.
+
+============================================================
+PLAN RECOMENDADO PARA MAÑANA: MODULARIZACIÓN SEGURA
+============================================================
+
+NO modularizar todo de golpe.
+
+Orden seguro:
+
+1. Crear carpeta db/
+- Mover conexión PostgreSQL a:
+  db/postgres.js
+- Exportar pool.
+- Mantener server.js funcionando igual.
+- Probar backend.
+
+2. Crear carpeta utils/
+Mover funciones auxiliares:
+- normalizeEmail
+- normalizeText
+- generateId
+- toNullableText
+- toNumberValue
+- toBooleanValue
+- toDateValue
+- funciones de mapeo si aplica
+
+Probar backend.
+
+3. Separar rutas de salud / pruebas
+- GET /
+- GET /db-test si existe
+- bootstrap si aplica
+
+Probar backend.
+
+4. Separar auth / sesiones
+- login usuario/restaurante
+- admin login
+- session
+- logout
+- helpers de sesión
+
+Probar:
+- login usuario
+- login restaurante
+- login admin
+
+5. Separar usuarios y restaurantes
+- /users
+- /register
+- /restaurants
+- /register-restaurant
+- edición admin de usuarios/restaurantes
+
+Probar:
+- crear usuario
+- crear restaurante
+- aprobar restaurante
+- editar desde admin
+
+6. Separar platos
+- /restaurants/:email/dishes
+- POST plato
+- PUT plato
+- DELETE plato
+
+Probar:
+- crear plato
+- editar plato
+- eliminar plato
+- ver en PostgreSQL
+
+7. Separar pedidos
+- /orders
+- /orders/restaurant/:email
+- /orders/customer/:email
+- /orders/:id/status
+
+Probar:
+- crear pedido
+- revisar order_items
+- cambiar estado
+- ver panel restaurante
+- ver mis pedidos
+
+8. Separar estadísticas
+- /stats/top-restaurants
+- /stats/top-dishes
+- cualquier resumen admin/restaurante
+
+Probar:
+- index
+- rankings
+- panel admin
+
+============================================================
+REGLA CRÍTICA PARA LA MODULARIZACIÓN
+============================================================
+
+No se debe cambiar lógica de negocio mientras se modulariza.
+
+Modularizar significa:
+- mover código,
+- ordenar archivos,
+- mantener mismas rutas,
+- mantener mismas respuestas,
+- mantener mismo comportamiento.
+
+NO significa:
+- rediseñar endpoints,
+- cambiar nombres de rutas públicas,
+- cambiar JSON de respuesta,
+- romper frontend,
+- cambiar login,
+- cambiar estados,
+- cambiar flujo de pedidos.
+
+Primero separar.
+Después mejorar.
+
+============================================================
+ARCHIVOS ESPERADOS PARA LA PRÓXIMA SESIÓN
+============================================================
+
+Para comenzar mañana, el usuario debe pasar el backend real actual o el server.js actual completo si se va a modularizar.
+
+Archivo clave:
+- server.js actual funcionando con PostgreSQL.
+
+Si se crean archivos nuevos, deben entregarse todos como .txt descargables:
+- server.js.txt
+- db/postgres.js.txt
+- routes/...
+- utils/...
+- middleware/...
+- services/...
+
+IMPORTANTE:
+Como esta vez sí se va a crear estructura nueva, se debe explicar exactamente:
+- qué carpeta crear,
+- qué archivo poner dentro,
+- qué copiar y pegar,
+- qué comando correr,
+- qué probar después.
+
+Pero siempre respetando la regla:
+- archivos completos,
+- .txt descargables,
+- listos para copiar y pegar,
+- sin bloques parciales.
+
+============================================================
+ORDEN RECOMENDADO DE TRABAJO MAÑANA
+============================================================
+
+1. Confirmar que lo de hoy sigue funcionando:
+- usuarios
+- restaurantes
+- admin
+- platos
+- pedidos
+- order_items
+
+2. Hacer backup local o commit estable:
+Mensaje sugerido:
+"backend postgres estable usuarios restaurantes platos pedidos"
+
+3. Crear una rama opcional o commit previo antes de modularizar.
+Esto permite volver atrás si algo falla.
+
+4. Modularizar solo la conexión PostgreSQL primero.
+5. Probar.
+6. Modularizar utils.
+7. Probar.
+8. Modularizar rutas por grupo.
+9. Probar cada grupo.
+
+============================================================
+COMMIT ESTABLE RECOMENDADO
+============================================================
+
+Antes de modularizar, se recomienda tener un commit limpio con el estado estable actual.
+
+Mensaje sugerido:
+
+backend postgres estable usuarios restaurantes platos pedidos
+
+Esto marca el punto donde PostgreSQL ya funciona.
+
+============================================================
+ESTADO DEL PROYECTO DESPUÉS DEL 10-05-2026
+============================================================
+
+Avance actualizado aproximado:
+
+Frontend general:
+80% - 88% como MVP visual/funcional.
+
+Index / Landing:
+85% - 92%.
+
+Panel restaurante:
+80% - 88%, porque ya gestiona platos y pedidos conectados a PostgreSQL.
+
+Panel administrativo:
+65% - 75%, porque ya entra, gestiona usuarios/restaurantes y ve datos principales, pero falta robustecer reportes, pagos, repartidores y control avanzado.
+
+Backend:
+65% - 75%, porque ya usa PostgreSQL para datos principales, pero falta modularizar, reforzar seguridad, sesiones, validaciones, pagos, repartidores y estructura profesional.
+
+Persistencia real:
+Avanzada / funcionando para datos principales.
+
+Producto MVP funcional:
+85% aprox.
+
+Producto completo tipo plataforma real:
+60% - 70%, porque falta modularización, pagos, repartidores, seguridad robusta, liquidaciones y operaciones en tiempo real.
+
+============================================================
+PRÓXIMO INICIO RECOMENDADO
+============================================================
+
+Cuando el usuario diga mañana “continuemos”:
+
+1. No empezar desde cero.
+2. Recordar que PostgreSQL ya quedó funcionando correctamente.
+3. No volver a proponer JSON como base de datos.
+4. Pedir o usar el server.js real actual.
+5. Modularizar backend paso a paso.
+6. Mantener rutas actuales.
+7. Mantener respuestas actuales.
+8. Usar comentarios y nombres en español cuando sea posible.
+9. No romper frontend.
+10. Entregar archivos completos en .txt descargables.
+
+============================================================
+FIN ACTUALIZACIÓN 10-05-2026
+============================================================
