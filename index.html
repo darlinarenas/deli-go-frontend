@@ -4,17 +4,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DELI</title>
+  <title>BHUZ</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
 
 <body>
 
+  <!-- =========================================================
+       HEADER PRINCIPAL
+       - Mantiene el logo real del proyecto.
+       - Mantiene el contenedor userNav que usa header.js/auth.js.
+  ========================================================== -->
   <header>
     <div class="header-inner">
 
+      <button class="menu-btn" type="button" aria-label="Menú">☰</button>
+
       <div class="logo-container">
-        <img src="assets/image/logo-bhuz.jpeg" alt="BUZZ" class="header-logo-img">
+        <img src="assets/image/logo-bhuz.jpeg" alt="BHUZ" class="header-logo-img">
       </div>
 
       <div id="userNav" class="user-nav"></div>
@@ -22,54 +29,127 @@
     </div>
   </header>
 
+  <!-- =========================================================
+       HERO COMPACTO
+       - Ya no usa el logo gigante como fondo.
+       - Solo presenta ciudad, título y slogan.
+  ========================================================== -->
   <section class="hero">
     <div class="hero-overlay"></div>
 
     <div class="hero-content">
+      <p id="city" class="city-pill">Detectando ubicación...</p>
       <h1>Pide comida fácil</h1>
-      <p id="city">Detectando ubicación...</p>
-      <p class="hero-slogan">Facil de pedir, Rapido de comer</p>
+      <p class="hero-slogan">Pide fácil, come feliz</p>
     </div>
   </section>
 
- 
-  <section class="section">
+  <main class="section">
 
-    <!-- PRESUPUESTO -->
-    <div class="budget-box">
-      <h2>💸 ¿Cuánto dispones para ordenar hoy?</h2>
+    <!-- =========================================================
+         PRESUPUESTO
+         - Mantiene id budget.
+         - Mantiene onclick generarRecomendacion().
+         - Mantiene id resultado para budget.js.
+    ========================================================== -->
+    <section class="budget-box">
+      <div class="budget-header">
+        <div>
+          <span class="mini-label">Presupuesto inteligente</span>
+          <h2>¿Cuánto dispones para ordenar hoy?</h2>
+        </div>
+        <span class="budget-icon">💸</span>
+      </div>
 
-      <input id="budget" class="budget-input" type="number" placeholder="Ej: 3000">
+      <div class="budget-actions">
+        <input id="budget" class="budget-input" type="number" placeholder="Ej: 25.00">
 
-      <button class="budget-btn" onclick="generarRecomendacion()">
-        Encontrar mejor opción
-      </button>
+        <button class="budget-btn" onclick="generarRecomendacion()">
+          Buscar opciones
+        </button>
+      </div>
 
       <div id="resultado" class="result-grid"></div>
-    </div>
+    </section>
 
-    <!-- TOP RESTAURANTES SEMANA -->
-    <div id="topRestaurantsSection" style="margin-bottom:30px;">
-      <h2>🔥 Restaurantes más pedidos esta semana</h2>
+    <!-- =========================================================
+         BUSCADOR GENERAL
+         - Mantiene class search que usa restaurants.js.
+    ========================================================== -->
+    <section class="search-card">
+      <span class="search-icon">🔎</span>
+      <input class="search" placeholder="Busca restaurantes, platos, comidas...">
+      <span class="filter-icon">☷</span>
+    </section>
+
+    <!-- =========================================================
+         CATEGORÍAS
+         - Mantiene id categories.
+    ========================================================== -->
+    <section class="categories-wrap">
+      <div class="categories" id="categories"></div>
+    </section>
+
+    <!-- =========================================================
+         TOP RESTAURANTES SEMANA
+         - Mantiene ids usados por restaurants.js.
+    ========================================================== -->
+    <section id="topRestaurantsSection" class="home-block">
+      <div class="block-title-row">
+        <h2>Restaurantes más pedidos de la semana</h2>
+        <span>Ver todos</span>
+      </div>
       <div id="topRestaurants" class="grid"></div>
-    </div>
+    </section>
 
-    <!-- TOP PLATOS SEMANA -->
-    <div id="topDishesSection" style="margin-bottom:30px;">
-      <h2>🍔 Platos más pedidos esta semana</h2>
+    <!-- =========================================================
+         TOP PLATOS SEMANA
+         - Mantiene ids usados por restaurants.js.
+    ========================================================== -->
+    <section id="topDishesSection" class="home-block">
+      <div class="block-title-row">
+        <h2>Platos más pedidos de la semana</h2>
+        <span>Ver todos</span>
+      </div>
       <div id="topDishes" class="grid"></div>
-    </div>
+    </section>
 
-    <!-- BUSCADOR -->
-    <input class="search" placeholder="Buscar...">
+    <!-- =========================================================
+         CTA BUSCAR PLATO
+    ========================================================== -->
+    <section class="cta-card">
+      <div>
+        <strong>¿Tienes antojo de algo específico?</strong>
+        <p>Busca un plato y pídelo directo.</p>
+      </div>
+      <a href="#restaurantList">Buscar plato</a>
+    </section>
 
-    <!-- CATEGORÍAS -->
-    <div class="categories" id="categories"></div>
+    <!-- =========================================================
+         LISTA RESTAURANTES
+         - Mantiene id restaurantList.
+    ========================================================== -->
+    <section class="home-block">
+      <div class="block-title-row">
+        <h2>Restaurantes disponibles</h2>
+      </div>
+      <div class="grid" id="restaurantList"></div>
+    </section>
 
-    <!-- LISTA RESTAURANTES -->
-    <div class="grid" id="restaurantList"></div>
+  </main>
 
-  </section>
+  <!-- =========================================================
+       NAV INFERIOR MÓVIL
+       - Visual solamente.
+       - No rompe lógica existente.
+  ========================================================== -->
+  <nav class="bottom-nav">
+    <a href="index.html" class="active">🏠<span>Inicio</span></a>
+    <a href="#restaurantList">🔎<span>Buscar</span></a>
+    <a href="mis-pedidos.html">🛍️<span>Mis pedidos</span></a>
+    <a href="#">♡<span>Favoritos</span></a>
+    <a href="#" onclick="showLogin(); return false;">👤<span>Perfil</span></a>
+  </nav>
 
   <!-- REGISTRO CLIENTE -->
   <section class="register-screen" id="registerScreen" style="display: none;">
@@ -148,6 +228,7 @@
 
 </body>
 </html>
+
 
 
 

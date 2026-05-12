@@ -1,45 +1,42 @@
 /* =========================================================
-   DELI GO / BUZZ - STYLES.CSS
+   BHUZ / DELI GO - STYLES.CSS
    Archivo completo listo para copiar y pegar
-   Cambio clave:
-   - Módulo de presupuesto usa el concepto "cuánto dispongo"
-   - Mantiene estilo moderno, limpio, rojo/naranja y tarjetas
-   ========================================================= */
 
-/* =========================
-   VARIABLES GENERALES
-   ========================= */
+   OBJETIVO DE ESTA VERSIÓN:
+   - Cambiar solo la presentación visual del index.
+   - Mantener IDs, clases y estructura que usan los JS actuales.
+   - Mantener conexión backend y funciones existentes.
+   - Estilo oscuro premium con verde BHUZ.
+========================================================= */
+
 :root {
-  --color-principal: #ff4d4d;
-  --color-principal-dark: #e63b3b;
-  --color-secundario: #ff8a00;
-  --color-acento: #ffd166;
-
-  --color-texto: #1f2937;
+  --color-principal: #00d26a;
+  --color-principal-hover: #00b65c;
+  --color-secundario: #18f08a;
+  --color-fondo: #05070d;
+  --color-fondo-2: #070b12;
+  --color-card: #0b1018;
+  --color-card-2: #0f1722;
+  --color-card-hover: #111827;
+  --color-texto: #ffffff;
+  --color-texto-secundario: #9ca3af;
   --color-texto-suave: #6b7280;
-  --color-blanco: #ffffff;
-  --color-fondo: #fff7f2;
-  --color-fondo-claro: #fffaf6;
-  --color-borde: #f1d7c9;
-
-  --shadow-suave: 0 10px 30px rgba(0, 0, 0, 0.08);
-  --shadow-card: 0 14px 35px rgba(255, 77, 77, 0.14);
-
-  --radius-sm: 10px;
-  --radius-md: 16px;
-  --radius-lg: 24px;
-  --radius-xl: 32px;
-
-  --container: 1180px;
+  --color-borde: rgba(255, 255, 255, 0.07);
+  --color-borde-verde: rgba(0, 210, 106, 0.22);
+  --color-error: #ef4444;
+  --color-warning: #facc15;
+  --color-success: #00d26a;
+  --sombra-suave: 0 18px 45px rgba(0, 0, 0, 0.45);
+  --sombra-hover: 0 18px 45px rgba(0, 210, 106, 0.13);
+  --radio-sm: 12px;
+  --radio-md: 18px;
+  --radio-lg: 24px;
+  --radio-xl: 30px;
+  --max-width: 1180px;
 }
 
-/* =========================
-   RESET BÁSICO
-   ========================= */
 * {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
 html {
@@ -47,10 +44,14 @@ html {
 }
 
 body {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: var(--color-fondo);
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background:
+    radial-gradient(circle at top left, rgba(0, 210, 106, 0.12), transparent 28%),
+    radial-gradient(circle at top right, rgba(0, 210, 106, 0.08), transparent 22%),
+    var(--color-fondo);
   color: var(--color-texto);
-  line-height: 1.5;
+  padding-bottom: 92px;
 }
 
 img {
@@ -70,864 +71,928 @@ textarea {
   font-family: inherit;
 }
 
-/* =========================
-   CONTENEDOR
-   ========================= */
-.container {
-  width: min(100% - 32px, var(--container));
-  margin: 0 auto;
+button {
+  cursor: pointer;
 }
 
-/* =========================
+/* =========================================================
    HEADER
-   ========================= */
-.header,
-.site-header,
-.main-header {
+========================================================= */
+
+header {
+  background: rgba(5, 7, 13, 0.92);
+  color: white;
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   position: sticky;
   top: 0;
-  z-index: 50;
-  background: rgba(255, 250, 246, 0.92);
-  backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(241, 215, 201, 0.8);
+  z-index: 900;
+  backdrop-filter: blur(18px);
 }
 
-.header-content,
-.navbar,
-.nav-content {
-  width: min(100% - 32px, var(--container));
+.header-inner {
+  width: min(100%, var(--max-width));
   margin: 0 auto;
-  min-height: 76px;
-  display: flex;
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 18px;
+  gap: 14px;
 }
 
-.logo,
-.brand,
-.logo-box {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-weight: 900;
-  letter-spacing: -0.03em;
-  color: var(--color-principal);
-}
-
-.logo img,
-.brand img,
-.logo-box img {
-  width: 54px;
-  height: 54px;
-  object-fit: contain;
+.menu-btn {
+  width: 42px;
+  height: 42px;
   border-radius: 14px;
-}
-
-.logo-text,
-.brand-text {
-  font-size: 1.45rem;
-  line-height: 1;
-}
-
-.delivery-badge,
-.badge-delivery {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 8px;
-  border-radius: 999px;
-  background: var(--color-principal);
-  color: #fff;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-}
-
-.nav-links,
-.menu-links {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  color: var(--color-texto);
-  font-weight: 700;
-}
-
-.nav-links a,
-.menu-links a {
-  padding: 9px 12px;
-  border-radius: 999px;
-  transition: 0.2s ease;
-}
-
-.nav-links a:hover,
-.menu-links a:hover {
-  background: rgba(255, 77, 77, 0.1);
-  color: var(--color-principal);
-}
-
-.header-actions,
-.auth-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-/* =========================
-   BOTONES
-   ========================= */
-.btn,
-button,
-.btn-primary,
-.btn-secundario,
-.btn-secondary {
-  border: none;
-  cursor: pointer;
-  border-radius: 999px;
-  font-weight: 800;
-  transition: 0.2s ease;
-}
-
-.btn,
-.btn-primary {
+  border: 1px solid var(--color-borde);
+  background: var(--color-card);
+  color: white;
+  font-size: 22px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
-  color: #fff;
-  padding: 12px 20px;
-  box-shadow: 0 12px 25px rgba(255, 77, 77, 0.22);
 }
 
-.btn:hover,
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 16px 28px rgba(255, 77, 77, 0.28);
+.logo-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.btn-secondary,
-.btn-secundario,
-.btn-outline {
-  background: #fff;
+.header-logo-img {
+  width: 168px;
+  height: auto;
+  object-fit: contain;
+}
+
+/* NAV ANTIGUO / COMPATIBILIDAD */
+
+.nav {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.nav a {
+  color: white;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.user-name {
+  font-weight: bold;
+}
+
+/* NAV DINÁMICO DEL HEADER */
+
+.user-nav {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+  text-align: right;
+  font-size: 14px;
+}
+
+.user-nav a {
+  color: white;
+  text-decoration: none;
+  cursor: pointer;
+  font-weight: 700;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.user-nav a:hover {
   color: var(--color-principal);
-  border: 1px solid rgba(255, 77, 77, 0.22);
-  padding: 11px 18px;
 }
 
-.btn-secondary:hover,
-.btn-secundario:hover,
-.btn-outline:hover {
-  background: rgba(255, 77, 77, 0.08);
+.user-greeting {
+  font-weight: 800;
+  color: white;
 }
 
-/* =========================
-   HERO
-   ========================= */
+/* =========================================================
+   HERO COMPACTO
+========================================================= */
+
 .hero {
   position: relative;
+  min-height: auto;
+  display: block;
+  padding: 24px 20px 12px;
   overflow: hidden;
-  padding: 62px 0 36px;
-  background:
-    radial-gradient(circle at top left, rgba(255, 209, 102, 0.35), transparent 32%),
-    radial-gradient(circle at top right, rgba(255, 77, 77, 0.22), transparent 30%),
-    linear-gradient(180deg, #fffaf6 0%, #fff1e6 100%);
+  background: transparent;
+  color: white;
+}
+
+.hero-overlay {
+  display: none;
 }
 
 .hero-content {
-  width: min(100% - 32px, var(--container));
+  width: min(100%, var(--max-width));
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 1.08fr 0.92fr;
-  gap: 42px;
-  align-items: center;
+  position: relative;
+  z-index: 2;
 }
 
-.hero-text h1,
-.hero-title {
-  font-size: clamp(2.35rem, 6vw, 5rem);
+.hero h1 {
+  margin: 10px 0 8px;
+  font-size: clamp(32px, 7vw, 56px);
   line-height: 0.98;
-  letter-spacing: -0.06em;
-  color: #251816;
-  margin-bottom: 18px;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  color: white;
+  text-shadow: none;
 }
 
-.hero-text h1 span,
-.hero-title span {
+.hero #city,
+.city-pill {
+  width: fit-content;
+  margin: 0;
+  padding: 9px 13px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 800;
   color: var(--color-principal);
+  background: rgba(0, 210, 106, 0.09);
+  border: 1px solid rgba(0, 210, 106, 0.2);
+  text-shadow: none;
 }
 
-.hero-subtitle,
-.hero-text p {
-  color: var(--color-texto-suave);
-  font-size: clamp(1rem, 2vw, 1.22rem);
-  max-width: 620px;
-  margin-bottom: 24px;
-}
-
-.city-pill,
-.location-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #fff;
-  border: 1px solid var(--color-borde);
-  color: var(--color-texto);
-  padding: 9px 14px;
-  border-radius: 999px;
-  font-weight: 800;
-  margin-bottom: 18px;
-  box-shadow: var(--shadow-suave);
-}
-
-.hero-actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.hero-image,
-.hero-card-image {
-  position: relative;
-}
-
-.hero-image img,
-.hero-card-image img {
-  width: 100%;
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-card);
-  object-fit: cover;
-}
-
-/* =========================
-   BUSCADOR
-   ========================= */
-.search-section,
-.search-box-wrapper {
-  margin-top: -8px;
-  position: relative;
-  z-index: 5;
-}
-
-.search-box,
-.main-search {
-  width: min(100% - 32px, 900px);
-  margin: 0 auto;
-  background: #fff;
-  border: 1px solid rgba(241, 215, 201, 0.9);
-  border-radius: 999px;
-  padding: 10px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  box-shadow: var(--shadow-suave);
-}
-
-.search-box input,
-.main-search input,
-#searchInput,
-#restaurantSearch {
-  flex: 1;
-  border: none;
-  outline: none;
-  padding: 13px 16px;
-  font-size: 1rem;
-  color: var(--color-texto);
-  background: transparent;
-}
-
-.search-box input::placeholder,
-.main-search input::placeholder {
-  color: #a8a29e;
-}
-
-.search-box button,
-.main-search button {
-  padding: 13px 20px;
-  background: var(--color-principal);
-  color: #fff;
-}
-
-/* =========================
-   MÓDULO DE PRESUPUESTO
-   IMPORTANTE:
-   El texto correcto es "¿Cuánto dispones para ordenar hoy?"
-   ========================= */
-.budget-section,
-.presupuesto-section,
-#budgetSection {
-  padding: 34px 0 16px;
-}
-
-.budget-card,
-.presupuesto-card,
-#budgetCard {
-  width: min(100% - 32px, var(--container));
-  margin: 0 auto;
-  background: linear-gradient(135deg, #ffffff 0%, #fff2e7 100%);
-  border: 1px solid rgba(255, 138, 0, 0.18);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-card);
-  padding: clamp(20px, 4vw, 34px);
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 22px;
-  align-items: center;
-}
-
-.budget-content h2,
-.presupuesto-card h2,
-#budgetTitle {
-  font-size: clamp(1.55rem, 3vw, 2.45rem);
-  letter-spacing: -0.04em;
-  color: #251816;
-  margin-bottom: 8px;
-}
-
-.budget-content h2::first-letter,
-.presupuesto-card h2::first-letter {
-  text-transform: uppercase;
-}
-
-.budget-content p,
-.presupuesto-card p,
-#budgetText {
-  color: var(--color-texto-suave);
-  font-size: 1rem;
-  max-width: 680px;
-}
-
-.budget-form,
-.presupuesto-form,
-#budgetForm {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #fff;
-  border: 1px solid rgba(255, 77, 77, 0.16);
-  padding: 8px;
-  border-radius: 999px;
-  box-shadow: 0 10px 25px rgba(255, 138, 0, 0.12);
-}
-
-.budget-form input,
-.presupuesto-form input,
-#budgetInput {
-  width: 190px;
-  border: none;
-  outline: none;
-  background: transparent;
-  padding: 12px 14px;
-  font-weight: 800;
-  color: var(--color-texto);
-  font-size: 1rem;
-}
-
-.budget-form input::placeholder,
-.presupuesto-form input::placeholder,
-#budgetInput::placeholder {
-  color: #a8a29e;
+.hero-slogan {
+  margin: 0;
+  font-size: 17px;
   font-weight: 700;
+  color: var(--color-texto-secundario);
+  text-shadow: none;
 }
 
-.budget-form button,
-.presupuesto-form button,
-#budgetButton {
-  background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
-  color: #fff;
-  padding: 12px 18px;
+/* =========================================================
+   CONTENIDO GENERAL
+========================================================= */
+
+.section {
+  width: min(100%, var(--max-width));
+  padding: 18px 20px 28px;
+  margin: auto;
+}
+
+.section h2 {
+  color: var(--color-texto);
+  font-size: 26px;
+  margin: 0 0 14px;
+  letter-spacing: -0.035em;
+}
+
+.section p {
+  color: var(--color-texto-secundario);
+}
+
+.home-block {
+  margin-top: 28px;
+}
+
+.block-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.block-title-row h2 {
+  margin: 0;
+  font-size: clamp(22px, 4vw, 30px);
+}
+
+.block-title-row span {
+  color: var(--color-principal);
+  font-weight: 900;
   white-space: nowrap;
 }
 
-/* Resultados del módulo de presupuesto */
-.budget-results,
-.presupuesto-resultados,
-#budgetResults {
-  width: min(100% - 32px, var(--container));
-  margin: 18px auto 0;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
-}
-
-.budget-result-card,
-.suggestion-card,
-.presupuesto-opcion {
-  background: #fff;
-  border: 1px solid rgba(241, 215, 201, 0.9);
-  border-radius: var(--radius-lg);
-  padding: 18px;
-  box-shadow: var(--shadow-suave);
-  transition: 0.2s ease;
-}
-
-.budget-result-card:hover,
-.suggestion-card:hover,
-.presupuesto-opcion:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-card);
-}
-
-.suggestion-price,
-.budget-price {
+.mini-label {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-bottom: 7px;
+  padding: 5px 10px;
+  border-radius: 999px;
   color: var(--color-principal);
+  background: rgba(0, 210, 106, 0.09);
+  border: 1px solid rgba(0, 210, 106, 0.16);
+  font-size: 12px;
   font-weight: 900;
-  font-size: 1.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-/* =========================
-   SECCIONES GENERALES
-   ========================= */
-.section {
-  padding: 44px 0;
+/* =========================================================
+   PRESUPUESTO
+========================================================= */
+
+.budget-box {
+  background: linear-gradient(180deg, rgba(15, 23, 34, 0.98), rgba(8, 13, 22, 0.98));
+  padding: 22px;
+  border-radius: var(--radio-xl);
+  box-shadow: var(--sombra-suave);
+  margin-bottom: 20px;
+  border: 1px solid var(--color-borde-verde);
 }
 
-.section-header {
-  width: min(100% - 32px, var(--container));
-  margin: 0 auto 22px;
+.budget-header {
   display: flex;
-  align-items: end;
   justify-content: space-between;
-  gap: 16px;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
-.section-title,
-.section-header h2 {
-  font-size: clamp(1.7rem, 4vw, 2.6rem);
-  letter-spacing: -0.045em;
-  color: #251816;
+.budget-box h2 {
+  color: white;
+  font-size: clamp(23px, 4vw, 34px);
+  margin: 0;
+  line-height: 1.05;
 }
 
-.section-subtitle,
-.section-header p {
-  color: var(--color-texto-suave);
-  margin-top: 4px;
+.budget-icon {
+  width: 46px;
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 17px;
+  background: rgba(0, 210, 106, 0.1);
+  border: 1px solid rgba(0, 210, 106, 0.17);
+  font-size: 22px;
+  flex: 0 0 auto;
 }
 
-/* =========================
+.budget-actions {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.budget-input {
+  width: 100%;
+  padding: 16px 17px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 0;
+  font-size: 16px;
+  outline: none;
+  background: #05070d;
+  color: white;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.budget-input::placeholder {
+  color: #6b7280;
+}
+
+.budget-input:focus {
+  border-color: var(--color-principal);
+  box-shadow: 0 0 0 4px rgba(0, 210, 106, 0.12);
+}
+
+.budget-btn {
+  padding: 16px 20px;
+  border: none;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
+  color: #031006;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+  white-space: nowrap;
+}
+
+.budget-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 22px rgba(0, 210, 106, 0.18);
+}
+
+.result-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 15px;
+  margin-top: 18px;
+  color: var(--color-texto-secundario);
+}
+
+.result-card {
+  background: linear-gradient(180deg, #0b1018, #0f1722);
+  color: white;
+  padding: 18px;
+  border-radius: 22px;
+  box-shadow: var(--sombra-suave);
+  border: 1px solid var(--color-borde);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  line-height: 1.55;
+}
+
+.result-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--sombra-hover);
+}
+
+.result-card h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: white;
+}
+
+.result-card button {
+  margin-top: 14px;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 15px;
+  background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
+  color: #031006;
+  cursor: pointer;
+  font-weight: 900;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.result-card button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 18px rgba(0, 210, 106, 0.18);
+}
+
+/* =========================================================
+   BUSCADOR
+========================================================= */
+
+.search-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(180deg, #0b1018, #0f1722);
+  border: 1px solid var(--color-borde);
+  border-radius: 24px;
+  padding: 10px 14px;
+  margin-bottom: 20px;
+  box-shadow: var(--sombra-suave);
+}
+
+.search-icon,
+.filter-icon {
+  color: var(--color-principal);
+  font-size: 23px;
+}
+
+.search {
+  width: 100%;
+  padding: 14px 0;
+  border-radius: 0;
+  border: none;
+  margin-bottom: 0;
+  background: transparent;
+  box-shadow: none;
+  outline: none;
+  font-size: 16px;
+  color: white;
+}
+
+.search::placeholder {
+  color: #8a93a3;
+}
+
+.search:focus {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* =========================================================
    CATEGORÍAS
-   ========================= */
-.categories,
-.category-list,
-.categorias-grid {
-  width: min(100% - 32px, var(--container));
-  margin: 0 auto;
+========================================================= */
+
+.categories-wrap {
+  margin-bottom: 12px;
+}
+
+.categories {
   display: flex;
-  gap: 14px;
+  gap: 12px;
   overflow-x: auto;
-  padding-bottom: 10px;
+  margin-bottom: 0;
+  padding-bottom: 6px;
   scrollbar-width: thin;
 }
 
-.category-card,
-.category-btn,
-.categoria-card {
-  min-width: 138px;
-  background: #fff;
-  border: 1px solid rgba(241, 215, 201, 0.9);
-  border-radius: var(--radius-lg);
-  padding: 16px;
-  text-align: center;
-  box-shadow: var(--shadow-suave);
+.category-btn {
+  background: #0f1722;
+  color: white;
+  border: 1px solid var(--color-borde);
+  padding: 12px 16px;
+  border-radius: 999px;
   cursor: pointer;
-  transition: 0.2s ease;
-}
-
-.category-card:hover,
-.category-btn:hover,
-.categoria-card:hover,
-.category-card.active,
-.category-btn.active {
-  transform: translateY(-3px);
-  border-color: rgba(255, 77, 77, 0.35);
-  color: var(--color-principal);
-}
-
-.category-icon,
-.categoria-icon {
-  font-size: 2rem;
-  margin-bottom: 8px;
-}
-
-.category-name,
-.categoria-name {
-  font-weight: 900;
-}
-
-/* =========================
-   RESTAURANTES
-   ========================= */
-.restaurants-grid,
-.restaurant-grid,
-#restaurantsList {
-  width: min(100% - 32px, var(--container));
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 22px;
-}
-
-.restaurant-card {
-  background: #fff;
-  border: 1px solid rgba(241, 215, 201, 0.9);
-  border-radius: var(--radius-xl);
-  overflow: hidden;
-  box-shadow: var(--shadow-suave);
-  transition: 0.2s ease;
-  cursor: pointer;
-}
-
-.restaurant-card:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--shadow-card);
-}
-
-.restaurant-cover,
-.restaurant-img,
-.restaurant-card img {
-  width: 100%;
-  height: 190px;
-  object-fit: cover;
-  background: linear-gradient(135deg, #ffe0cc, #fff5df);
-}
-
-.restaurant-info {
-  padding: 18px;
-}
-
-.restaurant-info h3 {
-  font-size: 1.25rem;
-  margin-bottom: 6px;
-  color: #251816;
-}
-
-.restaurant-info p {
-  color: var(--color-texto-suave);
-  font-size: 0.95rem;
-}
-
-.restaurant-meta {
-  margin-top: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  color: var(--color-texto-suave);
+  white-space: nowrap;
   font-weight: 800;
-  font-size: 0.9rem;
+  box-shadow: none;
+  transition: all 0.18s ease;
 }
 
-.status-open,
-.abierto {
-  color: #16a34a;
-  background: rgba(22, 163, 74, 0.1);
-  padding: 5px 9px;
-  border-radius: 999px;
+.category-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(0, 210, 106, 0.35);
 }
 
-.status-closed,
-.cerrado {
-  color: #dc2626;
-  background: rgba(220, 38, 38, 0.1);
-  padding: 5px 9px;
-  border-radius: 999px;
+.category-btn.active {
+  background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
+  color: #031006;
+  border-color: var(--color-principal);
 }
 
-/* =========================
-   PLATOS DESTACADOS / RANKING
-   ========================= */
-.dishes-grid,
-.ranking-grid,
-.top-dishes-grid {
-  width: min(100% - 32px, var(--container));
-  margin: 0 auto;
+/* =========================================================
+   GRIDS Y TARJETAS
+========================================================= */
+
+.grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
 }
 
-.dish-card,
-.ranking-card,
-.top-dish-card {
-  background: #fff;
-  border: 1px solid rgba(241, 215, 201, 0.9);
-  border-radius: var(--radius-lg);
-  padding: 16px;
-  box-shadow: var(--shadow-suave);
+.restaurant {
+  background: linear-gradient(180deg, #0b1018, #0f1722);
+  border-radius: var(--radio-lg);
+  padding: 18px;
+  box-shadow: var(--sombra-suave);
   cursor: pointer;
-  transition: 0.2s ease;
+  position: relative;
+  border: 1px solid var(--color-borde);
+  color: var(--color-texto-secundario);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  overflow: hidden;
 }
 
-.dish-card:hover,
-.ranking-card:hover,
-.top-dish-card:hover {
+.restaurant::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top right, rgba(0, 210, 106, 0.08), transparent 34%);
+  pointer-events: none;
+}
+
+.restaurant:hover {
   transform: translateY(-4px);
-  box-shadow: var(--shadow-card);
+  box-shadow: var(--sombra-hover);
+  border-color: rgba(0, 210, 106, 0.2);
 }
 
-.dish-emoji,
-.ranking-emoji {
-  font-size: 2.2rem;
-  margin-bottom: 8px;
+.restaurant b {
+  display: block;
+  font-size: 20px;
+  color: white;
+  margin-bottom: 10px;
+  padding-right: 48px;
+  position: relative;
+  z-index: 1;
 }
 
-.dish-card h3,
-.ranking-card h3 {
-  font-size: 1.05rem;
-  margin-bottom: 6px;
-}
-
-.dish-price,
-.ranking-price {
-  color: var(--color-principal);
-  font-size: 1.18rem;
+.restaurant button {
+  margin-top: 14px;
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 15px;
+  background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
+  color: #031006;
+  cursor: pointer;
   font-weight: 900;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  position: relative;
+  z-index: 1;
 }
 
-.dish-restaurant,
-.ranking-restaurant {
-  color: var(--color-texto-suave);
-  font-size: 0.9rem;
-  margin-top: 4px;
+.restaurant button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 18px rgba(0, 210, 106, 0.18);
 }
 
-/* =========================
-   ESTADOS VACÍOS / CARGA
-   ========================= */
+.tag {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: rgba(0, 210, 106, 0.12);
+  color: var(--color-principal);
+  border: 1px solid rgba(0, 210, 106, 0.2);
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  box-shadow: none;
+  z-index: 2;
+}
+
+/* Bloques internos que restaurants.js imprime con style inline */
+.restaurant div[style] {
+  background: rgba(0, 210, 106, 0.06) !important;
+  border: 1px solid rgba(0, 210, 106, 0.12);
+  color: white;
+}
+
+/* =========================================================
+   CTA
+========================================================= */
+
+.cta-card {
+  margin-top: 28px;
+  background: linear-gradient(180deg, #0b1018, #0f1722);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-lg);
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  box-shadow: var(--sombra-suave);
+}
+
+.cta-card strong {
+  display: block;
+  color: white;
+  font-size: 22px;
+  margin-bottom: 4px;
+}
+
+.cta-card p {
+  margin: 0;
+  color: var(--color-texto-secundario);
+}
+
+.cta-card a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 13px 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 210, 106, 0.3);
+  color: var(--color-principal);
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   ESTADOS
+========================================================= */
+
+.restaurant-status {
+  font-size: 13px;
+  font-weight: bold;
+  margin: 4px 0;
+}
+
+.status-open {
+  color: var(--color-success);
+}
+
+.status-closed {
+  color: var(--color-error);
+}
+
 .empty-state,
 .loading-state,
 .error-state {
-  width: min(100% - 32px, var(--container));
-  margin: 20px auto;
-  background: #fff;
-  border: 1px dashed rgba(255, 77, 77, 0.28);
-  border-radius: var(--radius-xl);
-  padding: 28px;
+  background: var(--color-card);
+  color: var(--color-texto-secundario);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-lg);
+  padding: 22px;
   text-align: center;
-  color: var(--color-texto-suave);
 }
 
-.empty-state strong,
-.error-state strong {
-  color: var(--color-principal);
+/* =========================================================
+   REGISTRO / LOGIN
+========================================================= */
+
+.register-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(5, 7, 13, 0.86);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(8px);
 }
 
-/* =========================
-   FOOTER
-   ========================= */
-.footer,
-.site-footer {
-  margin-top: 40px;
-  background: #211614;
-  color: #fff;
-  padding: 34px 0;
+.form-container {
+  background: linear-gradient(180deg, #0b1018, #0f1722);
+  padding: 30px;
+  border-radius: 24px;
+  width: 390px;
+  max-width: 90%;
+  position: relative;
+  box-shadow: var(--sombra-suave);
+  border: 1px solid var(--color-borde);
+  color: white;
 }
 
-.footer-content {
-  width: min(100% - 32px, var(--container));
-  margin: 0 auto;
+.form-container h2 {
+  margin-top: 0;
+  color: white;
+}
+
+.close-btn {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  cursor: pointer;
+  color: white;
+}
+
+.form-container input,
+.form-container select {
+  width: 100%;
+  margin: 10px 0;
+  padding: 13px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  outline: none;
+  background: #05070d;
+  color: white;
+}
+
+.form-container input::placeholder {
+  color: #6b7280;
+}
+
+.form-container input:focus,
+.form-container select:focus {
+  border-color: var(--color-principal);
+  box-shadow: 0 0 0 4px rgba(0, 210, 106, 0.12);
+}
+
+.form-container button {
+  width: 100%;
+  padding: 13px;
+  background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
+  color: #031006;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  font-weight: 900;
+}
+
+#message,
+#loginMessage,
+#restaurantMessage {
+  color: var(--color-texto-secundario);
+  font-weight: 700;
+}
+
+/* =========================================================
+   NAV INFERIOR MÓVIL
+========================================================= */
+
+.bottom-nav {
+  position: fixed;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  width: min(calc(100% - 24px), 560px);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  padding: 10px;
+  border-radius: 24px;
+  background: rgba(11, 16, 24, 0.94);
+  border: 1px solid var(--color-borde);
+  box-shadow: var(--sombra-suave);
+  backdrop-filter: blur(18px);
+  z-index: 950;
+}
+
+.bottom-nav a {
   display: flex;
-  justify-content: space-between;
-  gap: 20px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 48px;
+  color: var(--color-texto-secundario);
+  font-size: 19px;
+  font-weight: 800;
+  border-radius: 16px;
+}
+
+.bottom-nav a span {
+  font-size: 11px;
+}
+
+.bottom-nav a.active {
+  color: var(--color-principal);
+  background: rgba(0, 210, 106, 0.08);
+}
+
+/* =========================================================
+   PEDIDOS - PANEL RESTAURANTE / COMPATIBILIDAD
+========================================================= */
+
+.orders-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
   flex-wrap: wrap;
 }
 
-.footer p {
-  color: rgba(255, 255, 255, 0.72);
+.order-tab {
+  padding: 8px 14px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  background: #111827;
+  color: white;
+  font-weight: 700;
 }
 
-/* =========================
-   UTILIDADES
-   ========================= */
-.hidden {
-  display: none !important;
+.order-tab.active {
+  background: var(--color-principal);
+  color: #031006;
 }
 
-.text-primary {
-  color: var(--color-principal);
+.orders-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
 }
 
-.text-muted {
-  color: var(--color-texto-suave);
+.order-card {
+  background: var(--color-card);
+  color: white;
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: var(--sombra-suave);
+  border: 1px solid var(--color-borde);
 }
 
-.card {
-  background: #fff;
-  border-radius: var(--radius-lg);
-  border: 1px solid rgba(241, 215, 201, 0.9);
-  box-shadow: var(--shadow-suave);
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-weight: bold;
 }
 
-/* =========================
-   RESPONSIVE TABLET
-   ========================= */
-@media (max-width: 980px) {
-  .hero-content {
-    grid-template-columns: 1fr;
-  }
+.order-items {
+  font-size: 14px;
+  margin-bottom: 10px;
+  color: var(--color-texto-secundario);
+}
 
-  .budget-card,
-  .presupuesto-card,
-  #budgetCard {
-    grid-template-columns: 1fr;
-  }
+.order-total {
+  font-weight: bold;
+  margin-top: 6px;
+}
 
-  .restaurants-grid,
-  .restaurant-grid,
-  #restaurantsList {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.order-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 
-  .dishes-grid,
-  .ranking-grid,
-  .top-dishes-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.order-btn,
+.reset-btn {
+  border: none;
+  background: var(--color-principal);
+  color: #031006;
+  padding: 10px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 900;
+}
 
-  .budget-results,
-  .presupuesto-resultados,
-  #budgetResults {
-    grid-template-columns: repeat(2, 1fr);
+.reset-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
   }
 }
 
-/* =========================
-   RESPONSIVE MÓVIL
-   ========================= */
-@media (max-width: 680px) {
-  .header-content,
-  .navbar,
-  .nav-content {
-    min-height: 66px;
+@media (max-width: 768px) {
+  body {
+    padding-bottom: 92px;
   }
 
-  .nav-links,
-  .menu-links {
+  header {
+    padding: 12px 14px;
+  }
+
+  .header-inner {
+    grid-template-columns: 42px 1fr auto;
+    gap: 8px;
+  }
+
+  .header-logo-img {
+    width: 142px;
+  }
+
+  .user-nav {
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .user-nav a:not(:last-child),
+  .user-greeting {
     display: none;
   }
 
-  .logo img,
-  .brand img,
-  .logo-box img {
-    width: 44px;
-    height: 44px;
-  }
-
-  .logo-text,
-  .brand-text {
-    font-size: 1.18rem;
-  }
-
   .hero {
-    padding: 34px 0 24px;
+    padding: 18px 16px 8px;
   }
 
-  .hero-text h1,
-  .hero-title {
-    font-size: clamp(2.1rem, 12vw, 3.45rem);
+  .hero h1 {
+    font-size: 34px;
   }
 
-  .hero-actions {
-    flex-direction: column;
+  .hero-slogan,
+  .hero #city,
+  .city-pill {
+    font-size: 14px;
   }
 
-  .hero-actions .btn,
-  .hero-actions .btn-primary,
-  .hero-actions .btn-secondary {
-    width: 100%;
+  .section {
+    padding: 14px 16px 24px;
   }
 
-  .search-box,
-  .main-search {
-    border-radius: var(--radius-lg);
-    flex-direction: column;
-    align-items: stretch;
+  .budget-box {
+    padding: 18px;
+    border-radius: 24px;
   }
 
-  .search-box button,
-  .main-search button {
-    width: 100%;
-  }
-
-  .budget-card,
-  .presupuesto-card,
-  #budgetCard {
-    padding: 22px;
-    border-radius: var(--radius-lg);
-  }
-
-  .budget-form,
-  .presupuesto-form,
-  #budgetForm {
-    border-radius: var(--radius-lg);
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .budget-form input,
-  .presupuesto-form input,
-  #budgetInput {
-    width: 100%;
-  }
-
-  .budget-form button,
-  .presupuesto-form button,
-  #budgetButton {
-    width: 100%;
-  }
-
-  .restaurants-grid,
-  .restaurant-grid,
-  #restaurantsList,
-  .dishes-grid,
-  .ranking-grid,
-  .top-dishes-grid,
-  .budget-results,
-  .presupuesto-resultados,
-  #budgetResults {
+  .budget-actions {
     grid-template-columns: 1fr;
   }
 
-  .section-header {
+  .budget-btn {
+    width: 100%;
+  }
+
+  .grid,
+  .result-grid,
+  .orders-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .block-title-row h2 {
+    font-size: 22px;
+  }
+
+  .cta-card {
     align-items: flex-start;
     flex-direction: column;
   }
 
-  .footer-content {
-    flex-direction: column;
+  .cta-card a {
+    width: 100%;
+  }
+
+  .form-container {
+    padding: 24px;
   }
 }
 
-/* =========================
-   RESPONSIVE EXTRA PEQUEÑO
-   ========================= */
-@media (max-width: 420px) {
-  .container,
-  .header-content,
-  .navbar,
-  .nav-content,
-  .hero-content,
-  .section-header,
-  .categories,
-  .category-list,
-  .categorias-grid,
-  .restaurants-grid,
-  .restaurant-grid,
-  #restaurantsList,
-  .dishes-grid,
-  .ranking-grid,
-  .top-dishes-grid,
-  .budget-card,
-  .presupuesto-card,
-  #budgetCard,
-  .budget-results,
-  .presupuesto-resultados,
-  #budgetResults {
-    width: min(100% - 22px, var(--container));
+@media (min-width: 769px) {
+  .bottom-nav {
+    display: none;
   }
 
-  .hero-text h1,
-  .hero-title {
-    letter-spacing: -0.055em;
+  body {
+    padding-bottom: 0;
+  }
+}
+
+@media (max-width: 420px) {
+  .header-logo-img {
+    width: 124px;
+  }
+
+  .menu-btn {
+    width: 38px;
+    height: 38px;
+  }
+
+  .budget-box h2 {
+    font-size: 22px;
   }
 }
 
