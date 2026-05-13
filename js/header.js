@@ -43,6 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function openDrawer() {
+    renderSideMenu();
     closeAllPanels();
     if (drawer) drawer.classList.add("open");
     if (backdrop) backdrop.classList.add("show");
@@ -69,6 +70,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function showFavoritesMessage() {
     alert("Favoritos estará disponible pronto. Por ahora puedes buscar y pedir desde restaurantes y platos populares.");
+  }
+
+  function showComingSoonMessage(label) {
+    alert(`${label} estará disponible pronto. Lo vamos a conectar en el siguiente paso con datos reales.`);
   }
 
   function openLoginModal(role = "customer") {
@@ -164,12 +169,55 @@ document.addEventListener("DOMContentLoaded", () => {
     const drawerRegisterBtn = document.getElementById("drawerRegisterBtn");
     const drawerRestaurantBtn = document.getElementById("drawerRestaurantBtn");
     const drawerLogoutBtn = document.getElementById("drawerLogoutBtn");
+    const drawerAddressBtn = document.getElementById("drawerAddressBtn");
+    const drawerPaymentBtn = document.getElementById("drawerPaymentBtn");
+    const drawerNotificationsBtn = document.getElementById("drawerNotificationsBtn");
+    const drawerSupportBtn = document.getElementById("drawerSupportBtn");
+    const drawerProfileBtn = document.getElementById("drawerProfileBtn");
 
     if (drawerFavoritesBtn) {
       drawerFavoritesBtn.addEventListener("click", (e) => {
         e.preventDefault();
         closeAllPanels();
         showFavoritesMessage();
+      });
+    }
+
+    if (drawerAddressBtn) {
+      drawerAddressBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        closeAllPanels();
+        showComingSoonMessage("Direcciones y ubicación GPS");
+      });
+    }
+
+    if (drawerPaymentBtn) {
+      drawerPaymentBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        closeAllPanels();
+        showComingSoonMessage("Métodos de pago");
+      });
+    }
+
+    if (drawerNotificationsBtn) {
+      drawerNotificationsBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        openPanel(notificationsPanel);
+      });
+    }
+
+    if (drawerSupportBtn) {
+      drawerSupportBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        closeAllPanels();
+        showComingSoonMessage("Soporte y ayuda");
+      });
+    }
+
+    if (drawerProfileBtn) {
+      drawerProfileBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        openPanel(profilePanel);
       });
     }
 
@@ -207,13 +255,31 @@ document.addEventListener("DOMContentLoaded", () => {
     if (currentUser) {
       const isRestaurant = currentUser.role === "restaurant";
 
+      if (isRestaurant) {
+        drawerLinks.innerHTML = `
+          <a href="index.html">🏠 Inicio</a>
+          <a href="panel-restaurant.html">🏪 Mi panel restaurante</a>
+          <a href="panel-restaurant.html#orders">🛍️ Pedidos del restaurante</a>
+          <a href="#" id="drawerNotificationsBtn">🔔 Notificaciones</a>
+          <a href="#" id="drawerSupportBtn">❔ Ayuda / soporte</a>
+          <a href="#" id="drawerLogoutBtn">🚪 Cerrar sesión</a>
+        `;
+
+        bindDrawerActionButtons();
+        return;
+      }
+
       drawerLinks.innerHTML = `
         <a href="index.html">🏠 Inicio</a>
+        <a href="mis-pedidos.html">🛍️ Mis pedidos</a>
         <a href="#restaurantList">🍽️ Restaurantes</a>
         <a href="#topDishesSection">🔥 Platos populares</a>
-        ${isRestaurant ? '<a href="panel-restaurant.html">🏪 Mi panel restaurante</a>' : '<a href="mis-pedidos.html">🛍️ Mis pedidos</a>'}
         <a href="#" id="drawerFavoritesBtn">♡ Favoritos</a>
-        ${!isRestaurant ? '<a href="#" id="drawerRestaurantBtn">🏪 Registrar restaurante</a>' : ''}
+        <a href="#" id="drawerAddressBtn">📍 Direcciones / ubicación GPS</a>
+        <a href="#" id="drawerPaymentBtn">💳 Métodos de pago</a>
+        <a href="#" id="drawerNotificationsBtn">🔔 Notificaciones</a>
+        <a href="#" id="drawerProfileBtn">👤 Mi perfil</a>
+        <a href="#" id="drawerSupportBtn">❔ Ayuda / soporte</a>
         <a href="#" id="drawerLogoutBtn">🚪 Cerrar sesión</a>
       `;
 
@@ -251,11 +317,21 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
         <a href="index.html">Inicio</a>
         ${isRestaurant ? '<a href="panel-restaurant.html">Mi panel restaurante</a>' : '<a href="mis-pedidos.html">Mis pedidos</a>'}
+        ${!isRestaurant ? '<button type="button" id="profileAddressBtn">Agregar dirección / GPS</button>' : ''}
+        ${!isRestaurant ? '<button type="button" id="profilePaymentBtn">Agregar método de pago</button>' : ''}
+        <button type="button" id="profileSupportBtn">Ayuda / soporte</button>
         <button type="button" id="profileLogoutBtn">Cerrar sesión</button>
       `;
 
       const profileLogoutBtn = document.getElementById("profileLogoutBtn");
+      const profileAddressBtn = document.getElementById("profileAddressBtn");
+      const profilePaymentBtn = document.getElementById("profilePaymentBtn");
+      const profileSupportBtn = document.getElementById("profileSupportBtn");
+
       if (profileLogoutBtn) profileLogoutBtn.addEventListener("click", logoutSafe);
+      if (profileAddressBtn) profileAddressBtn.addEventListener("click", () => showComingSoonMessage("Direcciones y ubicación GPS"));
+      if (profilePaymentBtn) profilePaymentBtn.addEventListener("click", () => showComingSoonMessage("Métodos de pago"));
+      if (profileSupportBtn) profileSupportBtn.addEventListener("click", () => showComingSoonMessage("Soporte y ayuda"));
       return;
     }
 
@@ -341,9 +417,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   bindStaticActions();
+  renderSideMenu();
   renderHeader();
-  window.addEventListener("deli:session-ready", renderHeader);
+
+  window.addEventListener("deli:session-ready", () => {
+    renderSideMenu();
+    renderHeader();
+  });
 });
+
 
 
 
