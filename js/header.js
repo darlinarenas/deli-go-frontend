@@ -1,18 +1,239 @@
 /* ======================================================
-   DELI FOODS
-   HEADER.JS
+   BHUZ / DELI GO - HEADER.JS
+   Archivo completo listo para copiar y pegar
 
-   Renderiza el menú superior usando únicamente la sesión
-   validada por backend en auth.js.
+   OBJETIVO:
+   - Mantener login/sesión actual de auth.js.
+   - Hacer funcional menú hamburguesa.
+   - Hacer funcional campanita / pedidos.
+   - Hacer funcional perfil / login.
+   - Mantener backend y PostgreSQL sin cambios.
 ====================================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
   const userNav = document.getElementById("userNav");
-  if (!userNav) return;
+
+  const backdrop = document.getElementById("bhuzBackdrop");
+  const drawer = document.getElementById("bhuzDrawer");
+  const notificationsPanel = document.getElementById("notificationsPanel");
+  const profilePanel = document.getElementById("profilePanel");
+  const profileActionsPanel = document.getElementById("profileActionsPanel");
+
+  const openSideMenu = document.getElementById("openSideMenu");
+  const closeSideMenu = document.getElementById("closeSideMenu");
+  const openNotifications = document.getElementById("openNotifications");
+  const closeNotifications = document.getElementById("closeNotifications");
+  const openProfileMenu = document.getElementById("openProfileMenu");
+  const closeProfilePanel = document.getElementById("closeProfilePanel");
+
+  const bottomSearchBtn = document.getElementById("bottomSearchBtn");
+  const bottomFavoritesBtn = document.getElementById("bottomFavoritesBtn");
+  const bottomProfileBtn = document.getElementById("bottomProfileBtn");
+
+  function currentUserSafe() {
+    return (typeof getCurrentUser === "function" && getCurrentUser()) || null;
+  }
+
+  function closeAllPanels() {
+    if (drawer) drawer.classList.remove("open");
+    if (notificationsPanel) notificationsPanel.classList.remove("open");
+    if (profilePanel) profilePanel.classList.remove("open");
+    if (backdrop) backdrop.classList.remove("show");
+  }
+
+  function openDrawer() {
+    closeAllPanels();
+    if (drawer) drawer.classList.add("open");
+    if (backdrop) backdrop.classList.add("show");
+  }
+
+  function openPanel(panel) {
+    closeAllPanels();
+    if (panel) panel.classList.add("open");
+    if (backdrop) backdrop.classList.add("show");
+  }
+
+  function goToSearch() {
+    const searchInput = document.querySelector(".search");
+    const searchCard = document.querySelector(".search-card");
+
+    if (searchCard) {
+      searchCard.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
+    setTimeout(() => {
+      if (searchInput) searchInput.focus();
+    }, 350);
+  }
+
+  function showFavoritesMessage() {
+    alert("Favoritos estará disponible pronto. Por ahora puedes buscar y pedir desde restaurantes y platos populares.");
+  }
+
+  function openLoginModal(role = "customer") {
+    closeAllPanels();
+
+    if (typeof showLogin === "function") {
+      showLogin(role);
+      return;
+    }
+
+    const loginScreen = document.getElementById("loginScreen");
+    if (loginScreen) loginScreen.style.display = "flex";
+  }
+
+  function openRegisterModal() {
+    closeAllPanels();
+
+    if (typeof showRegister === "function") {
+      showRegister();
+      return;
+    }
+
+    const registerScreen = document.getElementById("registerScreen");
+    if (registerScreen) registerScreen.style.display = "flex";
+  }
+
+  function openRestaurantRegisterModal() {
+    closeAllPanels();
+
+    if (typeof showRestaurantRegister === "function") {
+      showRestaurantRegister();
+      return;
+    }
+
+    const restaurantRegisterScreen = document.getElementById("restaurantRegisterScreen");
+    if (restaurantRegisterScreen) restaurantRegisterScreen.style.display = "flex";
+  }
+
+  function logoutSafe(event) {
+    if (event) event.preventDefault();
+
+    if (typeof logout === "function") {
+      logout();
+      return;
+    }
+
+    window.location.href = "index.html";
+  }
+
+  function bindStaticActions() {
+    if (openSideMenu) openSideMenu.addEventListener("click", openDrawer);
+    if (closeSideMenu) closeSideMenu.addEventListener("click", closeAllPanels);
+    if (backdrop) backdrop.addEventListener("click", closeAllPanels);
+
+    if (openNotifications) {
+      openNotifications.addEventListener("click", () => openPanel(notificationsPanel));
+    }
+
+    if (closeNotifications) closeNotifications.addEventListener("click", closeAllPanels);
+
+    if (openProfileMenu) {
+      openProfileMenu.addEventListener("click", () => openPanel(profilePanel));
+    }
+
+    if (closeProfilePanel) closeProfilePanel.addEventListener("click", closeAllPanels);
+
+    if (bottomSearchBtn) {
+      bottomSearchBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        goToSearch();
+      });
+    }
+
+    if (bottomFavoritesBtn) {
+      bottomFavoritesBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        showFavoritesMessage();
+      });
+    }
+
+    if (bottomProfileBtn) {
+      bottomProfileBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        openPanel(profilePanel);
+      });
+    }
+
+    const drawerFavoritesBtn = document.getElementById("drawerFavoritesBtn");
+    const drawerLoginBtn = document.getElementById("drawerLoginBtn");
+    const drawerRegisterBtn = document.getElementById("drawerRegisterBtn");
+    const drawerRestaurantBtn = document.getElementById("drawerRestaurantBtn");
+
+    if (drawerFavoritesBtn) {
+      drawerFavoritesBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        closeAllPanels();
+        showFavoritesMessage();
+      });
+    }
+
+    if (drawerLoginBtn) {
+      drawerLoginBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        openLoginModal("customer");
+      });
+    }
+
+    if (drawerRegisterBtn) {
+      drawerRegisterBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        openRegisterModal();
+      });
+    }
+
+    if (drawerRestaurantBtn) {
+      drawerRestaurantBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        openRestaurantRegisterModal();
+      });
+    }
+  }
+
+  function renderProfilePanel() {
+    if (!profileActionsPanel) return;
+
+    const currentUser = currentUserSafe();
+
+    if (currentUser) {
+      const displayName = currentUser.fullName || currentUser.name || "Usuario";
+      const isRestaurant = currentUser.role === "restaurant";
+
+      profileActionsPanel.innerHTML = `
+        <div class="profile-mini-card">
+          <strong>Hola, ${displayName}</strong>
+          <span>${isRestaurant ? "Cuenta restaurante" : "Cuenta cliente"}</span>
+        </div>
+        <a href="index.html">Inicio</a>
+        ${isRestaurant ? '<a href="panel-restaurant.html">Mi panel restaurante</a>' : '<a href="mis-pedidos.html">Mis pedidos</a>'}
+        <button type="button" id="profileLogoutBtn">Cerrar sesión</button>
+      `;
+
+      const profileLogoutBtn = document.getElementById("profileLogoutBtn");
+      if (profileLogoutBtn) profileLogoutBtn.addEventListener("click", logoutSafe);
+      return;
+    }
+
+    profileActionsPanel.innerHTML = `
+      <button type="button" id="profileLoginBtn">Iniciar sesión</button>
+      <button type="button" id="profileRegisterBtn">Crear cuenta</button>
+      <button type="button" id="profileRestaurantBtn">Registrar restaurante</button>
+      <a href="mis-pedidos.html">Ver mis pedidos</a>
+    `;
+
+    const profileLoginBtn = document.getElementById("profileLoginBtn");
+    const profileRegisterBtn = document.getElementById("profileRegisterBtn");
+    const profileRestaurantBtn = document.getElementById("profileRestaurantBtn");
+
+    if (profileLoginBtn) profileLoginBtn.addEventListener("click", () => openLoginModal("customer"));
+    if (profileRegisterBtn) profileRegisterBtn.addEventListener("click", openRegisterModal);
+    if (profileRestaurantBtn) profileRestaurantBtn.addEventListener("click", openRestaurantRegisterModal);
+  }
 
   function renderHeader() {
-    const currentUser =
-      (typeof getCurrentUser === "function" && getCurrentUser()) || null;
+    if (!userNav) return;
+
+    const currentUser = currentUserSafe();
 
     if (currentUser) {
       if (currentUser.role === "restaurant") {
@@ -32,20 +253,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const logoutBtn = document.getElementById("logoutBtn");
+      if (logoutBtn) logoutBtn.addEventListener("click", logoutSafe);
 
-      if (logoutBtn) {
-        logoutBtn.addEventListener("click", (e) => {
-          e.preventDefault();
-
-          if (typeof logout === "function") {
-            logout();
-            return;
-          }
-
-          window.location.href = "index.html";
-        });
-      }
-
+      renderProfilePanel();
       return;
     }
 
@@ -54,65 +264,39 @@ document.addEventListener("DOMContentLoaded", () => {
       <a href="#" id="openLoginCustomer">Iniciar sesión</a>
       <a href="#" id="openRegisterCustomer">Regístrate</a>
       <a href="#" id="openRegisterRestaurant">Registro restaurante</a>
-      <a href="#">Quiénes somos</a>
+      <a href="#restaurantList">Restaurantes</a>
     `;
 
     const openLoginCustomer = document.getElementById("openLoginCustomer");
     const openRegisterCustomer = document.getElementById("openRegisterCustomer");
     const openRegisterRestaurant = document.getElementById("openRegisterRestaurant");
 
-    if (openRegisterCustomer) {
-      openRegisterCustomer.addEventListener("click", (e) => {
-        e.preventDefault();
-
-        if (typeof showRegister === "function") {
-          showRegister();
-          return;
-        }
-
-        const registerScreen = document.getElementById("registerScreen");
-        if (registerScreen) {
-          registerScreen.style.display = "flex";
-        }
-      });
-    }
-
     if (openLoginCustomer) {
       openLoginCustomer.addEventListener("click", (e) => {
         e.preventDefault();
+        openLoginModal("customer");
+      });
+    }
 
-        if (typeof showLogin === "function") {
-          showLogin("customer");
-          return;
-        }
-
-        const loginScreen = document.getElementById("loginScreen");
-        if (loginScreen) {
-          loginScreen.style.display = "flex";
-          return;
-        }
-
-        alert("Aún no has creado la pantalla de iniciar sesión en esta página.");
+    if (openRegisterCustomer) {
+      openRegisterCustomer.addEventListener("click", (e) => {
+        e.preventDefault();
+        openRegisterModal();
       });
     }
 
     if (openRegisterRestaurant) {
       openRegisterRestaurant.addEventListener("click", (e) => {
         e.preventDefault();
-
-        if (typeof showRestaurantRegister === "function") {
-          showRestaurantRegister();
-          return;
-        }
-
-        const restaurantRegisterScreen = document.getElementById("restaurantRegisterScreen");
-        if (restaurantRegisterScreen) {
-          restaurantRegisterScreen.style.display = "flex";
-        }
+        openRestaurantRegisterModal();
       });
     }
+
+    renderProfilePanel();
   }
 
+  bindStaticActions();
   renderHeader();
   window.addEventListener("deli:session-ready", renderHeader);
 });
+

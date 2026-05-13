@@ -5,6 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BHUZ</title>
+  <link rel="icon" type="image/jpeg" href="assets/image/logo-bhuz.jpeg">
+  <link rel="apple-touch-icon" href="assets/image/logo-bhuz.jpeg">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 
@@ -15,16 +17,21 @@
        - Mantiene el logo real del proyecto.
        - Mantiene el contenedor userNav que usa header.js/auth.js.
   ========================================================== -->
-  <header>
+  <header class="bhuz-header">
     <div class="header-inner">
 
-      <button class="menu-btn" type="button" aria-label="Menú">☰</button>
+      <button class="menu-btn" id="openSideMenu" type="button" aria-label="Abrir menú">☰</button>
 
-      <div class="logo-container">
+      <a href="index.html" class="logo-container" aria-label="BHUZ inicio">
         <img src="assets/image/logo-bhuz.jpeg" alt="BHUZ" class="header-logo-img">
-      </div>
+      </a>
 
       <div id="userNav" class="user-nav"></div>
+
+      <div class="header-actions-mobile">
+        <button class="icon-action" id="openNotifications" type="button" aria-label="Notificaciones">🔔</button>
+        <button class="icon-action" id="openProfileMenu" type="button" aria-label="Perfil">👤</button>
+      </div>
 
     </div>
   </header>
@@ -41,6 +48,11 @@
       <p id="city" class="city-pill">Detectando ubicación...</p>
       <h1>Pide comida fácil</h1>
       <p class="hero-slogan">Pide fácil, come feliz</p>
+      <div class="hero-chips">
+        <a href="#restaurantList">🍔 Restaurantes</a>
+        <a href="#topDishesSection">🔥 Populares</a>
+        <a href="mis-pedidos.html">🛍️ Mis pedidos</a>
+      </div>
     </div>
   </section>
 
@@ -145,11 +157,85 @@
   ========================================================== -->
   <nav class="bottom-nav">
     <a href="index.html" class="active">🏠<span>Inicio</span></a>
-    <a href="#restaurantList">🔎<span>Buscar</span></a>
-    <a href="mis-pedidos.html">🛍️<span>Mis pedidos</span></a>
-    <a href="#">♡<span>Favoritos</span></a>
-    <a href="#" onclick="showLogin(); return false;">👤<span>Perfil</span></a>
+    <a href="#" id="bottomSearchBtn">🔎<span>Buscar</span></a>
+    <a href="mis-pedidos.html">🛍️<span>Pedidos</span></a>
+    <a href="#" id="bottomFavoritesBtn">♡<span>Favoritos</span></a>
+    <a href="#" id="bottomProfileBtn">👤<span>Perfil</span></a>
   </nav>
+
+
+  <!-- =========================================================
+       MENÚ LATERAL BHUZ
+       - Opciones genéricas solicitadas.
+       - No cambia endpoints ni lógica backend.
+  ========================================================== -->
+  <div class="bhuz-backdrop" id="bhuzBackdrop"></div>
+
+  <aside class="bhuz-drawer" id="bhuzDrawer" aria-hidden="true">
+    <div class="drawer-head">
+      <img src="assets/image/logo-bhuz.jpeg" alt="BHUZ">
+      <button type="button" id="closeSideMenu" aria-label="Cerrar menú">✕</button>
+    </div>
+
+    <nav class="drawer-links">
+      <a href="index.html">🏠 Inicio</a>
+      <a href="#restaurantList">🍽️ Restaurantes</a>
+      <a href="#topDishesSection">🔥 Platos populares</a>
+      <a href="mis-pedidos.html">🛍️ Mis pedidos</a>
+      <a href="#" id="drawerFavoritesBtn">♡ Favoritos</a>
+      <a href="#" id="drawerLoginBtn">👤 Iniciar sesión</a>
+      <a href="#" id="drawerRegisterBtn">✨ Registrarme</a>
+      <a href="#" id="drawerRestaurantBtn">🏪 Registrar restaurante</a>
+    </nav>
+  </aside>
+
+  <!-- =========================================================
+       PANEL NOTIFICACIONES / PEDIDOS
+  ========================================================== -->
+  <aside class="bhuz-panel" id="notificationsPanel" aria-hidden="true">
+    <div class="panel-head">
+      <div>
+        <span class="mini-label">Centro de pedidos</span>
+        <h3>Notificaciones</h3>
+      </div>
+      <button type="button" id="closeNotifications">✕</button>
+    </div>
+
+    <div class="notification-list">
+      <a href="mis-pedidos.html" class="notification-card">
+        <strong>🛍️ Mis pedidos</strong>
+        <span>Consulta estado, historial y detalles.</span>
+      </a>
+      <div class="notification-card">
+        <strong>⏳ Pedido pendiente</strong>
+        <span>Cuando ordenes, aquí verás si está pendiente, aceptado, preparando o entregado.</span>
+      </div>
+      <div class="notification-card muted">
+        <strong>🔔 Avisos BHUZ</strong>
+        <span>Pronto verás promociones y actualizaciones importantes.</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- =========================================================
+       PANEL PERFIL / LOGIN
+  ========================================================== -->
+  <aside class="bhuz-panel" id="profilePanel" aria-hidden="true">
+    <div class="panel-head">
+      <div>
+        <span class="mini-label">Cuenta</span>
+        <h3>Perfil BHUZ</h3>
+      </div>
+      <button type="button" id="closeProfilePanel">✕</button>
+    </div>
+
+    <div class="profile-actions" id="profileActionsPanel">
+      <button type="button" id="profileLoginBtn">Iniciar sesión</button>
+      <button type="button" id="profileRegisterBtn">Crear cuenta</button>
+      <button type="button" id="profileRestaurantBtn">Registrar restaurante</button>
+      <a href="mis-pedidos.html">Ver mis pedidos</a>
+    </div>
+  </aside>
 
   <!-- REGISTRO CLIENTE -->
   <section class="register-screen" id="registerScreen" style="display: none;">
@@ -228,6 +314,11 @@
 
 </body>
 </html>
+
+
+
+
+
 
 
 
