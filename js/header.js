@@ -204,8 +204,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const currentUser = currentUserSafe();
 
-    renderSideMenu();
-
     if (currentUser) {
       const isRestaurant = currentUser.role === "restaurant";
 
@@ -241,8 +239,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!profileActionsPanel) return;
 
     const currentUser = currentUserSafe();
-
-    renderSideMenu();
 
     if (currentUser) {
       const displayName = currentUser.fullName || currentUser.name || "Usuario";
@@ -283,8 +279,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!userNav) return;
 
     const currentUser = currentUserSafe();
-
-    renderSideMenu();
 
     if (currentUser) {
       if (currentUser.role === "restaurant") {
@@ -350,5 +344,6 @@ document.addEventListener("DOMContentLoaded", () => {
   renderHeader();
   window.addEventListener("deli:session-ready", renderHeader);
 });
+
 
 
