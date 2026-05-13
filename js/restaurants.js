@@ -387,7 +387,7 @@ function getMatchingDishesForRestaurant(restaurant) {
 }
 
 function renderMatchingDishesSummary(restaurant) {
-  const matches = getMatchingDishesForRestaurant(restaurant).slice(0, 4);
+  const matches = getMatchingDishesForRestaurant(restaurant).slice(0, 2);
 
   if (!matches.length) {
     return "";
@@ -415,6 +415,9 @@ function renderMatchingDishesSummary(restaurant) {
           </button>
         </div>
       `).join("")}
+      <div style="margin-top:9px;font-size:12px;color:#9ca3af;line-height:1.35;">
+        Mostrando máximo 2 opciones. Entra al restaurante para ver el menú completo.
+      </div>
     </div>
   `;
 }
@@ -850,8 +853,34 @@ function renderErrorState() {
 /* ==========================================
    EVENTOS
 ========================================== */
+let bhuzSearchScrollTimer = null;
+
+function scrollToRestaurantResultsAfterSearch() {
+  const text = searchInput ? normalizeText(searchInput.value) : "";
+
+  if (bhuzSearchScrollTimer) {
+    clearTimeout(bhuzSearchScrollTimer);
+  }
+
+  if (!text || text.length < 2) return;
+
+  bhuzSearchScrollTimer = setTimeout(() => {
+    const target = document.getElementById("restaurantList") || list;
+
+    if (target) {
+      target.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }
+  }, 320);
+}
+
 if (searchInput) {
-  searchInput.addEventListener("input", updateRestaurants);
+  searchInput.addEventListener("input", () => {
+    updateRestaurants();
+    scrollToRestaurantResultsAfterSearch();
+  });
 }
 
 /* ==========================================
@@ -883,6 +912,194 @@ async function initRestaurantsPage() {
 }
 
 initRestaurantsPage();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

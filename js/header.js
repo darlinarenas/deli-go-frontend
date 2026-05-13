@@ -18,6 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const notificationsPanel = document.getElementById("notificationsPanel");
   const profilePanel = document.getElementById("profilePanel");
   const profileActionsPanel = document.getElementById("profileActionsPanel");
+  const drawerLinks = document.querySelector(".drawer-links");
 
   const openSideMenu = document.getElementById("openSideMenu");
   const closeSideMenu = document.getElementById("closeSideMenu");
@@ -154,11 +155,15 @@ document.addEventListener("DOMContentLoaded", () => {
         openPanel(profilePanel);
       });
     }
+  }
 
+
+  function bindDrawerActionButtons() {
     const drawerFavoritesBtn = document.getElementById("drawerFavoritesBtn");
     const drawerLoginBtn = document.getElementById("drawerLoginBtn");
     const drawerRegisterBtn = document.getElementById("drawerRegisterBtn");
     const drawerRestaurantBtn = document.getElementById("drawerRestaurantBtn");
+    const drawerLogoutBtn = document.getElementById("drawerLogoutBtn");
 
     if (drawerFavoritesBtn) {
       drawerFavoritesBtn.addEventListener("click", (e) => {
@@ -188,12 +193,56 @@ document.addEventListener("DOMContentLoaded", () => {
         openRestaurantRegisterModal();
       });
     }
+
+    if (drawerLogoutBtn) {
+      drawerLogoutBtn.addEventListener("click", logoutSafe);
+    }
+  }
+
+  function renderSideMenu() {
+    if (!drawerLinks) return;
+
+    const currentUser = currentUserSafe();
+
+    renderSideMenu();
+
+    if (currentUser) {
+      const isRestaurant = currentUser.role === "restaurant";
+
+      drawerLinks.innerHTML = `
+        <a href="index.html">🏠 Inicio</a>
+        <a href="#restaurantList">🍽️ Restaurantes</a>
+        <a href="#topDishesSection">🔥 Platos populares</a>
+        ${isRestaurant ? '<a href="panel-restaurant.html">🏪 Mi panel restaurante</a>' : '<a href="mis-pedidos.html">🛍️ Mis pedidos</a>'}
+        <a href="#" id="drawerFavoritesBtn">♡ Favoritos</a>
+        ${!isRestaurant ? '<a href="#" id="drawerRestaurantBtn">🏪 Registrar restaurante</a>' : ''}
+        <a href="#" id="drawerLogoutBtn">🚪 Cerrar sesión</a>
+      `;
+
+      bindDrawerActionButtons();
+      return;
+    }
+
+    drawerLinks.innerHTML = `
+      <a href="index.html">🏠 Inicio</a>
+      <a href="#restaurantList">🍽️ Restaurantes</a>
+      <a href="#topDishesSection">🔥 Platos populares</a>
+      <a href="mis-pedidos.html">🛍️ Mis pedidos</a>
+      <a href="#" id="drawerFavoritesBtn">♡ Favoritos</a>
+      <a href="#" id="drawerLoginBtn">👤 Iniciar sesión</a>
+      <a href="#" id="drawerRegisterBtn">✨ Registrarme</a>
+      <a href="#" id="drawerRestaurantBtn">🏪 Registrar restaurante</a>
+    `;
+
+    bindDrawerActionButtons();
   }
 
   function renderProfilePanel() {
     if (!profileActionsPanel) return;
 
     const currentUser = currentUserSafe();
+
+    renderSideMenu();
 
     if (currentUser) {
       const displayName = currentUser.fullName || currentUser.name || "Usuario";
@@ -234,6 +283,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!userNav) return;
 
     const currentUser = currentUserSafe();
+
+    renderSideMenu();
 
     if (currentUser) {
       if (currentUser.role === "restaurant") {
@@ -299,4 +350,5 @@ document.addEventListener("DOMContentLoaded", () => {
   renderHeader();
   window.addEventListener("deli:session-ready", renderHeader);
 });
+
 
