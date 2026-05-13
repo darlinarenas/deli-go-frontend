@@ -35,6 +35,17 @@ const topRestaurantsContainer = document.getElementById("topRestaurants");
 const topRestaurantsSection = document.getElementById("topRestaurantsSection");
 const topDishesContainer = document.getElementById("topDishes");
 const topDishesSection = document.getElementById("topDishesSection");
+const smartResultCard = document.getElementById("smartResultCard");
+const smartResultTitle = document.getElementById("smartResultTitle");
+const smartResultText = document.getElementById("smartResultText");
+const smartResultEmoji = document.getElementById("smartResultEmoji");
+const quickOfferCard = document.getElementById("quickOfferCard");
+const quickOfferTitle = document.getElementById("quickOfferTitle");
+const quickOfferText = document.getElementById("quickOfferText");
+const quickOfferBtn = document.getElementById("quickOfferBtn");
+const allRestaurantsSection = document.getElementById("allRestaurantsSection");
+const allRestaurantsTitle = document.getElementById("allRestaurantsTitle");
+const allRestaurantsHint = document.getElementById("allRestaurantsHint");
 
 /* ==========================================
    COMPATIBILIDAD CON OTROS ARCHIVOS
@@ -67,6 +78,168 @@ function escapeHtml(text) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
+}
+
+
+function getCategoryEmoji(category) {
+  const value = normalizeText(category);
+
+  if (value.includes("pollo")) return "🍗";
+  if (value.includes("empanada")) return "🥟";
+  if (value.includes("hamburg")) return "🍔";
+  if (value.includes("pizza")) return "🍕";
+  if (value.includes("bebida") || value.includes("pepsi") || value.includes("refresco")) return "🥤";
+  if (value.includes("huevo")) return "🥚";
+  if (value.includes("pan")) return "🥖";
+  if (value.includes("queso")) return "🧀";
+  if (value.includes("perro")) return "🌭";
+  if (value.includes("sushi")) return "🍣";
+  if (value.includes("postre")) return "🍰";
+  if (value === "todos") return "▦";
+
+  return "🍽️";
+}
+
+function getActiveSearchText() {
+  return searchInput ? normalizeText(searchInput.value) : "";
+}
+
+function getActiveContextLabel() {
+  const text = getActiveSearchText();
+
+  if (text) return text;
+  if (active && active !== "Todos") return active;
+
+  return "";
+}
+
+function hasActiveDiscoveryContext() {
+  return Boolean(getActiveContextLabel());
+}
+
+function restaurantMatchesContext(restaurant) {
+  const context = normalizeText(getActiveContextLabel());
+
+  if (!context) return true;
+
+  const matchRestaurant =
+    normalizeText(restaurant.name).includes(context) ||
+    normalizeText(restaurant.type).includes(context) ||
+    normalizeText(restaurant.category).includes(context) ||
+    normalizeText(restaurant.address).includes(context);
+
+  const matchDishes = (restaurant.dishes || []).some((dish) => {
+    return (
+      normalizeText(dish.name).includes(context) ||
+      normalizeText(dish.description).includes(context) ||
+      normalizeText(dish.category).includes(context)
+    );
+  });
+
+  return matchRestaurant || matchDishes;
+}
+
+function getPopularDishesForContext(limit = 8) {
+  const context = normalizeText(getActiveContextLabel());
+
+  let source = [];
+
+  if (context) {
+    source = allDishes.filter((dish) => {
+      return (
+        normalizeText(dish.name).includes(context) ||
+        normalizeText(dish.description).includes(context) ||
+        normalizeText(dish.category).includes(context) ||
+        normalizeText(dish.restaurantName).includes(context)
+      );
+    });
+  } else {
+    source = allDishes.slice();
+  }
+
+  return source
+    .map((dish) => ({
+      ...dish,
+      weeklySales: getDishWeeklySales(dish.restaurantEmail, dish)
+    }))
+    .sort((a, b) => {
+      const salesDiff = Number(b.weeklySales || 0) - Number(a.weeklySales || 0);
+      if (salesDiff !== 0) return salesDiff;
+      return Number(b.price || 0) - Number(a.price || 0);
+    })
+    .slice(0, limit);
+}
+
+function updateSmartContextUI(filteredRestaurants = []) {
+  const label = getActiveContextLabel();
+  const hasContext = Boolean(label);
+
+  if (smartResultCard) {
+    smartResultCard.style.display = hasContext ? "flex" : "none";
+  }
+
+  if (quickOfferCard) {
+    quickOfferCard.style.display = hasContext ? "grid" : "none";
+  }
+
+  if (!hasContext) {
+    if (allRestaurantsSection) allRestaurantsSection.classList.remove("is-secondary");
+    if (allRestaurantsTitle) allRestaurantsTitle.textContent = "Restaurantes disponibles";
+    if (allRestaurantsHint) allRestaurantsHint.textContent = "Explorar";
+    return;
+  }
+
+  const prettyLabel = label.charAt(0).toUpperCase() + label.slice(1);
+
+  if (smartResultTitle) {
+    smartResultTitle.textContent = `Mostrando restaurantes y platos de: ${prettyLabel}`;
+  }
+
+  if (smartResultText) {
+    smartResultText.textContent = `${filteredRestaurants.length} restaurante(s) relacionado(s). Todo lo importante aparece primero para evitar scroll innecesario.`;
+  }
+
+  if (smartResultEmoji) {
+    smartResultEmoji.textContent = getCategoryEmoji(prettyLabel);
+  }
+
+  if (quickOfferTitle) {
+    quickOfferTitle.textContent = `Ofertas en ${prettyLabel}`;
+  }
+
+  if (quickOfferText) {
+    quickOfferText.textContent = "Espacio listo para promociones, campañas pagadas o platos destacados por anunciante.";
+  }
+
+  if (quickOfferBtn) {
+    quickOfferBtn.onclick = () => {
+      alert("Aquí conectaremos promociones reales y campañas patrocinadas por categoría más adelante.");
+    };
+  }
+
+  if (allRestaurantsSection) allRestaurantsSection.classList.add("is-secondary");
+  if (allRestaurantsTitle) allRestaurantsTitle.textContent = `Más restaurantes relacionados con ${prettyLabel}`;
+  if (allRestaurantsHint) allRestaurantsHint.textContent = "Menú completo";
+}
+
+function bindDishOrderButtons(container) {
+  if (!container) return;
+
+  container.querySelectorAll("button[data-dish-id], button[data-dish-name]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+
+      const restaurantEmail = encodeURIComponent(button.dataset.restaurantEmail || "");
+      const dishId = encodeURIComponent(button.dataset.dishId || "");
+      const dishName = encodeURIComponent(button.dataset.dishName || "");
+      const dishPrice = encodeURIComponent(button.dataset.dishPrice || "0");
+
+      if (!restaurantEmail || (!dishId && !dishName)) return;
+
+      window.location.href =
+        `restaurant.html?restaurant=${restaurantEmail}&addDish=${dishId}&addDishName=${dishName}&addDishPrice=${dishPrice}&openCart=1`;
+    });
+  });
 }
 
 /* ==========================================
@@ -561,6 +734,7 @@ function renderCategories() {
     const button = document.createElement("button");
     button.textContent = category;
     button.className = "category-btn";
+    button.setAttribute("data-category-emoji", getCategoryEmoji(category));
 
     if (category === active) {
       button.classList.add("active");
@@ -568,7 +742,12 @@ function renderCategories() {
 
     button.onclick = () => {
       active = category;
-      updateRestaurants();
+
+      if (searchInput && category !== "Todos") {
+        searchInput.value = "";
+      }
+
+      updateRestaurants(true);
     };
 
     categoryContainer.appendChild(button);
@@ -578,38 +757,70 @@ function renderCategories() {
 /* ==========================================
    RENDER TOP 6 RESTAURANTES SEMANAL
 ========================================== */
-function renderTopRestaurants() {
+function renderTopRestaurants(filteredRestaurants = []) {
   if (!topRestaurantsContainer) return;
 
-  const topRestaurants = Array.isArray(topRestaurantsFromBackend)
-    ? topRestaurantsFromBackend.slice(0, 6)
-    : [];
-
-  if (!topRestaurants.length) {
-    if (topRestaurantsSection) {
-      topRestaurantsSection.style.display = "none";
-    }
-    topRestaurantsContainer.innerHTML = "";
-    return;
-  }
+  const hasContext = hasActiveDiscoveryContext();
+  const contextLabel = getActiveContextLabel();
 
   if (topRestaurantsSection) {
     topRestaurantsSection.style.display = "block";
   }
 
-  topRestaurantsContainer.innerHTML = topRestaurants.map((restaurant) => `
-    <div class="restaurant">
-      <div class="tag">🔥 Popular</div>
-      <b>${escapeHtml(restaurant.name)}</b><br>
-      <span class="restaurant-status status-open">🟢 Abierto</span><br>
-      ${escapeHtml(restaurant.type || restaurant.category || "Comida")}<br>
-      🛒 ${Number(restaurant.totalOrders || 0)} pedido(s) ${escapeHtml(topRestaurantsLabel)}<br>
-      ⭐ ${escapeHtml(restaurant.rating || "Nuevo")} · 🚚 ${escapeHtml(restaurant.delivery || "A convenir")} · ⏱ ${escapeHtml(restaurant.time || "20-40 min")}
-    </div>
-  `).join("");
+  if (topRestaurantsContainer) {
+    topRestaurantsContainer.classList.add("horizontal-grid");
+  }
+
+  const source = hasContext
+    ? filteredRestaurants.slice(0, 8)
+    : (Array.isArray(topRestaurantsFromBackend) ? topRestaurantsFromBackend.slice(0, 8) : []);
+
+  const title = topRestaurantsSection?.querySelector(".block-title-row h2");
+  const more = topRestaurantsSection?.querySelector(".block-title-row span");
+
+  if (title) {
+    title.textContent = hasContext
+      ? `Restaurantes que venden ${contextLabel.charAt(0).toUpperCase() + contextLabel.slice(1)}`
+      : "Restaurantes más pedidos";
+  }
+
+  if (more) {
+    more.textContent = "Ver todos";
+  }
+
+  if (!source.length) {
+    topRestaurantsContainer.innerHTML = `
+      <div class="empty-state" style="grid-column: 1 / -1;">
+        No encontramos restaurantes para esta búsqueda.
+      </div>
+    `;
+    return;
+  }
+
+  topRestaurantsContainer.innerHTML = source.map((restaurant, index) => {
+    const name = restaurant.name || "Restaurante";
+    const email = restaurant.email || "";
+    const type = restaurant.type || restaurant.category || "Comida";
+    const orders = Number(restaurant.totalOrders || 0);
+    const isAd = hasContext && index < 2;
+
+    return `
+      <div class="restaurant compact-result">
+        ${isAd ? '<span class="ad-label">Anuncio</span>' : '<span class="popular-label">🔥 Popular</span>'}
+        <b>${escapeHtml(name)}</b>
+        <span class="restaurant-status status-open">🟢 Abierto</span>
+        <span class="result-subtitle">
+          ${escapeHtml(type)}<br>
+          ${orders > 0 ? `🛒 ${orders} pedido(s) ${escapeHtml(topRestaurantsLabel)}<br>` : ""}
+          ⭐ ${escapeHtml(restaurant.rating || "Nuevo")} · 🚚 ${escapeHtml(restaurant.delivery || "A convenir")} · ⏱ ${escapeHtml(restaurant.time || "20-40 min")}
+        </span>
+      </div>
+    `;
+  }).join("");
 
   Array.from(topRestaurantsContainer.children).forEach((card, index) => {
-    const restaurant = topRestaurants[index];
+    const restaurant = source[index];
+    if (!restaurant) return;
 
     card.addEventListener("click", () => {
       if (restaurant.email) {
@@ -627,63 +838,87 @@ function renderTopRestaurants() {
 }
 
 /* ==========================================
-   RENDER TOP 6 PLATOS SEMANAL
+   RENDER TOP / PLATOS POR CONTEXTO
 ========================================== */
 function renderTopDishes() {
   if (!topDishesContainer) return;
 
-  const topDishes = Array.isArray(topDishesFromBackend)
-    ? topDishesFromBackend.slice(0, 6)
-    : [];
-
-  if (!topDishes.length) {
-    if (topDishesSection) {
-      topDishesSection.style.display = "none";
-    }
-    topDishesContainer.innerHTML = "";
-    return;
-  }
+  const hasContext = hasActiveDiscoveryContext();
+  const contextLabel = getActiveContextLabel();
 
   if (topDishesSection) {
     topDishesSection.style.display = "block";
   }
 
-  topDishesContainer.innerHTML = topDishes.map((dish) => `
-    <div class="restaurant">
-      <div class="tag">🍔 Top plato</div>
-      <b>${escapeHtml(dish.dishEmoji || "🍽️")} ${escapeHtml(dish.dishName)}</b><br>
-      📍 ${escapeHtml(dish.restaurantName)}<br>
-      🛒 ${Number(dish.totalQty || 0)} pedido(s) ${escapeHtml(topDishesLabel)}<br>
-      ${Number(dish.dishPrice || 0) > 0 ? `💵 $${Number(dish.dishPrice || 0).toLocaleString("es-CL")}` : ""}
-      <button
-        type="button"
-        class="budget-btn"
-        style="margin-top:12px;"
-        data-dish-id="${escapeHtml(dish.dishId || "")}" 
-        data-dish-name="${escapeHtml(dish.dishName || "")}" 
-        data-dish-price="${escapeHtml(dish.dishPrice || 0)}" 
-        data-restaurant-email="${escapeHtml(dish.restaurantEmail || "")}" 
-      >
-        Pedir ahora
-      </button>
-    </div>
-  `).join("");
+  topDishesContainer.classList.add("horizontal-grid");
 
-  topDishesContainer.querySelectorAll("button[data-dish-id]").forEach((button) => {
-    button.addEventListener("click", (event) => {
-      event.stopPropagation();
+  const title = topDishesSection?.querySelector(".block-title-row h2");
+  const more = topDishesSection?.querySelector(".block-title-row span");
 
-      const restaurantEmail = encodeURIComponent(button.dataset.restaurantEmail || "");
-      const dishId = encodeURIComponent(button.dataset.dishId || "");
-      const dishName = encodeURIComponent(button.dataset.dishName || "");
-      const dishPrice = encodeURIComponent(button.dataset.dishPrice || "0");
+  if (title) {
+    title.textContent = hasContext
+      ? `Platos populares en ${contextLabel.charAt(0).toUpperCase() + contextLabel.slice(1)}`
+      : "Platos más pedidos";
+  }
 
-      if (!restaurantEmail || (!dishId && !dishName)) return;
+  if (more) {
+    more.textContent = "Ver todos";
+  }
 
-      window.location.href =
-        `restaurant.html?restaurant=${restaurantEmail}&addDish=${dishId}&addDishName=${dishName}&addDishPrice=${dishPrice}&openCart=1`;
-    });
-  });
+  let dishes = [];
+
+  if (hasContext) {
+    dishes = getPopularDishesForContext(8);
+  } else {
+    dishes = Array.isArray(topDishesFromBackend)
+      ? topDishesFromBackend.slice(0, 8).map((dish) => ({
+          id: dish.dishId || "",
+          name: dish.dishName || "Plato",
+          emoji: dish.dishEmoji || "🍽️",
+          price: Number(dish.dishPrice || 0),
+          restaurantEmail: dish.restaurantEmail || "",
+          restaurantName: dish.restaurantName || "Restaurante",
+          weeklySales: Number(dish.totalQty || 0)
+        }))
+      : [];
+  }
+
+  if (!dishes.length) {
+    topDishesContainer.innerHTML = `
+      <div class="empty-state" style="grid-column: 1 / -1;">
+        No encontramos platos populares para esta búsqueda.
+      </div>
+    `;
+    return;
+  }
+
+  topDishesContainer.innerHTML = dishes.map((dish, index) => {
+    const isPopular = index < 4;
+
+    return `
+      <div class="restaurant compact-result">
+        <span class="popular-label">${isPopular ? "Popular" : "Recomendado"}</span>
+        <b>${escapeHtml(dish.emoji || "🍽️")} ${escapeHtml(dish.name || "Plato")}</b>
+        <span class="result-subtitle">
+          📍 ${escapeHtml(dish.restaurantName || "Restaurante")}<br>
+          ${Number(dish.weeklySales || 0) > 0 ? `🛒 ${Number(dish.weeklySales || 0)} pedido(s)<br>` : ""}
+          ${Number(dish.price || 0) > 0 ? `💵 $${Number(dish.price || 0).toLocaleString("es-CL")}` : ""}
+        </span>
+        <button
+          type="button"
+          class="budget-btn"
+          data-dish-id="${escapeHtml(dish.id || "")}" 
+          data-dish-name="${escapeHtml(dish.name || "")}" 
+          data-dish-price="${escapeHtml(dish.price || 0)}" 
+          data-restaurant-email="${escapeHtml(dish.restaurantEmail || "")}" 
+        >
+          Pedir ahora
+        </button>
+      </div>
+    `;
+  }).join("");
+
+  bindDishOrderButtons(topDishesContainer);
 }
 
 /* ==========================================
@@ -804,11 +1039,23 @@ function applyFilters() {
 /* ==========================================
    ACTUALIZAR LISTADO
 ========================================== */
-function updateRestaurants() {
+function updateRestaurants(shouldScroll = false) {
+  const filteredRestaurants = applyFilters();
+
   renderCategories();
-  renderTopRestaurants();
+  updateSmartContextUI(filteredRestaurants);
+  renderTopRestaurants(filteredRestaurants);
   renderTopDishes();
-  renderRestaurants(applyFilters());
+  renderRestaurants(filteredRestaurants);
+
+  if (shouldScroll && hasActiveDiscoveryContext()) {
+    setTimeout(() => {
+      const target = smartResultCard || topRestaurantsSection || list;
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 80);
+  }
 }
 
 /* ==========================================
@@ -865,7 +1112,7 @@ function scrollToRestaurantResultsAfterSearch() {
   if (!text || text.length < 2) return;
 
   bhuzSearchScrollTimer = setTimeout(() => {
-    const target = document.getElementById("restaurantList") || list;
+    const target = smartResultCard || topRestaurantsSection || document.getElementById("restaurantList") || list;
 
     if (target) {
       target.scrollIntoView({
@@ -878,8 +1125,7 @@ function scrollToRestaurantResultsAfterSearch() {
 
 if (searchInput) {
   searchInput.addEventListener("input", () => {
-    updateRestaurants();
-    scrollToRestaurantResultsAfterSearch();
+    updateRestaurants(true);
   });
 }
 
@@ -912,6 +1158,382 @@ async function initRestaurantsPage() {
 }
 
 initRestaurantsPage();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

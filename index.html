@@ -103,6 +103,30 @@
     </section>
 
     <!-- =========================================================
+         RESULTADO DINÁMICO OPCIÓN 3
+         - Este bloque se actualiza desde restaurants.js.
+         - Sirve para que categorías/búsquedas muestren resultados arriba.
+         - No rompe backend ni endpoints actuales.
+    ========================================================== -->
+    <section class="smart-result-card" id="smartResultCard" style="display: none;">
+      <div class="smart-result-copy">
+        <span class="mini-label">Resultado inmediato</span>
+        <h2 id="smartResultTitle">Mostrando restaurantes y platos</h2>
+        <p id="smartResultText">Elige una categoría o busca un plato para ver primero lo más relevante.</p>
+      </div>
+      <div class="smart-result-emoji" id="smartResultEmoji">🍽️</div>
+    </section>
+
+    <section class="quick-offer-card" id="quickOfferCard" style="display: none;">
+      <div class="quick-offer-icon">🏷️</div>
+      <div>
+        <strong id="quickOfferTitle">Ofertas destacadas</strong>
+        <p id="quickOfferText">Aquí podrás mostrar campañas, promociones o espacios patrocinados por categoría.</p>
+      </div>
+      <button type="button" id="quickOfferBtn">Ver ofertas</button>
+    </section>
+
+        <!-- =========================================================
          TOP RESTAURANTES SEMANA
          - Mantiene ids usados por restaurants.js.
     ========================================================== -->
@@ -141,9 +165,10 @@
          LISTA RESTAURANTES
          - Mantiene id restaurantList.
     ========================================================== -->
-    <section class="home-block">
+    <section class="home-block" id="allRestaurantsSection">
       <div class="block-title-row">
-        <h2>Restaurantes disponibles</h2>
+        <h2 id="allRestaurantsTitle">Restaurantes disponibles</h2>
+        <span id="allRestaurantsHint">Explorar</span>
       </div>
       <div class="grid" id="restaurantList"></div>
     </section>
@@ -314,6 +339,16 @@
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
 
 
 
