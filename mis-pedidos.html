@@ -1,69 +1,66 @@
-<!DOCTYPE html>
+<!-- BHUZ - mis-pedidos.html actualizado -->
+<!-- Vista premium compacta -->
+<!-- AUTO UPDATE ACTIVADO -->
 
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DELI - Mis pedidos</title>
+  <title>BHUZ - Mis pedidos</title>
   <link rel="stylesheet" href="css/mis-pedidos.css">
 </head>
+
 <body>
 
-  <!-- =====================================================
-       CABECERA
-  ====================================================== -->
+<header class="orders-header">
+  <div class="top-row">
+    <div class="back" onclick="history.back()">←</div>
+    <img src="assets/image/logo-bhuz.jpeg" class="orders-logo">
+  </div>
 
-  <header class="orders-header">
-    <div class="back" onclick="history.back()">← Volver</div>
-    <h1>Mis pedidos</h1>
-    <p>Consulta tu historial de pedidos realizados en Deli</p>
-  </header>
+  <h1>Mis pedidos</h1>
+  <p>Aquí podrás seguir el estado de tus pedidos en tiempo real.</p>
+</header>
 
-  <!-- =====================================================
-       RESUMEN DEL USUARIO
-  ====================================================== -->
+<section class="user-summary" id="userSummary">
+  <h2>Hola 👋</h2>
+  <p id="userNameText">Cargando pedidos...</p>
+</section>
 
-  <section class="user-summary" id="userSummary">
-    <h2>Hola 👋</h2>
-    <p id="userNameText">Aquí verás tus pedidos anteriores.</p>
-  </section>
+<section class="stats">
 
-  <!-- =====================================================
-       RESUMEN GENERAL
-  ====================================================== -->
+  <div class="stat-card">
+    <span>Pedidos realizados</span>
+    <strong id="totalOrders">0</strong>
+  </div>
 
-  <section class="stats">
-    <div class="stat-card">
-      <span>Total de pedidos</span>
-      <strong id="totalOrders">0</strong>
-    </div>
+  <div class="stat-card">
+    <span>Pedidos activos</span>
+    <strong id="activeOrders">0</strong>
+  </div>
 
-```
-<div class="stat-card">
-  <span>Total gastado</span>
-  <strong id="totalSpent">$0</strong>
-</div>
+  <div class="stat-card">
+    <span>Último estado</span>
+    <strong id="lastStatus">-</strong>
+  </div>
 
-<div class="stat-card">
-  <span>Último estado</span>
-  <strong id="lastStatus">-</strong>
-</div>
-```
+</section>
 
-  </section>
+<section class="orders-tabs">
+  <button class="tab-btn active" data-filter="all">Todos</button>
+  <button class="tab-btn" data-filter="en_camino">En camino</button>
+  <button class="tab-btn" data-filter="entregado">Entregados</button>
+  <button class="tab-btn" data-filter="cancelado">Cancelados</button>
+</section>
 
-  <!-- =====================================================
-       LISTA DE PEDIDOS
-  ====================================================== -->
+<main class="orders-container">
+  <div id="ordersList"></div>
+</main>
 
-  <main class="orders-container">
-    <div id="ordersList"></div>
-  </main>
-
-  <script src="js/auth.js"></script>
-  <script src="js/orders.js"></script>
-
-  <script src="js/user-orders.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/orders.js"></script>
+<script src="js/user-orders.js"></script>
 
 </body>
 </html>
