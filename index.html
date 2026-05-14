@@ -51,7 +51,6 @@
       <div class="hero-chips">
         <a href="#restaurantList">🍔 Restaurantes</a>
         <a href="#topDishesSection">🔥 Populares</a>
-        <a href="mis-pedidos.html">🛍️ Mis pedidos</a>
       </div>
     </div>
   </section>
@@ -329,6 +328,124 @@
     </div>
   </section>
 
+
+  <!-- =========================================================
+       UBICACIÓN BHUZ - FALLBACK SEGURO
+       - Evita que el texto "Detectando ubicación..." quede pegado.
+       - Primero intenta ubicación por navegador.
+       - Si el usuario no da permiso o falla, intenta ipapi.
+       - Si todo falla, deja una ciudad base para no romper la vista.
+  ========================================================== -->
+  <script>
+    (function initBhuzCityDetection() {
+      const cityElement = document.getElementById("city");
+      const FALLBACK_CITY = "Punto Fijo";
+      let cityResolved = false;
+
+      function setCityLabel(value, isFallback) {
+        if (!cityElement || cityResolved) return;
+
+        const cleanValue = String(value || "").trim();
+        cityElement.textContent = cleanValue
+          ? `📍 ${cleanValue}`
+          : `📍 ${FALLBACK_CITY}`;
+
+        if (isFallback) {
+          cityElement.classList.add("city-pill-fallback");
+        }
+
+        cityResolved = true;
+      }
+
+      function setFallbackCity() {
+        setCityLabel(FALLBACK_CITY, true);
+      }
+
+      async function detectCityByIp() {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+          const response = await fetch("https://ipapi.co/json/", {
+            cache: "no-store",
+            signal: controller.signal
+          });
+
+          clearTimeout(timeoutId);
+
+          if (!response.ok) {
+            throw new Error("No se pudo consultar ipapi");
+          }
+
+          const data = await response.json();
+          const city = data && (data.city || data.region || data.country_name);
+
+          setCityLabel(city || FALLBACK_CITY, !city);
+        } catch (error) {
+          console.warn("BHUZ ubicación por IP no disponible:", error);
+          setFallbackCity();
+        }
+      }
+
+      function detectCityByBrowser() {
+        if (!navigator.geolocation) {
+          detectCityByIp();
+          return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+          async function handlePosition(position) {
+            try {
+              const latitude = position.coords.latitude;
+              const longitude = position.coords.longitude;
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 4500);
+
+              const response = await fetch(
+                `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=es`,
+                {
+                  cache: "no-store",
+                  signal: controller.signal
+                }
+              );
+
+              clearTimeout(timeoutId);
+
+              if (!response.ok) {
+                throw new Error("No se pudo convertir coordenadas en ciudad");
+              }
+
+              const data = await response.json();
+              const city = data && (data.city || data.locality || data.principalSubdivision || data.countryName);
+
+              setCityLabel(city || FALLBACK_CITY, !city);
+            } catch (error) {
+              console.warn("BHUZ geolocalización reversa no disponible:", error);
+              detectCityByIp();
+            }
+          },
+          function handleGeoError(error) {
+            console.warn("BHUZ permiso de ubicación no disponible:", error);
+            detectCityByIp();
+          },
+          {
+            enableHighAccuracy: false,
+            timeout: 5000,
+            maximumAge: 1000 * 60 * 20
+          }
+        );
+      }
+
+      setTimeout(function preventStuckCityLabel() {
+        if (!cityResolved) {
+          detectCityByIp();
+        }
+      }, 5200);
+
+      detectCityByBrowser();
+    })();
+  </script>
+
   <script src="js/database.js"></script>
   <script src="js/restaurants.js"></script>
   <script src="js/auth.js"></script>
@@ -339,6 +456,26 @@
 
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
