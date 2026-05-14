@@ -3,15 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DELI - Restaurante</title>
+  <title>BHUZ - Restaurante</title>
+  <link rel="icon" type="image/jpeg" href="assets/image/logo-bhuz.jpeg">
+  <link rel="apple-touch-icon" href="assets/image/logo-bhuz.jpeg">
   <link rel="stylesheet" href="css/restaurant.css">
 </head>
 <body>
 
-  <!-- TOP BAR -->
+  <!-- =====================================================
+       TOP BAR PREMIUM BHUZ
+       - Mantiene userNav para auth.js.
+       - No cambia rutas ni lógica backend.
+  ====================================================== -->
   <header class="top-user-bar">
     <div class="top-user-left">
-      <strong class="brand-logo">DELI</strong>
+      <button class="back-icon" type="button" onclick="history.back()" aria-label="Volver">←</button>
+      <a href="index.html" class="brand-logo" aria-label="BHUZ inicio">
+        <img src="assets/image/logo-bhuz.jpeg" alt="BHUZ">
+      </a>
     </div>
 
     <div class="top-user-right" id="restaurantUserNav">
@@ -19,64 +28,94 @@
     </div>
   </header>
 
-  <!-- HERO -->
+  <!-- =====================================================
+       HERO RESTAURANTE PREMIUM
+       - IDs originales preservados: restaurantName / restaurantMeta.
+  ====================================================== -->
   <section class="restaurant-hero">
     <div class="hero-content">
-      <div class="back" onclick="history.back()">← Volver</div>
+      <div class="hero-copy">
+        <div class="back" onclick="history.back()">← Volver</div>
 
-      <h1 class="hero-title" id="restaurantName">MERAKI</h1>
+        <span class="hero-kicker">Restaurante BHUZ</span>
+        <h1 class="hero-title" id="restaurantName">Restaurante</h1>
+        <p class="hero-description" id="restaurantMeta">Cargando información del restaurante...</p>
 
-      <div class="hero-badges">
-        <span class="hero-badge" id="restaurantMeta">Punto Fijo</span>
-        <span class="hero-badge">⭐ 4.7</span>
-        <span class="hero-badge">🛵 Delivery</span>
-        <span class="hero-badge">⏱ 20-35 min</span>
+        <div class="hero-badges">
+          <span class="hero-badge">🟢 Abierto</span>
+          <span class="hero-badge">⭐ Nuevo</span>
+          <span class="hero-badge">🛵 Delivery</span>
+          <span class="hero-badge">⏱ 20-35 min</span>
+        </div>
+      </div>
+
+      <div class="hero-visual" aria-hidden="true">
+        <div class="hero-food-orb">🍔</div>
+        <div class="hero-glow-card">
+          <span>Pedido rápido</span>
+          <strong>Menú disponible</strong>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- PROMOCIONES -->
+  <!-- =====================================================
+       PROMOCIONES
+       - ID original preservado: restaurantPromotions.
+  ====================================================== -->
   <section class="promo-section">
     <div class="section-inner">
-      <h2 class="section-title">Promociones</h2>
+      <div class="section-heading-row">
+        <div>
+          <span class="mini-label">Beneficios</span>
+          <h2 class="section-title">Promociones</h2>
+        </div>
+      </div>
 
       <div class="promotions" id="restaurantPromotions">
         <div class="promo-card">
-          <div class="promo-title">🔥 2x1 EN PIZZAS</div>
-          <div class="promo-text">Aprovecha el 2x1 en pizzas esta semana</div>
-        </div>
-
-        <div class="promo-card">
-          <div class="promo-title">💸 DELIVERY GRATIS</div>
-          <div class="promo-text">Por tiempo limitado</div>
-        </div>
-
-        <div class="promo-card">
-          <div class="promo-title">🎉 20% DESCUENTO</div>
-          <div class="promo-text">En productos seleccionados</div>
+          <div class="promo-title">🔥 Cargando promociones</div>
+          <div class="promo-text">Buscando campañas activas del restaurante.</div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- CATEGORÍAS -->
+  <!-- =====================================================
+       CATEGORÍAS
+       - ID original preservado: menuCategories.
+  ====================================================== -->
   <section class="categories-section">
     <div class="section-inner">
-      <h2 class="section-title menu-title">Todos</h2>
+      <div class="section-heading-row compact">
+        <div>
+          <span class="mini-label">Menú</span>
+          <h2 class="section-title menu-title">Elige tus favoritos</h2>
+        </div>
+      </div>
       <div class="categories" id="menuCategories"></div>
     </div>
   </section>
 
-  <!-- MENÚ -->
+  <!-- =====================================================
+       MENÚ
+       - ID original preservado: menu.
+  ====================================================== -->
   <main class="container">
     <div id="menu"></div>
   </main>
 
-  <!-- CARRITO -->
+  <!-- =====================================================
+       CARRITO
+       - IDs originales preservados: cart / cartPanel.
+  ====================================================== -->
   <div class="cart" id="cart"></div>
   <div class="cart-panel" id="cartPanel"></div>
 
-  <!-- CHECKOUT -->
+  <!-- =====================================================
+       CHECKOUT
+       - IDs originales preservados.
+  ====================================================== -->
   <div class="checkout-modal" id="checkoutModal">
     <div class="checkout-box">
       <h2>Confirmar pedido</h2>

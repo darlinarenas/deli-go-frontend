@@ -529,7 +529,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     cartEl.style.display = "block";
-    cartEl.innerHTML = `🛒 Ver carrito • ${formatPrice(total)}`;
+    cartEl.innerHTML = `🛒 Ver carrito • ${cart.reduce((sum, item) => sum + item.qty, 0)} producto(s) • ${formatPrice(total)}`;
   }
 
   function renderCartPanel() {
@@ -564,7 +564,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `).join("")}
 
-      <div class="cart-total">Total: ${formatPrice(total)}</div>
+      <div class="cart-total"><span>Total</span><strong>${formatPrice(total)}</strong></div>
 
       <button type="button" class="checkout-btn" id="goCheckoutBtn">Confirmar pedido</button>
       <button type="button" class="continue-btn" id="continueBuyingBtn">Seguir comprando</button>
@@ -707,7 +707,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!visibleDishes.length) {
       menuEl.innerHTML = `
-        <div style="background:#fff;padding:16px;border-radius:12px;">
+        <div class="empty-box">
           Este restaurante aún no tiene platos disponibles.
         </div>
       `;
@@ -720,8 +720,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       return `
         <div class="item">
+          <div class="dish-visual">${escapeHtml(dish.emoji || "🍽️")}</div>
+
           <div class="info">
-            <div class="title">${escapeHtml(dish.emoji)} ${escapeHtml(dish.name)}</div>
+            <div class="title">${escapeHtml(dish.name)}</div>
             <div class="desc">${escapeHtml(dish.description || "Sin descripción")}</div>
             <div class="price"><strong>${formatPrice(dish.price)}</strong></div>
           </div>
@@ -940,7 +942,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!selectedRestaurant) {
       if (menuEl) {
         menuEl.innerHTML = `
-          <div style="background:#fff;padding:16px;border-radius:12px;">
+          <div class="empty-box">
             No se encontró el restaurante.
           </div>
         `;
@@ -995,6 +997,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
   init();
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
