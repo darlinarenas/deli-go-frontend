@@ -432,32 +432,29 @@ async function updateOrderStatus(orderId, status) {
 
 /* ======================================================
    BLOQUE 11
-   BHUZ LIVE NOTIFICATIONS GLOBAL PREMIUM
-   - Pop-up global visible en index, mis pedidos, restaurante y cualquier vista que cargue orders.js.
-   - Diseño superior llamativo estilo BHUZ premium.
-   - Preparado para sonidos personalizados grabados por el usuario.
-   - Solución móvil: desbloqueo de audio con primera interacción del usuario.
-   - No modifica backend, PostgreSQL, pedidos ni respuestas JSON.
-   - Solo compara estados recibidos desde backend en memoria del navegador.
+   BHUZ LIVE NOTIFICATIONS GLOBAL V3
+   - Pop-up GLOBAL: index, mis pedidos y cualquier página que cargue orders.js.
+   - Botón discreto "Activar sonidos BHUZ" para dar permiso real en móvil.
+   - Vibración como respaldo cuando el navegador permite navigator.vibrate().
+   - Evita mostrar notificaciones al restaurante.
+   - Evita duplicados cuando mis-pedidos y el polling global consultan a la vez.
+   - Mantiene backend/PostgreSQL intactos: solo escucha estados desde backend.
 ====================================================== */
 const BHUZ_LIVE_SOUND_CONFIG = {
-  /*
-    CAMBIO FUTURO PARA SONIDOS PERSONALIZADOS:
-    Cuando tengas tus audios propios, colócalos en esta ruta del frontend:
+  enabled: true,
+  volume: 0.78,
+  toastDurationMs: 14000,
+  globalPollingMs: 7000,
+  useSoftFallbackBeep: true,
+  useVibrationOnMobile: true,
 
+  /*
+    SONIDOS TEMPORALES / PERSONALIZABLES:
+    Coloca tus audios propios en:
       assets/sounds/
 
-    Y reemplaza los nombres de archivo de abajo por los tuyos.
-    Formatos recomendados: .mp3, .webm o .wav corto.
-
-    IMPORTANTE MÓVIL:
-    Android/iOS normalmente no dejan sonar audio automático hasta que el usuario
-    toque la pantalla al menos una vez. Por eso este sistema desbloquea audio
-    con click, touchstart, pointerdown, keydown y scroll.
+    y reemplaza estos nombres cuando grabes tus sonidos BHUZ originales.
   */
-  enabled: true,
-  volume: 0.55,
-  useSoftFallbackBeep: true,
   customSounds: {
     aceptado: "assets/sounds/bhuz-pedido-aceptado.mp3",
     preparando: "assets/sounds/bhuz-pedido-preparando.mp3",
@@ -502,6 +499,12 @@ const BHUZ_LIVE_STATUS_MESSAGES = {
 
 function createBhuzLiveNotifications() {
   const statusCache = new Map();
+  const notifiedCache = new Map();
+  const audioElements = new Map();
+
+  const STORAGE_STATUS_CACHE = "BHUZ_LIVE_STATUS_CACHE_V3";
+  const STORAGE_SOUND_ENABLED = "BHUZ_LIVE_SOUND_ENABLED_V3";
+
   let firstCustomerSyncDone = false;
   let audioUnlocked = false;
   let globalPollingStarted = false;
@@ -516,7 +519,7 @@ function createBhuzLiveNotifications() {
       .bhuz-live-root{
         position:fixed;
         left:50%;
-        top:14px;
+        top:calc(env(safe-area-inset-top, 0px) + 14px);
         transform:translateX(-50%);
         width:min(940px, calc(100% - 24px));
         z-index:999999;
@@ -527,6 +530,7 @@ function createBhuzLiveNotifications() {
       }
 
       .bhuz-live-toast{
+        --bhuz-toast-duration:14s;
         position:relative;
         overflow:hidden;
         width:100%;
@@ -538,15 +542,15 @@ function createBhuzLiveNotifications() {
         padding:18px 20px;
         border-radius:26px;
         color:#fff;
-        border:1px solid rgba(0,255,140,.62);
+        border:1px solid rgba(0,255,140,.68);
         background:
-          radial-gradient(circle at 13% 52%, rgba(0,255,140,.24), transparent 28%),
-          radial-gradient(circle at 88% 52%, rgba(0,210,106,.18), transparent 24%),
-          linear-gradient(135deg, rgba(5,9,14,.96), rgba(12,18,28,.94));
+          radial-gradient(circle at 13% 52%, rgba(0,255,140,.27), transparent 28%),
+          radial-gradient(circle at 88% 52%, rgba(0,210,106,.20), transparent 24%),
+          linear-gradient(135deg, rgba(5,9,14,.98), rgba(12,18,28,.96));
         box-shadow:
-          0 0 0 1px rgba(0,255,140,.12) inset,
-          0 22px 60px rgba(0,0,0,.58),
-          0 0 34px rgba(0,255,140,.32);
+          0 0 0 1px rgba(0,255,140,.14) inset,
+          0 22px 60px rgba(0,0,0,.60),
+          0 0 36px rgba(0,255,140,.34);
         pointer-events:auto;
         animation:bhuzToastIn .34s cubic-bezier(.2,.9,.22,1.18);
       }
@@ -570,7 +574,7 @@ function createBhuzLiveNotifications() {
         width:100%;
         background:linear-gradient(90deg,#7cff00,#00d26a,#18f08a);
         transform-origin:left;
-        animation:bhuzToastTimer 6.5s linear forwards;
+        animation:bhuzToastTimer var(--bhuz-toast-duration) linear forwards;
         box-shadow:0 0 16px rgba(0,255,140,.75);
       }
 
@@ -583,8 +587,8 @@ function createBhuzLiveNotifications() {
         justify-content:center;
         border-radius:50%;
         background:radial-gradient(circle, rgba(124,255,0,.34), rgba(0,210,106,.14));
-        border:1px solid rgba(124,255,0,.55);
-        box-shadow:0 0 28px rgba(124,255,0,.35);
+        border:1px solid rgba(124,255,0,.58);
+        box-shadow:0 0 28px rgba(124,255,0,.36);
         flex:0 0 auto;
       }
 
@@ -641,7 +645,7 @@ function createBhuzLiveNotifications() {
       .bhuz-live-content span{
         display:block;
         margin-top:7px;
-        color:rgba(255,255,255,.86);
+        color:rgba(255,255,255,.88);
         font-size:clamp(13px, 2.6vw, 17px);
         line-height:1.35;
         font-weight:700;
@@ -691,8 +695,8 @@ function createBhuzLiveNotifications() {
       }
 
       .bhuz-live-preparando{
-        border-color:rgba(250,204,21,.68);
-        box-shadow:0 22px 60px rgba(0,0,0,.58), 0 0 34px rgba(250,204,21,.25);
+        border-color:rgba(250,204,21,.70);
+        box-shadow:0 22px 60px rgba(0,0,0,.60), 0 0 34px rgba(250,204,21,.27);
       }
 
       .bhuz-live-preparando::after{
@@ -700,8 +704,8 @@ function createBhuzLiveNotifications() {
       }
 
       .bhuz-live-en_camino{
-        border-color:rgba(56,189,248,.72);
-        box-shadow:0 22px 60px rgba(0,0,0,.58), 0 0 34px rgba(56,189,248,.25);
+        border-color:rgba(56,189,248,.74);
+        box-shadow:0 22px 60px rgba(0,0,0,.60), 0 0 34px rgba(56,189,248,.27);
       }
 
       .bhuz-live-en_camino::after{
@@ -709,8 +713,8 @@ function createBhuzLiveNotifications() {
       }
 
       .bhuz-live-entregado{
-        border-color:rgba(168,85,247,.72);
-        box-shadow:0 22px 60px rgba(0,0,0,.58), 0 0 34px rgba(168,85,247,.25);
+        border-color:rgba(168,85,247,.74);
+        box-shadow:0 22px 60px rgba(0,0,0,.60), 0 0 34px rgba(168,85,247,.27);
       }
 
       .bhuz-live-entregado::after{
@@ -724,6 +728,35 @@ function createBhuzLiveNotifications() {
       .bhuz-live-card-updated{
         border-color:rgba(0,255,140,.78)!important;
         box-shadow:0 0 34px rgba(0,255,140,.33)!important;
+      }
+
+      .bhuz-sound-unlock{
+        position:fixed;
+        right:14px;
+        bottom:calc(env(safe-area-inset-bottom, 0px) + 88px);
+        z-index:999998;
+        display:flex;
+        align-items:center;
+        gap:8px;
+        border:1px solid rgba(0,255,140,.28);
+        border-radius:999px;
+        padding:10px 13px;
+        color:#061006;
+        background:linear-gradient(135deg,#7cff00,#00d26a);
+        box-shadow:0 14px 34px rgba(0,210,106,.26);
+        font-size:13px;
+        font-weight:1000;
+        cursor:pointer;
+        opacity:.94;
+      }
+
+      .bhuz-sound-unlock:hover{
+        opacity:1;
+        transform:translateY(-1px);
+      }
+
+      .bhuz-sound-unlock.is-hidden{
+        display:none;
       }
 
       @keyframes bhuzToastIn{
@@ -748,13 +781,13 @@ function createBhuzLiveNotifications() {
 
       @media(max-width:640px){
         .bhuz-live-root{
-          top:10px;
+          top:calc(env(safe-area-inset-top, 0px) + 8px);
           width:calc(100% - 18px);
           gap:10px;
         }
 
         .bhuz-live-toast{
-          min-height:92px;
+          min-height:104px;
           grid-template-columns:auto minmax(0,1fr);
           gap:12px;
           padding:14px 42px 14px 13px;
@@ -762,8 +795,8 @@ function createBhuzLiveNotifications() {
         }
 
         .bhuz-live-icon-wrap{
-          width:58px;
-          height:58px;
+          width:60px;
+          height:60px;
         }
 
         .bhuz-live-icon-wrap::before{
@@ -804,6 +837,13 @@ function createBhuzLiveNotifications() {
           width:30px;
           height:30px;
           font-size:23px;
+        }
+
+        .bhuz-sound-unlock{
+          right:12px;
+          bottom:calc(env(safe-area-inset-bottom, 0px) + 78px);
+          padding:9px 11px;
+          font-size:12px;
         }
       }
     `;
@@ -846,18 +886,142 @@ function createBhuzLiveNotifications() {
     };
   }
 
-  function unlockAudioOnce() {
-    if (audioUnlocked) return;
-    audioUnlocked = true;
-    warmUpAudio();
+  function readStatusCacheFromSession() {
+    try {
+      const saved = ordersSafeParse(sessionStorage.getItem(STORAGE_STATUS_CACHE), {});
+      if (!saved || typeof saved !== "object") return;
+
+      Object.entries(saved).forEach(([orderId, status]) => {
+        if (orderId) statusCache.set(String(orderId), normalizeOrderStatus(status));
+      });
+    } catch {
+      // Silencioso.
+    }
   }
 
-  function warmUpAudio() {
+  function saveStatusCacheToSession() {
+    try {
+      const plain = {};
+      statusCache.forEach((status, orderId) => {
+        plain[orderId] = status;
+      });
+      sessionStorage.setItem(STORAGE_STATUS_CACHE, JSON.stringify(plain));
+    } catch {
+      // Silencioso.
+    }
+  }
+
+  function hasSoundPermissionSaved() {
+    try {
+      return sessionStorage.getItem(STORAGE_SOUND_ENABLED) === "1";
+    } catch {
+      return false;
+    }
+  }
+
+  function saveSoundPermission() {
+    try {
+      sessionStorage.setItem(STORAGE_SOUND_ENABLED, "1");
+    } catch {
+      // Silencioso.
+    }
+  }
+
+  function ensureSoundUnlockButton() {
+    ensureStyles();
+
+    if (audioUnlocked || hasSoundPermissionSaved()) {
+      return;
+    }
+
+    if (document.getElementById("bhuzSoundUnlock")) return;
+
+    const button = document.createElement("button");
+    button.id = "bhuzSoundUnlock";
+    button.className = "bhuz-sound-unlock";
+    button.type = "button";
+    button.innerHTML = "🔊 Activar sonidos BHUZ";
+
+    button.addEventListener("click", async () => {
+      await unlockAudioNow(true);
+      hideSoundUnlockButton();
+      showMiniActivationToast();
+    });
+
+    document.body.appendChild(button);
+  }
+
+  function hideSoundUnlockButton() {
+    const button = document.getElementById("bhuzSoundUnlock");
+    if (button) {
+      button.classList.add("is-hidden");
+      setTimeout(() => {
+        if (button.parentNode) button.parentNode.removeChild(button);
+      }, 250);
+    }
+  }
+
+  async function unlockAudioNow(userRequested = false) {
+    audioUnlocked = true;
+    saveSoundPermission();
+    prepareAudioElements();
+
+    await warmUpAudio();
+
+    if (userRequested) {
+      playFallbackBeep("aceptado");
+      vibrateSoftly("aceptado");
+    }
+  }
+
+  function bindPassiveAudioUnlockEvents() {
+    /*
+      Esto ayuda en PC y algunos Android, pero el botón sigue siendo la forma
+      más estable para dar permiso real en móvil.
+    */
+    ["click", "touchstart", "pointerdown", "keydown"].forEach((eventName) => {
+      window.addEventListener(eventName, () => {
+        if (!audioUnlocked && hasSoundPermissionSaved()) {
+          unlockAudioNow(false);
+        }
+      }, { once: false, passive: true });
+    });
+  }
+
+  function prepareAudioElements() {
+    try {
+      Object.entries(BHUZ_LIVE_SOUND_CONFIG.customSounds).forEach(([status, src]) => {
+        if (!src || audioElements.has(status)) return;
+
+        const audio = new Audio(src);
+        audio.preload = "auto";
+        audio.playsInline = true;
+        audio.volume = BHUZ_LIVE_SOUND_CONFIG.volume;
+
+        try {
+          audio.load();
+        } catch {
+          // Silencioso.
+        }
+
+        audioElements.set(status, audio);
+      });
+    } catch {
+      // Silencioso.
+    }
+  }
+
+  async function warmUpAudio() {
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       if (!AudioContext) return;
 
       const audioContext = new AudioContext();
+
+      if (audioContext.state === "suspended" && typeof audioContext.resume === "function") {
+        await audioContext.resume();
+      }
+
       const oscillator = audioContext.createOscillator();
       const gain = audioContext.createGain();
 
@@ -869,16 +1033,36 @@ function createBhuzLiveNotifications() {
       setTimeout(() => {
         oscillator.stop();
         audioContext.close();
-      }, 40);
-    } catch (error) {
-      // Silencioso: algunos navegadores móviles siguen bloqueando audio hasta interacción real.
+      }, 45);
+    } catch {
+      // Silencioso.
     }
   }
 
-  function bindAudioUnlockEvents() {
-    ["click", "touchstart", "pointerdown", "keydown", "scroll"].forEach((eventName) => {
-      window.addEventListener(eventName, unlockAudioOnce, { once: true, passive: true });
-    });
+  function vibrateSoftly(status) {
+    if (!BHUZ_LIVE_SOUND_CONFIG.useVibrationOnMobile) return;
+    if (!navigator || typeof navigator.vibrate !== "function") return;
+
+    try {
+      switch (normalizeOrderStatus(status)) {
+        case "aceptado":
+          navigator.vibrate([80, 45, 80]);
+          break;
+        case "preparando":
+          navigator.vibrate([100]);
+          break;
+        case "en_camino":
+          navigator.vibrate([80, 40, 80, 40, 80]);
+          break;
+        case "entregado":
+          navigator.vibrate([120, 60, 120]);
+          break;
+        default:
+          navigator.vibrate([80]);
+      }
+    } catch {
+      // Silencioso.
+    }
   }
 
   function playFallbackBeep(status) {
@@ -889,6 +1073,11 @@ function createBhuzLiveNotifications() {
       if (!AudioContext) return;
 
       const audioContext = new AudioContext();
+
+      if (audioContext.state === "suspended" && typeof audioContext.resume === "function") {
+        audioContext.resume();
+      }
+
       const oscillator = audioContext.createOscillator();
       const gain = audioContext.createGain();
 
@@ -901,8 +1090,8 @@ function createBhuzLiveNotifications() {
       };
 
       oscillator.type = "sine";
-      oscillator.frequency.value = statusFrequency[status] || 650;
-      gain.gain.value = 0.045;
+      oscillator.frequency.value = statusFrequency[normalizeOrderStatus(status)] || 650;
+      gain.gain.value = 0.065;
 
       oscillator.connect(gain);
       gain.connect(audioContext.destination);
@@ -911,9 +1100,9 @@ function createBhuzLiveNotifications() {
       setTimeout(() => {
         oscillator.stop();
         audioContext.close();
-      }, 160);
-    } catch (error) {
-      // Silencioso: algunos navegadores bloquean audio si no hubo interacción.
+      }, 190);
+    } catch {
+      // Silencioso.
     }
   }
 
@@ -923,24 +1112,38 @@ function createBhuzLiveNotifications() {
     const normalizedStatus = normalizeOrderStatus(status);
     const soundSrc = BHUZ_LIVE_SOUND_CONFIG.customSounds[normalizedStatus];
 
+    vibrateSoftly(normalizedStatus);
+
+    if (!audioUnlocked && hasSoundPermissionSaved()) {
+      unlockAudioNow(false);
+    }
+
     if (!audioUnlocked) {
-      // Antes de la primera interacción del usuario, muchos navegadores bloquean audio.
-      // Igual se muestra la notificación visual premium.
+      ensureSoundUnlockButton();
       return;
     }
 
     if (soundSrc) {
       try {
-        const audio = new Audio(soundSrc);
-        audio.preload = "auto";
-        audio.playsInline = true;
+        let audio = audioElements.get(normalizedStatus);
+
+        if (!audio) {
+          audio = new Audio(soundSrc);
+          audio.preload = "auto";
+          audio.playsInline = true;
+          audioElements.set(normalizedStatus, audio);
+        }
+
+        audio.pause();
+        audio.currentTime = 0;
         audio.volume = BHUZ_LIVE_SOUND_CONFIG.volume;
 
         audio.play().catch(() => {
           playFallbackBeep(normalizedStatus);
         });
+
         return;
-      } catch (error) {
+      } catch {
         playFallbackBeep(normalizedStatus);
         return;
       }
@@ -989,31 +1192,46 @@ function createBhuzLiveNotifications() {
 
     setTimeout(() => {
       card.classList.remove("bhuz-live-card-updated");
-    }, 2600);
+    }, 3200);
   }
 
-  function showToast(order, previousStatus, nextStatus) {
+  function showToast(order, previousStatus, nextStatus, options = {}) {
     if (typeof document === "undefined" || !document.body) return;
 
+    const settings = {
+      sound: options.sound !== false,
+      activation: options.activation === true
+    };
+
     const normalizedStatus = normalizeOrderStatus(nextStatus);
-    const copy = getNotificationCopy(normalizedStatus);
+    const copy = settings.activation
+      ? {
+          badge: "SONIDOS ACTIVADOS",
+          title: "BHUZ ya puede sonar",
+          highlight: "sonar",
+          message: "Cuando cambie el estado de tu pedido recibirás sonido y vibración."
+        }
+      : getNotificationCopy(normalizedStatus);
+
     const root = ensureRoot();
 
     const toast = document.createElement("div");
     toast.className = `bhuz-live-toast bhuz-live-${normalizedStatus}`;
+    toast.style.setProperty("--bhuz-toast-duration", `${BHUZ_LIVE_SOUND_CONFIG.toastDurationMs}ms`);
+
     toast.innerHTML = `
       <div class="bhuz-live-icon-wrap">
-        <div class="bhuz-live-icon">${getStatusIcon(normalizedStatus)}</div>
+        <div class="bhuz-live-icon">${settings.activation ? "🔊" : getStatusIcon(normalizedStatus)}</div>
       </div>
 
       <div class="bhuz-live-content">
         <div class="bhuz-live-badge">${escapeLiveHtml(copy.badge)}</div>
         <strong>${buildHighlightedTitle(copy.title, copy.highlight)}</strong>
         <span>${escapeLiveHtml(copy.message)}</span>
-        <small>${escapeLiveHtml(order.restaurantName || "BHUZ")}</small>
+        <small>${escapeLiveHtml(order.restaurantName || order.restaurant?.name || "BHUZ")}</small>
       </div>
 
-      <div class="bhuz-live-food">${getStatusFoodIcon(normalizedStatus)}</div>
+      <div class="bhuz-live-food">${settings.activation ? "✨" : getStatusFoodIcon(normalizedStatus)}</div>
 
       <button class="bhuz-live-close" type="button" aria-label="Cerrar notificación">×</button>
     `;
@@ -1025,9 +1243,15 @@ function createBhuzLiveNotifications() {
       closeBtn.addEventListener("click", () => removeToast(toast));
     }
 
-    setTimeout(() => removeToast(toast), 6500);
-    playStatusSound(normalizedStatus);
-    glowOrderCard(order.id);
+    setTimeout(() => removeToast(toast), BHUZ_LIVE_SOUND_CONFIG.toastDurationMs);
+
+    if (settings.sound && !settings.activation) {
+      playStatusSound(normalizedStatus);
+    }
+
+    if (!settings.activation) {
+      glowOrderCard(order.id);
+    }
 
     window.dispatchEvent(new CustomEvent("bhuz:order-status-changed", {
       detail: {
@@ -1036,6 +1260,18 @@ function createBhuzLiveNotifications() {
         nextStatus: normalizedStatus
       }
     }));
+  }
+
+  function showMiniActivationToast() {
+    showToast(
+      { id: "bhuz_sound_activation", restaurantName: "BHUZ" },
+      "pendiente",
+      "aceptado",
+      {
+        sound: false,
+        activation: true
+      }
+    );
   }
 
   function removeToast(toast) {
@@ -1116,7 +1352,24 @@ function createBhuzLiveNotifications() {
     return true;
   }
 
+  function wasRecentlyNotified(orderId, status) {
+    const key = `${String(orderId)}_${normalizeOrderStatus(status)}`;
+    const lastTime = Number(notifiedCache.get(key) || 0);
+
+    if (Date.now() - lastTime < 5000) {
+      return true;
+    }
+
+    notifiedCache.set(key, Date.now());
+    return false;
+  }
+
   function processCustomerOrders(orders) {
+    const customer = getCurrentCustomerForLive();
+
+    // Seguridad: si esta página es de restaurante/admin, no mostrar popup al restaurante.
+    if (!customer) return;
+
     if (!Array.isArray(orders)) return;
 
     const normalizedOrders = normalizeOrdersList(orders);
@@ -1128,13 +1381,18 @@ function createBhuzLiveNotifications() {
       const nextStatus = normalizeOrderStatus(order.status);
       const previousStatus = statusCache.get(orderId);
 
-      if (firstCustomerSyncDone && shouldNotify(previousStatus, nextStatus)) {
+      if (
+        firstCustomerSyncDone &&
+        shouldNotify(previousStatus, nextStatus) &&
+        !wasRecentlyNotified(orderId, nextStatus)
+      ) {
         showToast(order, previousStatus, nextStatus);
       }
 
       statusCache.set(orderId, nextStatus);
     });
 
+    saveStatusCacheToSession();
     firstCustomerSyncDone = true;
   }
 
@@ -1143,10 +1401,10 @@ function createBhuzLiveNotifications() {
 
     if (!customer || !customer.email) return;
 
-    // Si cambia el usuario, se reinicia la primera sincronización para evitar popups viejos.
     if (lastCustomerEmailPolled && lastCustomerEmailPolled !== customer.email) {
       statusCache.clear();
       firstCustomerSyncDone = false;
+      saveStatusCacheToSession();
     }
 
     lastCustomerEmailPolled = customer.email;
@@ -1159,11 +1417,10 @@ function createBhuzLiveNotifications() {
       const data = await response.json();
 
       if (response.ok && data.ok) {
-        const normalizedOrders = normalizeOrdersList(data.orders);
-        processCustomerOrders(normalizedOrders);
+        processCustomerOrders(normalizeOrdersList(data.orders));
       }
-    } catch (error) {
-      // Silencioso para no ensuciar consola ni UX.
+    } catch {
+      // Silencioso para no ensuciar consola ni interrumpir UX.
     }
   }
 
@@ -1172,21 +1429,35 @@ function createBhuzLiveNotifications() {
 
     globalPollingStarted = true;
 
-    // Primera revisión suave después de que auth.js tenga tiempo de cargar sesión.
-    setTimeout(pollCustomerOrdersGlobally, 1800);
+    readStatusCacheFromSession();
 
-    // Revisión global para index y cualquier página que cargue orders.js.
-    setInterval(pollCustomerOrdersGlobally, 12000);
+    if (statusCache.size > 0) {
+      firstCustomerSyncDone = true;
+    }
 
-    // Al volver a la pestaña/app, revisa inmediatamente.
+    ensureRoot();
+    ensureSoundUnlockButton();
+
+    setTimeout(pollCustomerOrdersGlobally, 900);
+    setTimeout(pollCustomerOrdersGlobally, 3500);
+
+    setInterval(pollCustomerOrdersGlobally, BHUZ_LIVE_SOUND_CONFIG.globalPollingMs);
+
     document.addEventListener("visibilitychange", () => {
       if (!document.hidden) {
         pollCustomerOrdersGlobally();
       }
     });
+
+    window.addEventListener("focus", pollCustomerOrdersGlobally);
   }
 
-  bindAudioUnlockEvents();
+  bindPassiveAudioUnlockEvents();
+
+  window.addEventListener("deli:session-ready", () => {
+    startGlobalPolling();
+    pollCustomerOrdersGlobally();
+  });
 
   if (typeof document !== "undefined") {
     if (document.readyState === "loading") {
@@ -1201,6 +1472,7 @@ function createBhuzLiveNotifications() {
     pollCustomerOrdersGlobally,
     playStatusSound,
     showToast,
+    unlockAudioNow,
     config: BHUZ_LIVE_SOUND_CONFIG
   };
 }
@@ -1223,6 +1495,246 @@ window.DELI_ORDERS = {
   normalizeOrderStatus,
   bhuzLiveNotifications: window.BHUZ_LIVE_NOTIFICATIONS
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

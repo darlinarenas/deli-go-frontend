@@ -88,7 +88,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       `).join("");
 
       return `
-        <article class="order-card updated-glow">
+        <article class="order-card" data-order-id="${order.id || ''}">
 
           <div class="order-top">
             <div>
@@ -143,5 +143,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   }, 8000);
 
 });
+
+
+
 
 
