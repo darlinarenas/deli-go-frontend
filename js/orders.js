@@ -356,6 +356,17 @@ async function getOrdersByCustomer(email) {
 
     if (response.ok && data.ok) {
       const normalizedOrders = normalizeOrdersList(data.orders);
+
+      // CAMBIO BHUZ LIVE:
+      // La vista de cliente usa getOrdersByCustomer().
+      // Aquí se detectan cambios de estado para mostrar:
+      // - popup premium
+      // - glow neón
+      // - sonidos
+      if (window.BHUZ_LIVE_NOTIFICATIONS) {
+        window.BHUZ_LIVE_NOTIFICATIONS.processCustomerOrders(normalizedOrders);
+      }
+
       return normalizedOrders;
     }
   } catch (error) {
@@ -754,6 +765,26 @@ window.DELI_ORDERS = {
   normalizeOrderStatus,
   bhuzLiveNotifications: window.BHUZ_LIVE_NOTIFICATIONS
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
