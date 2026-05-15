@@ -198,3 +198,217 @@ body{
     flex-direction:column;
   }
 }
+
+
+/* ======================================================
+   BHUZ LIVE NOTIFICATIONS
+   - Notificaciones tipo app real para cambios de estado.
+   - Preparado para sonidos personalizados desde orders.js.
+====================================================== */
+
+.bhuz-live-root{
+  position:fixed;
+  top:18px;
+  right:18px;
+  z-index:9999;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  width:min(380px, calc(100vw - 28px));
+  pointer-events:none;
+}
+
+.bhuz-live-toast{
+  pointer-events:auto;
+  display:grid;
+  grid-template-columns:48px 1fr 34px;
+  gap:12px;
+  align-items:center;
+  padding:14px;
+  border-radius:22px;
+  background:
+    radial-gradient(circle at top right, rgba(0,210,106,0.22), transparent 36%),
+    linear-gradient(180deg, #0b1018, #0f1722);
+  border:1px solid rgba(0,210,106,0.30);
+  box-shadow:0 22px 60px rgba(0,0,0,0.50), 0 0 32px rgba(0,210,106,0.10);
+  transform:translateY(-8px) scale(.98);
+  opacity:0;
+  animation:bhuzToastIn .26s ease forwards;
+  overflow:hidden;
+}
+
+.bhuz-live-toast::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:0;
+  bottom:0;
+  width:4px;
+  background:var(--green);
+  box-shadow:0 0 20px rgba(0,210,106,.55);
+}
+
+.bhuz-live-toast.is-hiding{
+  animation:bhuzToastOut .24s ease forwards;
+}
+
+.bhuz-live-icon{
+  width:48px;
+  height:48px;
+  border-radius:17px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,210,106,0.12);
+  border:1px solid rgba(0,210,106,0.20);
+  font-size:24px;
+  box-shadow:0 0 26px rgba(0,210,106,0.12);
+}
+
+.bhuz-live-content{
+  min-width:0;
+}
+
+.bhuz-live-content strong,
+.bhuz-live-content span,
+.bhuz-live-content small{
+  display:block;
+}
+
+.bhuz-live-content strong{
+  color:white;
+  font-size:15px;
+  margin-bottom:4px;
+}
+
+.bhuz-live-content span{
+  color:#d1d5db;
+  font-size:13px;
+  line-height:1.35;
+}
+
+.bhuz-live-content small{
+  color:var(--green);
+  margin-top:5px;
+  font-size:11px;
+  font-weight:bold;
+}
+
+.bhuz-live-close{
+  width:30px;
+  height:30px;
+  border:none;
+  border-radius:12px;
+  background:rgba(255,255,255,0.07);
+  color:white;
+  font-size:20px;
+  line-height:1;
+  cursor:pointer;
+}
+
+.bhuz-live-card-updated{
+  border-color:rgba(0,210,106,0.45) !important;
+  box-shadow:0 0 36px rgba(0,210,106,0.18) !important;
+}
+
+@keyframes bhuzToastIn{
+  to{
+    opacity:1;
+    transform:translateY(0) scale(1);
+  }
+}
+
+@keyframes bhuzToastOut{
+  to{
+    opacity:0;
+    transform:translateY(-8px) scale(.98);
+  }
+}
+
+/* ======================================================
+   BHUZ SKELETON PREMIUM - preparado para el siguiente paso
+   Estas clases quedan listas para usarlas cuando conectemos
+   placeholders en user-orders.js o vistas futuras.
+====================================================== */
+
+.bhuz-skeleton-card{
+  position:relative;
+  overflow:hidden;
+  min-height:126px;
+  border-radius:22px;
+  background:linear-gradient(180deg, #0b1018, #0f1722);
+  border:1px solid var(--border);
+  margin-bottom:14px;
+  padding:16px;
+}
+
+.bhuz-skeleton-card::after,
+.bhuz-skeleton-line::after,
+.bhuz-skeleton-pill::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  transform:translateX(-100%);
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent);
+  animation:bhuzSkeletonShimmer 1.35s infinite;
+}
+
+.bhuz-skeleton-line,
+.bhuz-skeleton-pill{
+  position:relative;
+  overflow:hidden;
+  display:block;
+  background:rgba(255,255,255,0.07);
+}
+
+.bhuz-skeleton-line{
+  height:14px;
+  border-radius:999px;
+  margin-bottom:12px;
+}
+
+.bhuz-skeleton-line.big{
+  width:58%;
+  height:22px;
+}
+
+.bhuz-skeleton-line.medium{
+  width:78%;
+}
+
+.bhuz-skeleton-line.small{
+  width:38%;
+}
+
+.bhuz-skeleton-pill{
+  width:96px;
+  height:32px;
+  border-radius:999px;
+}
+
+@keyframes bhuzSkeletonShimmer{
+  100%{
+    transform:translateX(100%);
+  }
+}
+
+@media(max-width:768px){
+  .bhuz-live-root{
+    top:auto;
+    right:14px;
+    bottom:18px;
+    width:calc(100vw - 28px);
+  }
+
+  .bhuz-live-toast{
+    grid-template-columns:44px 1fr 30px;
+    border-radius:20px;
+  }
+
+  .bhuz-live-icon{
+    width:44px;
+    height:44px;
+    border-radius:15px;
+  }
+}
+
