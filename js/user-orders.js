@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    ordersList.innerHTML = filtered.map(order=>{
+    const html = filtered.map(order=>{
 
       const itemsHtml = (order.items || []).map(item=>`
         <div class="order-item">
@@ -119,6 +119,21 @@ document.addEventListener("DOMContentLoaded", async () => {
         </article>
       `;
     }).join("");
+
+    /*
+      FIX BHUZ LIVE:
+      Evita destruir/recrear toda la vista mientras un popup live está activo.
+      Eso hacía que el popup desapareciera demasiado rápido en "Mis pedidos".
+    */
+    const popupActivo = document.querySelector(".bhuz-live-toast");
+
+    if (popupActivo && ordersList.innerHTML.trim() === html.trim()) {
+      return;
+    }
+
+    if (ordersList.innerHTML.trim() !== html.trim()) {
+      ordersList.innerHTML = html;
+    }
   }
 
   document.querySelectorAll(".tab-btn").forEach(btn=>{
@@ -143,6 +158,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   }, 8000);
 
 });
+
+
+
+
+
+
 
 
 
