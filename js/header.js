@@ -37,7 +37,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const bhuzLastOrderRestaurant = document.getElementById("bhuzLastOrderRestaurant");
   const bhuzLastOrderStatus = document.getElementById("bhuzLastOrderStatus");
   const bhuzLastOrderTotal = document.getElementById("bhuzLastOrderTotal");
+  const bhuzLastOrderTime = document.getElementById("bhuzLastOrderTime");
+  const bhuzLastOrderProducts = document.getElementById("bhuzLastOrderProducts");
+  const bhuzLastOrderCountdown = document.getElementById("bhuzLastOrderCountdown");
   const bhuzLastOrderClose = document.getElementById("bhuzLastOrderClose");
+  const bhuzActivateSoundBtn = document.getElementById("bhuzActivateSoundBtn");
+  const bhuzNotificationSoundBtn = document.getElementById("bhuzNotificationSoundBtn");
   let bhuzLastOrderTimer = null;
 
   /* ======================================================
@@ -357,12 +362,76 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!items.length) return "Tu pedido fue enviado correctamente.";
 
     const firstItems = items.slice(0, 2).map((item) => {
-      const qty = Number(item.qty || 1);
-      return `${item.name || "Producto"} x${qty}`;
+      const qty = Number(item.qty || item.quantity || 1);
+      return `${qty}x ${item.name || item.dishName || "Producto"}`;
     });
 
     const extraCount = Math.max(items.length - 2, 0);
     return `${firstItems.join(", ")}${extraCount > 0 ? ` +${extraCount} más` : ""}`;
+  }
+
+  function buildLastOrderProductsText(order) {
+    const items = Array.isArray(order?.items) ? order.items : [];
+
+    if (!items.length) return "Tu pedido fue enviado correctamente.";
+
+    return items.map((item) => {
+      const qty = Number(item.qty || item.quantity || 1);
+      const name = item.name || item.dishName || "Producto";
+      return `${qty}x ${name}`;
+    }).join(", ");
+  }
+
+  function formatLastOrderTime(value) {
+    const date = value ? new Date(value) : new Date();
+
+    if (Number.isNaN(date.getTime())) {
+      return "🕒 Hoy";
+    }
+
+    try {
+      return `🕒 Hoy, ${date.toLocaleTimeString("es-CL", {
+        hour: "2-digit",
+        minute: "2-digit"
+      })}`;
+    } catch (error) {
+      return "🕒 Hoy";
+    }
+  }
+
+  function setSoundButtonState(isActive) {
+    const buttons = [bhuzActivateSoundBtn, bhuzNotificationSoundBtn].filter(Boolean);
+
+    buttons.forEach((button) => {
+      if (isActive) {
+        button.classList.add("is-active");
+        button.textContent = "✅ Sonido activado en este teléfono";
+      } else {
+        button.classList.remove("is-active");
+        button.textContent = "🔊 Activar sonido en este teléfono";
+      }
+    });
+  }
+
+  async function activateBhuzSound(event) {
+    if (event) event.preventDefault();
+
+    let activated = false;
+
+    try {
+      if (window.BHUZ_LIVE_NOTIFICATIONS && typeof window.BHUZ_LIVE_NOTIFICATIONS.unlockAudio === "function") {
+        activated = await window.BHUZ_LIVE_NOTIFICATIONS.unlockAudio();
+      }
+
+      if (window.BHUZ_LIVE_NOTIFICATIONS && typeof window.BHUZ_LIVE_NOTIFICATIONS.playStatusSound === "function") {
+        window.BHUZ_LIVE_NOTIFICATIONS.playStatusSound("aceptado");
+        activated = true;
+      }
+    } catch (error) {
+      console.warn("No se pudo activar sonido BHUZ:", error);
+    }
+
+    setSoundButtonState(Boolean(activated));
   }
 
   function hideLastOrderCard() {
@@ -386,11 +455,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const statusLabel = getOrderStatusLabel(order.status || "pendiente");
 
-    if (bhuzLastOrderTitle) bhuzLastOrderTitle.textContent = "Pedido confirmado";
-    if (bhuzLastOrderText) bhuzLastOrderText.textContent = buildLastOrderItemsText(order);
+    if (bhuzLastOrderTitle) bhuzLastOrderTitle.textContent = "¡Pedido realizado con éxito! 🎉";
+    if (bhuzLastOrderText) bhuzLastOrderText.textContent = "Tu pedido ya fue recibido por el restaurante.";
     if (bhuzLastOrderRestaurant) bhuzLastOrderRestaurant.textContent = order.restaurantName || order.restaurant?.name || "BHUZ";
     if (bhuzLastOrderStatus) bhuzLastOrderStatus.textContent = statusLabel;
     if (bhuzLastOrderTotal) bhuzLastOrderTotal.textContent = formatLivePrice(order.total || 0);
+    if (bhuzLastOrderTime) bhuzLastOrderTime.textContent = formatLastOrderTime(order.createdAt || order.created_at || order.date);
+    if (bhuzLastOrderProducts) bhuzLastOrderProducts.innerHTML = `<span>🛍️</span> ${escapeLiveText(buildLastOrderProductsText(order))}`;
+    if (bhuzLastOrderCountdown) bhuzLastOrderCountdown.textContent = "⏱️ Se cerrará en 15 segundos";
 
     bhuzLastOrderCard.style.display = "grid";
     bhuzLastOrderCard.classList.remove("is-hiding");
@@ -541,6 +613,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (bhuzLastOrderClose) {
       bhuzLastOrderClose.addEventListener("click", hideLastOrderCard);
+    }
+
+    if (bhuzActivateSoundBtn) {
+      bhuzActivateSoundBtn.addEventListener("click", activateBhuzSound);
+    }
+
+    if (bhuzNotificationSoundBtn) {
+      bhuzNotificationSoundBtn.addEventListener("click", activateBhuzSound);
     }
 
     if (bottomSearchBtn) {
@@ -839,6 +919,7 @@ document.addEventListener("DOMContentLoaded", () => {
     startLivePolling();
   });
 });
+
 
 
 

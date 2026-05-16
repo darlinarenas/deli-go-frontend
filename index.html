@@ -162,141 +162,228 @@
 
 
     /* =========================================================
-       CAMBIO BHUZ LIVE INDEX
-       - Tarjeta temporal de última compra en index.
-       - Se muestra 15 segundos o hasta que el usuario pulse X.
-       - No depende de localStorage como fuente real de datos.
+       CAMBIO BHUZ LIVE INDEX - POPUP PREMIUM FINAL
+       - Modal centrado como confirmación de compra.
+       - Iluminación verde de fondo para que se distinga del index.
+       - Muestra restaurante, hora y productos.
+       - Barra de tiempo descendente de 15 segundos.
+       - Botón para activar sonido en teléfonos.
     ========================================================== */
     .bhuz-last-order-card {
       display: none;
-      position: relative;
-      margin: 0 0 22px;
-      padding: 20px;
-      border-radius: 28px;
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      z-index: 100000;
+      width: min(520px, calc(100vw - 30px));
+      max-height: calc(100vh - 30px);
+      padding: 24px;
+      border-radius: 30px;
       overflow: hidden;
-      border: 1px solid rgba(16, 233, 129, 0.78);
+      color: #ffffff;
+      border: 1px solid rgba(16, 233, 129, 0.58);
       background:
-        radial-gradient(circle at 12% 0%, rgba(16, 233, 129, 0.36), transparent 32%),
-        radial-gradient(circle at 100% 20%, rgba(0, 195, 255, 0.20), transparent 30%),
-        linear-gradient(135deg, rgba(0, 15, 10, 0.99), rgba(4, 34, 26, 0.99));
-      color: #fff;
+        radial-gradient(circle at 50% 0%, rgba(16, 233, 129, 0.30), transparent 34%),
+        radial-gradient(circle at 0% 100%, rgba(16, 233, 129, 0.16), transparent 42%),
+        linear-gradient(145deg, rgba(4, 12, 14, 0.98), rgba(1, 8, 10, 0.98));
       box-shadow:
-        0 22px 70px rgba(0, 0, 0, 0.58),
-        0 0 0 1px rgba(16, 233, 129, 0.16),
-        0 0 42px rgba(16, 233, 129, 0.28);
-      animation: bhuzLiveIn 0.28s ease-out;
+        0 0 0 9999px rgba(0, 0, 0, 0.62),
+        0 28px 90px rgba(0, 0, 0, 0.76),
+        0 0 70px rgba(16, 233, 129, 0.42),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
       isolation: isolate;
+      transform: translate(-50%, -50%) scale(0.98);
     }
 
     .bhuz-last-order-card::before {
-      content: "ÚLTIMA COMPRA";
+      content: "";
       position: absolute;
-      top: 14px;
-      right: 54px;
-      padding: 5px 10px;
-      border-radius: 999px;
-      background: rgba(16, 233, 129, 0.16);
-      color: #10e981;
-      border: 1px solid rgba(16, 233, 129, 0.32);
-      font-size: 10px;
-      font-weight: 950;
-      letter-spacing: 0.08em;
-      z-index: -0;
+      inset: -35%;
+      z-index: -2;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(16, 233, 129, 0.38), transparent 34%),
+        conic-gradient(from 120deg, transparent, rgba(16, 233, 129, 0.18), transparent, rgba(0, 255, 170, 0.12), transparent);
+      filter: blur(18px);
+      opacity: 0.85;
+      animation: bhuzLastOrderGlow 4.5s ease-in-out infinite alternate;
     }
 
     .bhuz-last-order-card::after {
       content: "";
       position: absolute;
       inset: 0;
-      background: linear-gradient(90deg, rgba(255, 255, 255, 0.08), transparent 32%, rgba(16, 233, 129, 0.08));
-      pointer-events: none;
       z-index: -1;
+      background:
+        linear-gradient(110deg, rgba(255, 255, 255, 0.10), transparent 26%, rgba(16, 233, 129, 0.10) 52%, transparent 78%),
+        radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.07), transparent 36%);
+      pointer-events: none;
     }
 
     .bhuz-last-order-card.is-visible {
       display: grid;
-      gap: 12px;
+      gap: 16px;
+      animation: bhuzLastOrderModalIn 0.24s ease-out forwards;
     }
 
     .bhuz-last-order-card.is-hiding {
       opacity: 0;
-      transform: translateY(-8px) scale(0.98);
+      transform: translate(-50%, -46%) scale(0.96);
       transition: 0.25s ease;
     }
 
-    .bhuz-last-order-top {
+    .bhuz-last-order-celebration {
+      display: grid;
+      justify-items: center;
+      gap: 10px;
+      text-align: center;
+      padding: 4px 34px 0;
+    }
+
+    .bhuz-last-order-check {
+      width: 64px;
+      height: 64px;
+      border-radius: 999px;
       display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #10e981, #08b85f);
+      color: #ffffff;
+      font-size: 36px;
+      font-weight: 950;
+      box-shadow:
+        0 0 0 10px rgba(16, 233, 129, 0.12),
+        0 0 36px rgba(16, 233, 129, 0.62);
     }
 
     .bhuz-last-order-copy {
       display: grid;
-      gap: 4px;
+      gap: 6px;
       min-width: 0;
+      text-align: center;
     }
 
     .bhuz-last-order-copy strong {
-      font-size: 20px;
-      line-height: 1.15;
-      letter-spacing: -0.02em;
+      font-size: clamp(22px, 4.8vw, 28px);
+      line-height: 1.08;
+      letter-spacing: -0.04em;
     }
 
     .bhuz-last-order-copy span {
-      max-width: 520px;
-      color: rgba(255, 255, 255, 0.82);
+      color: rgba(255, 255, 255, 0.78);
       font-size: 14px;
-      line-height: 1.4;
+      line-height: 1.45;
     }
 
     .bhuz-last-order-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
       border: 0;
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
       border-radius: 999px;
       cursor: pointer;
-      color: #fff;
+      color: rgba(255, 255, 255, 0.84);
       background: rgba(255, 255, 255, 0.10);
-      font-size: 18px;
+      font-size: 22px;
       line-height: 1;
-      flex: 0 0 auto;
+      transition: 0.18s ease;
     }
 
-    .bhuz-last-order-meta {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
+    .bhuz-last-order-close:hover {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.18);
+      transform: scale(1.03);
     }
 
-    .bhuz-last-order-meta div {
+    .bhuz-last-order-detail-card {
       display: grid;
-      gap: 3px;
-      padding: 12px;
+      grid-template-columns: 58px 1fr;
+      gap: 14px;
+      align-items: start;
+      padding: 16px;
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at 0% 0%, rgba(16, 233, 129, 0.18), transparent 38%),
+        linear-gradient(145deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.035));
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      box-shadow: inset 0 0 22px rgba(16, 233, 129, 0.05);
+    }
+
+    .bhuz-last-order-restaurant-icon {
+      width: 56px;
+      height: 56px;
       border-radius: 18px;
-      background: rgba(0, 0, 0, 0.24);
-      border: 1px solid rgba(16, 233, 129, 0.18);
-      box-shadow: inset 0 0 18px rgba(16, 233, 129, 0.04);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.42);
+      border: 1px solid rgba(16, 233, 129, 0.34);
+      box-shadow: 0 0 24px rgba(16, 233, 129, 0.18);
+      font-size: 26px;
     }
 
-    .bhuz-last-order-meta small {
-      color: rgba(255, 255, 255, 0.50);
-      font-size: 11px;
+    .bhuz-last-order-detail-content {
+      display: grid;
+      gap: 7px;
+      min-width: 0;
     }
 
-    .bhuz-last-order-meta b {
-      color: #fff;
-      font-size: 13px;
+    .bhuz-last-order-detail-content b {
+      color: #ffffff;
+      font-size: 18px;
+      line-height: 1.15;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
 
+    .bhuz-last-order-time {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: rgba(255, 255, 255, 0.76);
+      font-size: 13px;
+      line-height: 1.2;
+    }
+
+    .bhuz-last-order-products {
+      margin-top: 5px;
+      padding-top: 10px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.14);
+      color: rgba(255, 255, 255, 0.90);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .bhuz-last-order-products span {
+      color: #10e981;
+      margin-right: 6px;
+    }
+
+    .bhuz-last-order-footer {
+      display: grid;
+      gap: 10px;
+      justify-items: center;
+      text-align: center;
+    }
+
+    .bhuz-last-order-countdown {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      color: rgba(255, 255, 255, 0.86);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
     .bhuz-last-order-progress {
-      height: 5px;
+      width: 100%;
+      height: 8px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.13);
       overflow: hidden;
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.22);
     }
 
     .bhuz-last-order-progress span {
@@ -304,10 +391,39 @@
       height: 100%;
       width: 100%;
       border-radius: inherit;
-      background: #10e981;
-      box-shadow: 0 0 16px rgba(16, 233, 129, 0.85);
+      background: linear-gradient(90deg, #10e981, #7cff9e, #10e981);
+      box-shadow: 0 0 18px rgba(16, 233, 129, 0.85);
       transform-origin: left center;
       animation: bhuzLastOrderTimer 15s linear forwards;
+    }
+
+    .bhuz-sound-unlock-btn {
+      border: 1px solid rgba(16, 233, 129, 0.40);
+      border-radius: 999px;
+      padding: 10px 14px;
+      cursor: pointer;
+      color: #00140c;
+      background: linear-gradient(135deg, #10e981, #7cff9e);
+      box-shadow: 0 0 22px rgba(16, 233, 129, 0.24);
+      font-size: 13px;
+      font-weight: 950;
+      letter-spacing: -0.01em;
+    }
+
+    .bhuz-sound-unlock-btn.is-active {
+      color: #10e981;
+      background: rgba(16, 233, 129, 0.12);
+      border-color: rgba(16, 233, 129, 0.55);
+    }
+
+    @keyframes bhuzLastOrderModalIn {
+      from { opacity: 0; transform: translate(-50%, -46%) scale(0.96); }
+      to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
+
+    @keyframes bhuzLastOrderGlow {
+      from { opacity: 0.48; transform: rotate(0deg) scale(0.96); }
+      to { opacity: 0.95; transform: rotate(8deg) scale(1.04); }
     }
 
     @keyframes bhuzLastOrderTimer {
@@ -323,8 +439,23 @@
         width: auto;
       }
 
-      .bhuz-last-order-meta {
-        grid-template-columns: 1fr;
+      .bhuz-last-order-card {
+        width: min(430px, calc(100vw - 24px));
+        padding: 20px;
+        border-radius: 26px;
+      }
+
+      .bhuz-last-order-detail-card {
+        grid-template-columns: 48px 1fr;
+        gap: 12px;
+        padding: 14px;
+      }
+
+      .bhuz-last-order-restaurant-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 16px;
+        font-size: 23px;
       }
     }
   </style>
@@ -387,32 +518,34 @@
          - Desaparece solo en 15 segundos o manualmente con X.
          - La fuente real del pedido sigue siendo backend/PostgreSQL.
     ========================================================== -->
-    <section class="bhuz-last-order-card" id="bhuzLastOrderCard" aria-live="polite">
-      <div class="bhuz-last-order-top">
+    <section class="bhuz-last-order-card" id="bhuzLastOrderCard" aria-live="polite" role="dialog" aria-label="Resumen del pedido realizado">
+      <button class="bhuz-last-order-close" id="bhuzLastOrderClose" type="button" aria-label="Cerrar resumen">×</button>
+
+      <div class="bhuz-last-order-celebration">
+        <div class="bhuz-last-order-check">✓</div>
         <div class="bhuz-last-order-copy">
-          <strong id="bhuzLastOrderTitle">Pedido confirmado</strong>
-          <span id="bhuzLastOrderText">Tu pedido fue enviado correctamente.</span>
+          <strong id="bhuzLastOrderTitle">¡Pedido realizado con éxito! 🎉</strong>
+          <span id="bhuzLastOrderText">Tu pedido ya fue recibido por el restaurante.</span>
         </div>
-        <button class="bhuz-last-order-close" id="bhuzLastOrderClose" type="button" aria-label="Cerrar resumen">×</button>
       </div>
 
-      <div class="bhuz-last-order-meta">
-        <div>
-          <small>Restaurante</small>
+      <div class="bhuz-last-order-detail-card">
+        <div class="bhuz-last-order-restaurant-icon">🍔</div>
+        <div class="bhuz-last-order-detail-content">
           <b id="bhuzLastOrderRestaurant">BHUZ</b>
-        </div>
-        <div>
-          <small>Estado</small>
-          <b id="bhuzLastOrderStatus">Pendiente</b>
-        </div>
-        <div>
-          <small>Total</small>
-          <b id="bhuzLastOrderTotal">$0</b>
+          <span class="bhuz-last-order-time" id="bhuzLastOrderTime">🕒 Hoy</span>
+          <div class="bhuz-last-order-products" id="bhuzLastOrderProducts">
+            <span>🛍️</span> Tu pedido fue enviado correctamente.
+          </div>
         </div>
       </div>
 
-      <div class="bhuz-last-order-progress" aria-hidden="true">
-        <span></span>
+      <div class="bhuz-last-order-footer">
+        <div class="bhuz-last-order-countdown" id="bhuzLastOrderCountdown">⏱️ Se cerrará en 15 segundos</div>
+        <div class="bhuz-last-order-progress" aria-hidden="true">
+          <span></span>
+        </div>
+        <button class="bhuz-sound-unlock-btn" id="bhuzActivateSoundBtn" type="button">🔊 Activar sonido en este teléfono</button>
       </div>
     </section>
 
@@ -583,6 +716,8 @@
       </div>
       <button type="button" id="closeNotifications">✕</button>
     </div>
+
+    <button class="bhuz-sound-unlock-btn" id="bhuzNotificationSoundBtn" type="button">🔊 Activar sonido en este teléfono</button>
 
     <div class="notification-list" id="notificationsList">
       <a href="mis-pedidos.html" class="notification-card">
