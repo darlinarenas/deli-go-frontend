@@ -928,19 +928,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.closeCheckout();
 
-    alert("Pedido confirmado correctamente");
+    /* ======================================================
+       CAMBIO BHUZ LIVE GLOBAL
+       - Después de crear el pedido en backend, guardamos un resumen temporal
+         para que index.html muestre la tarjeta premium del último pedido.
+       - NO se guarda como fuente real de pedidos.
+       - NO toca carrito, checkout, PostgreSQL ni endpoints.
+    ====================================================== */
+    try {
+      sessionStorage.setItem("bhuzLastCreatedOrder", JSON.stringify(created));
+      window.dispatchEvent(new CustomEvent("bhuz:order-created", {
+        detail: { order: created }
+      }));
+    } catch (error) {
+      console.warn("No se pudo preparar el resumen del último pedido:", error);
+    }
 
-    /*
-      BHUZ LIVE EXPERIENCE
-      En vez de enviar al usuario a mis-pedidos,
-      regresamos al index con el ID del pedido creado para activar:
-      - popup global
-      - tarjeta LIVE
-      - campanita activa
-      - tracking persistente
-    */
-    const createdOrderId = encodeURIComponent(created.id || order.id || "");
-    window.location.href = `index.html?orderSuccess=1&orderId=${createdOrderId}`;
+    window.location.href = "index.html?orderSuccess=1";
   }
 
   /* ======================================================
@@ -1008,6 +1012,60 @@ document.addEventListener("DOMContentLoaded", () => {
 
   init();
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
