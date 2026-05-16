@@ -933,13 +933,14 @@ document.addEventListener("DOMContentLoaded", () => {
     /*
       BHUZ LIVE EXPERIENCE
       En vez de enviar al usuario a mis-pedidos,
-      regresamos al index para activar:
+      regresamos al index con el ID del pedido creado para activar:
       - popup global
       - tarjeta LIVE
       - campanita activa
       - tracking persistente
     */
-    window.location.href = "index.html?orderSuccess=1";
+    const createdOrderId = encodeURIComponent(created.id || order.id || "");
+    window.location.href = `index.html?orderSuccess=1&orderId=${createdOrderId}`;
   }
 
   /* ======================================================
@@ -1007,6 +1008,60 @@ document.addEventListener("DOMContentLoaded", () => {
 
   init();
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
