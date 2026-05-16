@@ -150,15 +150,41 @@ document.addEventListener("DOMContentLoaded", () => {
         : `Tu pedido ahora está ${statusLabel.toLowerCase()}.`;
 
       return `
-        <div class="notification-card live">
+        <button type="button" class="notification-card live notification-card-action" data-notification-key="${escapeLiveText(item.uniqueKey || "")}" title="Marcar como visto">
           <strong>${icon} ${escapeLiveText(title)}</strong>
           <span>${escapeLiveText(message)}</span>
           <small>${escapeLiveText(item.restaurantName || "BHUZ")} · Pedido ${escapeLiveText(item.orderId || "")}</small>
-        </div>
+          <em>Marcar como visto</em>
+        </button>
       `;
     }).join("");
 
     notificationsList.innerHTML = `${liveHtml}${baseCard}`;
+  }
+
+  function markNotificationAsRead(uniqueKey) {
+    if (!uniqueKey) return;
+
+    const beforeLength = liveNotifications.length;
+    liveNotifications = liveNotifications.filter((item) => item.uniqueKey !== uniqueKey);
+
+    if (liveNotifications.length === beforeLength) return;
+
+    saveLiveNotifications();
+    renderNotificationsPanel();
+    updateNotificationBadge();
+  }
+
+  function bindNotificationsListActions() {
+    if (!notificationsList) return;
+
+    notificationsList.addEventListener("click", (event) => {
+      const actionCard = event.target.closest(".notification-card-action");
+      if (!actionCard) return;
+
+      event.preventDefault();
+      markNotificationAsRead(actionCard.dataset.notificationKey || "");
+    });
   }
 
   function pushLiveNotification(data) {
@@ -801,6 +827,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderNotificationsPanel();
   updateNotificationBadge();
 
+  bindNotificationsListActions();
   bindStaticActions();
   renderSideMenu();
   renderHeader();
@@ -812,6 +839,56 @@ document.addEventListener("DOMContentLoaded", () => {
     startLivePolling();
   });
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
