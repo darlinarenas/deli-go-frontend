@@ -1,5 +1,5 @@
 /* ======================================================
-   DELI FOODS
+   BHUZ
    restaurant-page.js
 
    Página pública del restaurante
@@ -929,7 +929,17 @@ document.addEventListener("DOMContentLoaded", () => {
     window.closeCheckout();
 
     alert("Pedido confirmado correctamente");
-    window.location.href = "mis-pedidos.html";
+
+    /*
+      BHUZ LIVE EXPERIENCE
+      En vez de enviar al usuario a mis-pedidos,
+      regresamos al index para activar:
+      - popup global
+      - tarjeta LIVE
+      - campanita activa
+      - tracking persistente
+    */
+    window.location.href = "index.html?orderSuccess=1";
   }
 
   /* ======================================================
@@ -997,6 +1007,60 @@ document.addEventListener("DOMContentLoaded", () => {
 
   init();
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,221 +1,209 @@
-
-ACTUALIZACIÓN MASTER - 14-05-2026
-
-============================================================
-ESTADO ACTUAL DEL PROYECTO
-============================================================
-
-BHUZ / DELI GO ya funciona principalmente sobre backend real y PostgreSQL.
-
-Actualmente funcionan correctamente:
-
-- Login usuarios
-- Login restaurantes
-- Login admin
-- Panel restaurante
-- Panel administrador
-- Pedidos reales
-- order_items
-- Restaurantes reales
-- Platos reales
-- Rankings reales
-- Categorías dinámicas
-- Presupuesto inteligente
-- PostgreSQL conectado
-- Backend Render funcionando
-- Frontend conectado a backend real
+ACTUALIZACIÓN MASTER - 15-05-2026
 
 ============================================================
-TRANSFORMACIÓN VISUAL PREMIUM COMPLETADA
-============================================================
+ESTADO REAL ACTUAL DEL PROYECTO
+===============================
 
-Durante esta sesión se realizó una transformación visual MUY importante.
+BHUZ volvió a una versión ESTABLE utilizando respaldo seguro.
 
-OBJETIVO LOGRADO:
-Dejar de sentirse como una web clásica y empezar a sentirse como una app moderna premium.
+Actualmente FUNCIONA correctamente:
 
-============================================================
-INDEX PREMIUM BHUZ
-============================================================
-
-SE IMPLEMENTÓ:
-
-✔ Diseño oscuro premium
-✔ Negro profundo + verde neón BHUZ
-✔ Tarjetas compactas tipo app
-✔ Menos scroll
-✔ Navegación más limpia
-✔ Header moderno
-✔ Menú hamburguesa
-✔ Logo mejorado
-✔ Corrección de “Mis pedidos” redundante
-✔ Corrección detección ubicación
-✔ Hero compacto
-✔ Estructura visual estilo Uber Eats / Rappi
-✔ Mejor organización visual
-✔ Responsive mobile-first real
-
-============================================================
-MIS PEDIDOS PREMIUM
-============================================================
-
-SE IMPLEMENTÓ:
-
-✔ Nueva vista premium BHUZ
-✔ Tarjetas compactas
-✔ Dark mode premium
-✔ Tabs por estado
-✔ Eliminado “Total gastado”
-✔ Reemplazo por:
-  - Pedidos activos
-  - Pedidos realizados
-✔ Estados visuales premium
-✔ Actualización automática de estados
-✔ Auto refresh silencioso
-✔ UX tipo app real
+✔ Login usuarios
+✔ Login restaurantes
+✔ Login admin
+✔ Panel restaurante
+✔ Panel administrador
+✔ Carrito
+✔ Checkout
+✔ Pedidos reales
+✔ PostgreSQL
+✔ Backend Render
+✔ Frontend conectado
+✔ Restaurantes reales
+✔ Platos reales
+✔ Categorías dinámicas
+✔ Rankings
+✔ Presupuesto inteligente
 
 IMPORTANTE:
-Los estados ahora cambian automáticamente sin refrescar la página.
+Se restauró un backup estable debido a conflictos generados durante las pruebas LIVE globales.
 
 ============================================================
-RESTAURANT PAGE PREMIUM
-============================================================
+ESTADO REAL DE NOTIFICACIONES LIVE
+==================================
 
-SE IMPLEMENTÓ:
+ACTUALMENTE:
 
-✔ Nueva vista restaurante premium
-✔ Hero visual moderno
-✔ Preparado para banners reales
-✔ Preparado para imágenes reales
-✔ Carrito premium
-✔ Glow BHUZ verde
-✔ Categorías premium
-✔ Cards compactas
-✔ Menos scroll
-✔ UX más limpia
-✔ Responsive moderno
-✔ Estilo tipo app real
+✔ Los popups funcionan
+✔ Los sonidos funcionan parcialmente
+✔ Vibración móvil parcialmente funcional
+✔ Sistema LIVE funciona en:
+
+* panel mis pedidos
 
 IMPORTANTE:
-NO se rompió:
+El popup GLOBAL todavía NO está estable.
 
-- backend
-- carrito
-- checkout
-- addToCart
-- PostgreSQL
-- promociones
-- categorías dinámicas
-- login
-- pedidos
+Problemas encontrados:
 
-============================================================
-NUEVA DIRECCIÓN VISUAL OFICIAL
-============================================================
+* conflictos con renders automáticos
+* conflictos con refresh de mis pedidos
+* pérdida temporal del carrito en checkout
+* conflictos entre polling y renderizados
+* problemas de audio móvil dependiendo del navegador
 
-La identidad oficial aprobada ahora es:
-
-- negro profundo
-- verde neón BHUZ
-- estilo moderno
-- glow suave
-- minimalismo premium
-- UI compacta
-- mobile-first
-
-Referencia:
-la UI BHUZ negra/verde aprobada por el usuario.
+DECISIÓN TOMADA:
+NO seguir parchando el sistema LIVE encima de la versión actual.
 
 ============================================================
-PRÓXIMO OBJETIVO PRINCIPAL
-============================================================
+DECISIÓN IMPORTANTE PARA MAÑANA
+===============================
 
-Mañana se trabajará la parte INTELIGENTE y DIFERENCIADORA del proyecto.
+Mañana NO se trabajará el sistema LIVE encima de archivos existentes.
 
-PRIORIDAD:
+Se hará:
 
-📍 GPS + UBICACIÓN INTELIGENTE
-
-============================================================
-OBJETIVOS GPS / DIRECCIONES
-============================================================
-
-Implementar:
-
-✔ dirección manual
-✔ ubicación GPS obligatoria
-✔ compartir ubicación
-✔ guardar ubicaciones frecuentes
-✔ enviar pedido a otra persona
-✔ link para compartir ubicación exacta
-✔ compatibilidad real con Venezuela
+✔ sistema separado
+✔ modular
+✔ aislado
+✔ sin tocar checkout
+✔ sin tocar carrito
+✔ sin tocar render principal
 
 OBJETIVO:
-Resolver el problema REAL de direcciones imprecisas en Venezuela.
+Crear:
+js/bhuz-live-notifications.js
+
+completamente independiente del flujo principal.
 
 ============================================================
-OTROS PENDIENTES IMPORTANTES
-============================================================
+OBJETIVO REAL PARA MAÑANA
+=========================
 
-1. VER TODOS dinámico
-2. Favoritos reales
-3. Historial inteligente
-4. Promociones patrocinadas
-5. Skeleton loading
-6. Animaciones suaves
-7. Experiencia tipo app nativa
-8. Notificaciones live
-9. Sonidos / vibración móvil
-10. Publicidad premium
+PRIORIDAD #1:
 
-============================================================
-MODULARIZACIÓN BACKEND
-============================================================
+✔ Popup global estable
+✔ Sonidos móviles reales
+✔ Vibración móvil
+✔ Popup en:
 
-Continuar separando:
-
-- rutas
-- PostgreSQL
-- controladores
-- utilidades
-- lógica
+* index
+* mis pedidos
+* panel restaurante
 
 SIN romper:
-- endpoints actuales
-- frontend actual
-- respuestas JSON actuales
+
+* carrito
+* checkout
+* pedidos
+* PostgreSQL
+* frontend actual
+
+============================================================
+PANEL RESTAURANTE
+=================
+
+Mañana también:
+
+✔ sonido personalizado cuando entra pedido
+✔ popup grande:
+“Nuevo pedido entrante”
+✔ vibración móvil
+✔ evitar sonidos duplicados
+✔ botón activar sonidos restaurante
+
+IMPORTANTE:
+El usuario ya grabó sonidos propios para usar en BHUZ.
+
+============================================================
+TRANSFORMACIÓN VISUAL PREMIUM
+=============================
+
+SE MANTIENE TODO EL AVANCE PREMIUM:
+
+✔ UI negra + verde neón
+✔ estilo moderno BHUZ
+✔ cards premium
+✔ UX tipo app
+✔ dark mode premium
+✔ glow BHUZ
+✔ responsive mobile-first
+✔ navegación premium
+✔ paneles modernos
+
+IMPORTANTE:
+La identidad visual BHUZ quedó aprobada.
+
+============================================================
+PENDIENTES IMPORTANTES
+======================
+
+1. Popup global estable
+2. Sistema LIVE modular
+3. Skeleton loading
+4. Animaciones suaves
+5. Favoritos reales
+6. Historial inteligente
+7. GPS inteligente
+8. Compartir ubicación
+9. Enviar pedido a otra persona
+10. Experiencia tipo app nativa
+
+============================================================
+LECCIÓN IMPORTANTE DE ESTA SESIÓN
+=================================
+
+NO tocar:
+
+* checkout
+* carrito
+* lógica principal
+
+para implementar:
+
+* notificaciones
+* sonidos
+* popups
+
+TODO sistema LIVE debe ser:
+✔ aislado
+✔ modular
+✔ desacoplado
 
 ============================================================
 REGLAS IMPORTANTES
-============================================================
+==================
 
 SIEMPRE:
 
-- trabajar sobre archivos reales completos
-- entregar .txt completos
-- listos para copiar y pegar
-- no recortar código
-- no simplificar estructuras
-- no romper funciones existentes
-- modificaciones mínimas y seguras
-- backend como fuente principal
-- no depender de localStorage para datos críticos
+* trabajar sobre archivos reales completos
+* entregar .txt completos
+* no recortar código
+* no simplificar estructuras
+* no romper funciones existentes
+* cambios mínimos y seguros
+* backend como fuente principal
+* PostgreSQL como fuente real
+* localStorage solo temporal
 
 ============================================================
-NOTA IMPORTANTE
+ESTADO EMOCIONAL REAL DEL PROYECTO
+==================================
+
+Aunque esta sesión fue estresante:
+
+✔ el proyecto NO se perdió
+✔ PostgreSQL sigue funcionando
+✔ backend sigue funcionando
+✔ BHUZ sigue avanzando
+✔ la identidad visual quedó MUY bien
+✔ el backup salvó la estabilidad
+
+La próxima sesión debe ser:
+más modular
+más aislada
+más segura
+
 ============================================================
-
-La app ya alcanzó un punto importante:
-
-Ahora BHUZ ya empieza a sentirse como:
-- producto real
-- startup real
-- app moderna
-- plataforma premium
-
-La siguiente fase será:
-hacerla inteligente y logística.
-
-============================================================
-FIN ACTUALIZACIÓN 14-05-2026
-============================================================
+FIN ACTUALIZACIÓN 15-05-2026
+============================

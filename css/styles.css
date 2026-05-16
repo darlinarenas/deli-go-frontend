@@ -1784,3 +1784,300 @@ header {
 
 
 
+
+
+/* =========================================================
+   BHUZ LIVE GLOBAL UI
+   Notificaciones globales premium
+========================================================= */
+
+.bhuz-live-order-section{
+  width:min(100%, var(--max-width));
+  margin:0 auto;
+  padding:0 20px 8px;
+  position:relative;
+  z-index:40;
+}
+
+.bhuz-live-order-card{
+  position:relative;
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  padding:20px;
+  border-radius:28px;
+  border:1px solid rgba(0,255,140,0.18);
+  background:
+    radial-gradient(circle at top right, rgba(0,255,140,0.16), transparent 28%),
+    linear-gradient(135deg, rgba(14,22,30,0.98), rgba(5,7,13,0.96));
+  box-shadow:
+    0 22px 60px rgba(0,0,0,0.42),
+    0 0 34px rgba(0,255,140,0.08);
+}
+
+.bhuz-live-order-card::before{
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:0;
+  width:100%;
+  height:4px;
+  background:rgba(255,255,255,0.06);
+}
+
+.bhuz-live-order-card::after{
+  content:"";
+  position:absolute;
+  left:-40%;
+  bottom:0;
+  width:40%;
+  height:4px;
+  background:linear-gradient(90deg, transparent, #00ff8c, transparent);
+  animation:bhuzLiveBar 3s linear infinite;
+}
+
+@keyframes bhuzLiveBar{
+  from{ left:-40%; }
+  to{ left:100%; }
+}
+
+.bhuz-live-order-left{
+  display:grid;
+  gap:10px;
+}
+
+.bhuz-live-order-badge{
+  width:fit-content;
+  padding:7px 12px;
+  border-radius:999px;
+  background:rgba(0,255,140,0.10);
+  border:1px solid rgba(0,255,140,0.20);
+  color:#00ff8c;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+
+.bhuz-live-order-card h3{
+  margin:0;
+  font-size:28px;
+  line-height:1;
+  color:#fff;
+  letter-spacing:-0.04em;
+}
+
+.bhuz-live-order-card p{
+  margin:0;
+  color:#9ca3af;
+  font-weight:700;
+}
+
+.bhuz-live-order-meta{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.bhuz-live-order-meta span{
+  padding:8px 12px;
+  border-radius:14px;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.08);
+  color:#fff;
+  font-size:13px;
+  font-weight:800;
+}
+
+.bhuz-live-order-btn{
+  border:none;
+  border-radius:18px;
+  padding:14px 18px;
+  background:linear-gradient(135deg,#00d26a,#18f08a);
+  color:#031006;
+  font-weight:900;
+  cursor:pointer;
+  transition:transform .18s ease, box-shadow .18s ease;
+  box-shadow:0 12px 26px rgba(0,255,140,0.18);
+}
+
+.bhuz-live-order-btn:hover{
+  transform:translateY(-2px);
+}
+
+.icon-action.has-live-update{
+  position:relative;
+  border-color:rgba(0,255,140,0.34);
+  background:rgba(0,255,140,0.12);
+  box-shadow:0 0 22px rgba(0,255,140,0.22);
+  animation:bhuzBellPulse 1.4s infinite;
+}
+
+.icon-action.has-live-update::after{
+  content:"";
+  position:absolute;
+  top:6px;
+  right:6px;
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:#00ff8c;
+  box-shadow:0 0 16px rgba(0,255,140,0.8);
+}
+
+@keyframes bhuzBellPulse{
+  0%{ transform:scale(1); }
+  50%{ transform:scale(1.06); }
+  100%{ transform:scale(1); }
+}
+
+.bhuz-live-root{
+  position:fixed;
+  top:88px;
+  right:18px;
+  width:min(92vw, 390px);
+  display:grid;
+  gap:14px;
+  z-index:9999;
+}
+
+.bhuz-live-toast{
+  position:relative;
+  overflow:hidden;
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  align-items:flex-start;
+  gap:14px;
+  padding:16px;
+  border-radius:24px;
+  border:1px solid rgba(0,255,140,0.16);
+  background:
+    radial-gradient(circle at top right, rgba(0,255,140,0.14), transparent 28%),
+    rgba(8,13,22,0.96);
+  backdrop-filter:blur(22px);
+  box-shadow:
+    0 20px 50px rgba(0,0,0,0.44),
+    0 0 26px rgba(0,255,140,0.10);
+  animation:bhuzToastEnter .26s ease;
+}
+
+.bhuz-live-toast::before{
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:0;
+  height:4px;
+  width:100%;
+  background:rgba(255,255,255,0.05);
+}
+
+.bhuz-live-toast::after{
+  content:"";
+  position:absolute;
+  left:0;
+  bottom:0;
+  height:4px;
+  width:100%;
+  background:linear-gradient(90deg,#00d26a,#18f08a);
+  transform-origin:left;
+  animation:bhuzToastTimer 6.5s linear forwards;
+}
+
+@keyframes bhuzToastTimer{
+  from{ transform:scaleX(1); }
+  to{ transform:scaleX(0); }
+}
+
+@keyframes bhuzToastEnter{
+  from{
+    opacity:0;
+    transform:translateY(-10px) scale(.96);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0) scale(1);
+  }
+}
+
+.bhuz-live-toast.is-hiding{
+  opacity:0;
+  transform:translateY(-8px) scale(.96);
+  transition:all .22s ease;
+}
+
+.bhuz-live-icon{
+  width:48px;
+  height:48px;
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,255,140,0.10);
+  border:1px solid rgba(0,255,140,0.18);
+  font-size:24px;
+}
+
+.bhuz-live-content{
+  display:grid;
+  gap:4px;
+}
+
+.bhuz-live-content strong{
+  color:#fff;
+  font-size:15px;
+}
+
+.bhuz-live-content span,
+.bhuz-live-content small{
+  color:#9ca3af;
+  line-height:1.4;
+}
+
+.bhuz-live-close{
+  width:34px;
+  height:34px;
+  border:none;
+  border-radius:12px;
+  background:rgba(255,255,255,0.06);
+  color:#fff;
+  cursor:pointer;
+  font-size:18px;
+}
+
+@media (max-width:768px){
+
+  .bhuz-live-order-section{
+    padding:0 16px 8px;
+  }
+
+  .bhuz-live-order-card{
+    flex-direction:column;
+    align-items:flex-start;
+    border-radius:24px;
+  }
+
+  .bhuz-live-order-right{
+    width:100%;
+  }
+
+  .bhuz-live-order-btn{
+    width:100%;
+  }
+
+  .bhuz-live-root{
+    top:76px;
+    right:12px;
+    width:calc(100vw - 24px);
+  }
+
+  .bhuz-live-toast{
+    border-radius:22px;
+  }
+}
+
+
+
+
+
