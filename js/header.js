@@ -31,6 +31,238 @@ document.addEventListener("DOMContentLoaded", () => {
   const bottomFavoritesBtn = document.getElementById("bottomFavoritesBtn");
   const bottomProfileBtn = document.getElementById("bottomProfileBtn");
 
+  /* ======================================================
+     BHUZ LIVE GLOBAL - CAMPANITA / INDEX
+     - Módulo aislado del carrito y checkout.
+     - Escucha eventos emitidos por orders.js.
+     - Hace polling seguro SOLO para el cliente logueado.
+     - Usa sessionStorage solo como memoria temporal de UI.
+  ====================================================== */
+  const notificationBadge = document.getElementById("notificationBadge");
+  const notificationsList = document.getElementById("notificationsList");
+  const LIVE_NOTIFICATIONS_KEY = "bhuzLiveNotifications";
+  const LIVE_LAST_ORDER_KEY = "bhuzLastOrderSummary";
+  const LIVE_POLL_MS = 7000;
+
+  let liveNotifications = readLiveNotifications();
+  let livePollTimer = null;
+  let livePollRunning = false;
+
+  function readLiveNotifications() {
+    try {
+      const saved = sessionStorage.getItem(LIVE_NOTIFICATIONS_KEY);
+      const parsed = saved ? JSON.parse(saved) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function saveLiveNotifications() {
+    try {
+      sessionStorage.setItem(LIVE_NOTIFICATIONS_KEY, JSON.stringify(liveNotifications.slice(0, 20)));
+    } catch (error) {
+      console.warn("No se pudieron guardar notificaciones temporales BHUZ:", error);
+    }
+  }
+
+  function escapeLiveText(text) {
+    return String(text || "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function getOrderStatusLabel(status) {
+    if (window.DELI_ORDERS && typeof window.DELI_ORDERS.getStatusLabel === "function") {
+      return window.DELI_ORDERS.getStatusLabel(status);
+    }
+
+    const normalized = String(status || "pendiente").replaceAll("_", " ");
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  }
+
+  function getOrderStatusIcon(status) {
+    const value = String(status || "").toLowerCase();
+
+    if (value.includes("acept")) return "✅";
+    if (value.includes("prepar")) return "👨‍🍳";
+    if (value.includes("list")) return "🔥";
+    if (value.includes("camino")) return "🛵";
+    if (value.includes("entreg")) return "🎉";
+
+    return "🔔";
+  }
+
+  function updateNotificationBadge() {
+    if (!notificationBadge) return;
+
+    const count = liveNotifications.length;
+
+    if (!count) {
+      notificationBadge.style.display = "none";
+      notificationBadge.textContent = "0";
+      return;
+    }
+
+    notificationBadge.style.display = "flex";
+    notificationBadge.textContent = count > 9 ? "9+" : String(count);
+  }
+
+  function renderNotificationsPanel() {
+    if (!notificationsList) return;
+
+    const baseCard = `
+      <a href="mis-pedidos.html" class="notification-card">
+        <strong>🛍️ Mis pedidos</strong>
+        <span>Consulta estado, historial y detalles.</span>
+      </a>
+    `;
+
+    if (!liveNotifications.length) {
+      notificationsList.innerHTML = `
+        ${baseCard}
+        <div class="notification-card muted">
+          <strong>🔔 Avisos BHUZ</strong>
+          <span>Cuando tu pedido cambie de estado, aparecerá aquí automáticamente.</span>
+        </div>
+      `;
+      return;
+    }
+
+    const liveHtml = liveNotifications.map((item) => {
+      const icon = getOrderStatusIcon(item.status);
+      const statusLabel = getOrderStatusLabel(item.status);
+      const title = item.type === "created" ? "Pedido confirmado" : "Pedido actualizado";
+      const message = item.type === "created"
+        ? "Tu pedido fue enviado correctamente. Puedes seguirlo en Mis pedidos."
+        : `Tu pedido ahora está ${statusLabel.toLowerCase()}.`;
+
+      return `
+        <div class="notification-card live">
+          <strong>${icon} ${escapeLiveText(title)}</strong>
+          <span>${escapeLiveText(message)}</span>
+          <small>${escapeLiveText(item.restaurantName || "BHUZ")} · Pedido ${escapeLiveText(item.orderId || "")}</small>
+        </div>
+      `;
+    }).join("");
+
+    notificationsList.innerHTML = `${liveHtml}${baseCard}`;
+  }
+
+  function pushLiveNotification(data) {
+    if (!data || !data.orderId) return;
+
+    const uniqueKey = `${data.type || "status"}:${data.orderId}:${data.status || ""}`;
+
+    const alreadyExists = liveNotifications.some((item) => item.uniqueKey === uniqueKey);
+    if (alreadyExists) return;
+
+    liveNotifications.unshift({
+      uniqueKey,
+      type: data.type || "status",
+      orderId: String(data.orderId),
+      restaurantName: data.restaurantName || "BHUZ",
+      status: data.status || "pendiente",
+      createdAt: Date.now()
+    });
+
+    liveNotifications = liveNotifications.slice(0, 20);
+    saveLiveNotifications();
+    renderNotificationsPanel();
+    updateNotificationBadge();
+  }
+
+  function readLastCreatedOrderFromSession() {
+    try {
+      const saved = sessionStorage.getItem(LIVE_LAST_ORDER_KEY);
+      return saved ? JSON.parse(saved) : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function hydrateLastCreatedOrder() {
+    const lastOrder = readLastCreatedOrderFromSession();
+    if (!lastOrder || !lastOrder.id) return;
+
+    pushLiveNotification({
+      type: "created",
+      orderId: lastOrder.id,
+      restaurantName: lastOrder.restaurantName || "BHUZ",
+      status: lastOrder.status || "pendiente"
+    });
+  }
+
+  function bindLiveOrderEvents() {
+    window.addEventListener("bhuz:order-created", (event) => {
+      const order = event.detail?.order || null;
+      if (!order || !order.id) return;
+
+      pushLiveNotification({
+        type: "created",
+        orderId: order.id,
+        restaurantName: order.restaurantName || order.restaurant?.name || "BHUZ",
+        status: order.status || "pendiente"
+      });
+    });
+
+    window.addEventListener("bhuz:order-status-changed", (event) => {
+      const detail = event.detail || {};
+      const order = detail.order || null;
+      if (!order || !order.id) return;
+
+      pushLiveNotification({
+        type: "status",
+        orderId: order.id,
+        restaurantName: order.restaurantName || order.restaurant?.name || "BHUZ",
+        status: detail.nextStatus || order.status || "pendiente"
+      });
+    });
+  }
+
+  async function pollCustomerOrdersForIndex() {
+    if (livePollRunning) return;
+
+    const currentUser = currentUserSafe();
+
+    if (!currentUser || currentUser.role === "restaurant" || !currentUser.email) {
+      return;
+    }
+
+    if (!window.DELI_ORDERS || typeof window.DELI_ORDERS.getOrdersByCustomer !== "function") {
+      return;
+    }
+
+    livePollRunning = true;
+
+    try {
+      await window.DELI_ORDERS.getOrdersByCustomer(currentUser.email);
+    } catch (error) {
+      console.warn("No se pudo actualizar LIVE en index:", error);
+    } finally {
+      livePollRunning = false;
+    }
+  }
+
+  function startLivePolling() {
+    if (livePollTimer) {
+      clearInterval(livePollTimer);
+      livePollTimer = null;
+    }
+
+    const currentUser = currentUserSafe();
+
+    if (!currentUser || currentUser.role === "restaurant" || !currentUser.email) {
+      return;
+    }
+
+    pollCustomerOrdersForIndex();
+    livePollTimer = setInterval(pollCustomerOrdersForIndex, LIVE_POLL_MS);
+  }
+
   function currentUserSafe() {
     return (typeof getCurrentUser === "function" && getCurrentUser()) || null;
   }
@@ -129,7 +361,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (backdrop) backdrop.addEventListener("click", closeAllPanels);
 
     if (openNotifications) {
-      openNotifications.addEventListener("click", () => openPanel(notificationsPanel));
+      openNotifications.addEventListener("click", () => {
+        renderNotificationsPanel();
+        updateNotificationBadge();
+        openPanel(notificationsPanel);
+      });
     }
 
     if (closeNotifications) closeNotifications.addEventListener("click", closeAllPanels);
@@ -202,6 +438,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (drawerNotificationsBtn) {
       drawerNotificationsBtn.addEventListener("click", (e) => {
         e.preventDefault();
+        renderNotificationsPanel();
+        updateNotificationBadge();
         openPanel(notificationsPanel);
       });
     }
@@ -416,15 +654,32 @@ document.addEventListener("DOMContentLoaded", () => {
     renderProfilePanel();
   }
 
+  bindLiveOrderEvents();
+  hydrateLastCreatedOrder();
+  renderNotificationsPanel();
+  updateNotificationBadge();
+
   bindStaticActions();
   renderSideMenu();
   renderHeader();
+  startLivePolling();
 
   window.addEventListener("deli:session-ready", () => {
     renderSideMenu();
     renderHeader();
+    startLivePolling();
   });
 });
+
+
+
+
+
+
+
+
+
+
 
 
 
