@@ -522,6 +522,8 @@ function createBhuzLiveNotifications() {
   const statusCache = new Map();
   let firstCustomerSyncDone = false;
   let audioUnlocked = false;
+  let liveAudioContext = null;
+  const liveAudioElements = new Map();
 
   function ensureRoot() {
     let root = document.getElementById("bhuzLiveRoot");
@@ -536,43 +538,66 @@ function createBhuzLiveNotifications() {
     return root;
   }
 
+  function getLiveAudioContext() {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return null;
+
+      if (!liveAudioContext || liveAudioContext.state === "closed") {
+        liveAudioContext = new AudioContext();
+      }
+
+      return liveAudioContext;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  async function resumeLiveAudioContext() {
+    const context = getLiveAudioContext();
+
+    if (context && context.state === "suspended" && typeof context.resume === "function") {
+      try {
+        await context.resume();
+      } catch (error) {
+        // Silencioso: algunos teléfonos exigen otro toque del usuario.
+      }
+    }
+
+    return context;
+  }
+
+  function getReusableAudioElement(src) {
+    if (!src) return null;
+
+    if (!liveAudioElements.has(src)) {
+      const audio = new Audio(src);
+      audio.preload = "auto";
+      audio.volume = BHUZ_LIVE_SOUND_CONFIG.volume;
+      liveAudioElements.set(src, audio);
+    }
+
+    return liveAudioElements.get(src);
+  }
+
   function unlockAudioOnce() {
-    if (audioUnlocked) return;
     audioUnlocked = true;
+    resumeLiveAudioContext();
   }
 
   async function forceUnlockAudioForUserInteraction() {
     audioUnlocked = true;
 
     try {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (AudioContext) {
-        const audioContext = new AudioContext();
+      await resumeLiveAudioContext();
 
-        if (audioContext.state === "suspended" && typeof audioContext.resume === "function") {
-          await audioContext.resume();
-        }
+      Object.values(BHUZ_LIVE_SOUND_CONFIG.customSounds || {}).forEach((src) => {
+        const audio = getReusableAudioElement(src);
+        if (!audio) return;
+        audio.load();
+      });
 
-        const oscillator = audioContext.createOscillator();
-        const gain = audioContext.createGain();
-
-        oscillator.type = "sine";
-        oscillator.frequency.value = 620;
-        gain.gain.value = 0.018;
-
-        oscillator.connect(gain);
-        gain.connect(audioContext.destination);
-        oscillator.start();
-
-        setTimeout(() => {
-          try {
-            oscillator.stop();
-            audioContext.close();
-          } catch (error) {
-            // Silencioso: el navegador puede cerrar el contexto antes.
-          }
-        }, 120);
-      }
+      playFallbackBeep("aceptado", 90, 0.018);
     } catch (error) {
       // Silencioso: algunos navegadores siguen bloqueando audio hasta otra interacción.
     }
@@ -586,14 +611,17 @@ function createBhuzLiveNotifications() {
     });
   }
 
-  function playFallbackBeep(status) {
+  function playFallbackBeep(status, duration = 170, gainValue = 0.04) {
     if (!BHUZ_LIVE_SOUND_CONFIG.useSoftFallbackBeep) return;
 
     try {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContext) return;
+      const audioContext = getLiveAudioContext();
+      if (!audioContext) return;
 
-      const audioContext = new AudioContext();
+      if (audioContext.state === "suspended" && typeof audioContext.resume === "function") {
+        audioContext.resume().catch(() => {});
+      }
+
       const oscillator = audioContext.createOscillator();
       const gain = audioContext.createGain();
 
@@ -607,16 +635,21 @@ function createBhuzLiveNotifications() {
 
       oscillator.type = "sine";
       oscillator.frequency.value = statusFrequency[status] || 650;
-      gain.gain.value = 0.035;
+      gain.gain.value = gainValue;
 
       oscillator.connect(gain);
       gain.connect(audioContext.destination);
 
       oscillator.start();
       setTimeout(() => {
-        oscillator.stop();
-        audioContext.close();
-      }, 150);
+        try {
+          oscillator.stop();
+          oscillator.disconnect();
+          gain.disconnect();
+        } catch (error) {
+          // Silencioso: el sonido ya pudo terminar.
+        }
+      }, duration);
     } catch (error) {
       // Silencioso: algunos navegadores bloquean audio si no hubo interacción.
     }
@@ -634,15 +667,21 @@ function createBhuzLiveNotifications() {
       return;
     }
 
+    resumeLiveAudioContext();
+
     if (soundSrc) {
       try {
-        const audio = new Audio(soundSrc);
-        audio.volume = BHUZ_LIVE_SOUND_CONFIG.volume;
+        const audio = getReusableAudioElement(soundSrc);
+        if (audio) {
+          audio.pause();
+          audio.currentTime = 0;
+          audio.volume = BHUZ_LIVE_SOUND_CONFIG.volume;
 
-        audio.play().catch(() => {
-          playFallbackBeep(normalizedStatus);
-        });
-        return;
+          audio.play().catch(() => {
+            playFallbackBeep(normalizedStatus);
+          });
+          return;
+        }
       } catch (error) {
         playFallbackBeep(normalizedStatus);
         return;
@@ -836,6 +875,7 @@ window.DELI_ORDERS = {
   normalizeOrderStatus,
   bhuzLiveNotifications: window.BHUZ_LIVE_NOTIFICATIONS
 };
+
 
 
 

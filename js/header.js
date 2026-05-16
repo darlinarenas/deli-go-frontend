@@ -43,6 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const bhuzLastOrderClose = document.getElementById("bhuzLastOrderClose");
   const bhuzActivateSoundBtn = document.getElementById("bhuzActivateSoundBtn");
   const bhuzNotificationSoundBtn = document.getElementById("bhuzNotificationSoundBtn");
+  const bhuzGlobalSoundBtn = document.getElementById("bhuzGlobalSoundBtn");
   let bhuzLastOrderTimer = null;
 
   /* ======================================================
@@ -382,6 +383,47 @@ document.addEventListener("DOMContentLoaded", () => {
     }).join(", ");
   }
 
+  function buildLastOrderReceiptHtml(order) {
+    const items = Array.isArray(order?.items) ? order.items : [];
+
+    if (!items.length) {
+      return `
+        <div class="bhuz-last-order-empty">
+          <span>🛍️</span>
+          <p>Tu pedido fue enviado correctamente.</p>
+        </div>
+      `;
+    }
+
+    const rows = items.map((item) => {
+      const qty = Number(item.qty || item.quantity || item.cantidad || 1);
+      const safeQty = Number.isFinite(qty) && qty > 0 ? qty : 1;
+      const name = item.name || item.dishName || item.productName || item.title || "Producto";
+      const subtotal = Number(item.subtotal || (Number(item.price || item.unitPrice || 0) * safeQty) || 0);
+      const subtotalHtml = subtotal > 0 ? `<em>${escapeLiveText(formatLivePrice(subtotal))}</em>` : "";
+
+      return `
+        <div class="bhuz-receipt-row">
+          <span class="bhuz-receipt-qty">${escapeLiveText(safeQty)}</span>
+          <span class="bhuz-receipt-name">${escapeLiveText(name)}</span>
+          ${subtotalHtml}
+        </div>
+      `;
+    }).join("");
+
+    return `
+      <div class="bhuz-receipt-box">
+        <div class="bhuz-receipt-title">
+          <span>🧾</span>
+          <strong>Detalle del pedido</strong>
+        </div>
+        <div class="bhuz-receipt-list">
+          ${rows}
+        </div>
+      </div>
+    `;
+  }
+
   function formatLastOrderTime(value) {
     const date = value ? new Date(value) : new Date();
 
@@ -400,15 +442,21 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function setSoundButtonState(isActive) {
-    const buttons = [bhuzActivateSoundBtn, bhuzNotificationSoundBtn].filter(Boolean);
+    const buttons = [bhuzActivateSoundBtn, bhuzNotificationSoundBtn, bhuzGlobalSoundBtn].filter(Boolean);
 
     buttons.forEach((button) => {
       if (isActive) {
         button.classList.add("is-active");
         button.textContent = "✅ Sonido activado en este teléfono";
+        if (button === bhuzGlobalSoundBtn) {
+          button.style.display = "none";
+        }
       } else {
         button.classList.remove("is-active");
         button.textContent = "🔊 Activar sonido en este teléfono";
+        if (button === bhuzGlobalSoundBtn) {
+          button.style.display = "inline-flex";
+        }
       }
     });
   }
@@ -461,7 +509,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (bhuzLastOrderStatus) bhuzLastOrderStatus.textContent = statusLabel;
     if (bhuzLastOrderTotal) bhuzLastOrderTotal.textContent = formatLivePrice(order.total || 0);
     if (bhuzLastOrderTime) bhuzLastOrderTime.textContent = formatLastOrderTime(order.createdAt || order.created_at || order.date);
-    if (bhuzLastOrderProducts) bhuzLastOrderProducts.innerHTML = `<span>🛍️</span> ${escapeLiveText(buildLastOrderProductsText(order))}`;
+    if (bhuzLastOrderProducts) bhuzLastOrderProducts.innerHTML = buildLastOrderReceiptHtml(order);
     if (bhuzLastOrderCountdown) bhuzLastOrderCountdown.textContent = "⏱️ Se cerrará en 15 segundos";
 
     bhuzLastOrderCard.style.display = "grid";
@@ -621,6 +669,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (bhuzNotificationSoundBtn) {
       bhuzNotificationSoundBtn.addEventListener("click", activateBhuzSound);
+    }
+
+    if (bhuzGlobalSoundBtn) {
+      bhuzGlobalSoundBtn.addEventListener("click", activateBhuzSound);
+      setSoundButtonState(
+        Boolean(window.BHUZ_LIVE_NOTIFICATIONS && typeof window.BHUZ_LIVE_NOTIFICATIONS.isAudioUnlocked === "function" && window.BHUZ_LIVE_NOTIFICATIONS.isAudioUnlocked())
+      );
     }
 
     if (bottomSearchBtn) {
@@ -919,6 +974,7 @@ document.addEventListener("DOMContentLoaded", () => {
     startLivePolling();
   });
 });
+
 
 
 
