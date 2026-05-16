@@ -31,6 +31,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const bottomFavoritesBtn = document.getElementById("bottomFavoritesBtn");
   const bottomProfileBtn = document.getElementById("bottomProfileBtn");
 
+  const bhuzLastOrderCard = document.getElementById("bhuzLastOrderCard");
+  const bhuzLastOrderTitle = document.getElementById("bhuzLastOrderTitle");
+  const bhuzLastOrderText = document.getElementById("bhuzLastOrderText");
+  const bhuzLastOrderRestaurant = document.getElementById("bhuzLastOrderRestaurant");
+  const bhuzLastOrderStatus = document.getElementById("bhuzLastOrderStatus");
+  const bhuzLastOrderTotal = document.getElementById("bhuzLastOrderTotal");
+  const bhuzLastOrderClose = document.getElementById("bhuzLastOrderClose");
+  let bhuzLastOrderTimer = null;
+
   /* ======================================================
      BHUZ LIVE GLOBAL - CAMPANITA / INDEX
      - Módulo aislado del carrito y checkout.
@@ -263,6 +272,134 @@ document.addEventListener("DOMContentLoaded", () => {
     livePollTimer = setInterval(pollCustomerOrdersForIndex, LIVE_POLL_MS);
   }
 
+  /* ======================================================
+     CAMBIO BHUZ LIVE INDEX
+     - Muestra resumen corto de la última compra al volver al index.
+     - Desaparece automáticamente en 15 segundos o al pulsar X.
+     - Usa sessionStorage solo como memoria temporal de UI.
+  ====================================================== */
+  function hasOrderSuccessParam() {
+    const params = new URLSearchParams(window.location.search || "");
+    return params.get("orderSuccess") === "1";
+  }
+
+  function cleanOrderSuccessUrl() {
+    if (!hasOrderSuccessParam()) return;
+
+    const url = new URL(window.location.href);
+    url.searchParams.delete("orderSuccess");
+    url.searchParams.delete("orderId");
+    window.history.replaceState({}, document.title, url.toString());
+  }
+
+  function readTemporaryLastOrder() {
+    try {
+      const created = sessionStorage.getItem("bhuzLastCreatedOrder");
+      if (created) return JSON.parse(created);
+
+      const summary = sessionStorage.getItem(LIVE_LAST_ORDER_KEY);
+      if (summary) return JSON.parse(summary);
+    } catch (error) {
+      console.warn("No se pudo leer el resumen temporal del último pedido:", error);
+    }
+
+    return null;
+  }
+
+  function formatLivePrice(value) {
+    if (window.DELI_ORDERS && typeof window.DELI_ORDERS.formatPrice === "function") {
+      return window.DELI_ORDERS.formatPrice(value || 0);
+    }
+
+    const amount = Number(value || 0);
+
+    try {
+      return new Intl.NumberFormat("es-CL", {
+        style: "currency",
+        currency: "CLP",
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+      }).format(amount);
+    } catch (error) {
+      return `$${amount}`;
+    }
+  }
+
+  function buildLastOrderItemsText(order) {
+    const items = Array.isArray(order?.items) ? order.items : [];
+
+    if (!items.length) return "Tu pedido fue enviado correctamente.";
+
+    const firstItems = items.slice(0, 2).map((item) => {
+      const qty = Number(item.qty || 1);
+      return `${item.name || "Producto"} x${qty}`;
+    });
+
+    const extraCount = Math.max(items.length - 2, 0);
+    return `${firstItems.join(", ")}${extraCount > 0 ? ` +${extraCount} más` : ""}`;
+  }
+
+  function hideLastOrderCard() {
+    if (!bhuzLastOrderCard) return;
+
+    if (bhuzLastOrderTimer) {
+      clearTimeout(bhuzLastOrderTimer);
+      bhuzLastOrderTimer = null;
+    }
+
+    bhuzLastOrderCard.classList.add("is-hiding");
+
+    setTimeout(() => {
+      bhuzLastOrderCard.classList.remove("is-visible", "is-hiding");
+      bhuzLastOrderCard.style.display = "none";
+    }, 260);
+  }
+
+  function showLastOrderCard(order) {
+    if (!bhuzLastOrderCard || !order) return;
+
+    const statusLabel = getOrderStatusLabel(order.status || "pendiente");
+
+    if (bhuzLastOrderTitle) bhuzLastOrderTitle.textContent = "Pedido confirmado";
+    if (bhuzLastOrderText) bhuzLastOrderText.textContent = buildLastOrderItemsText(order);
+    if (bhuzLastOrderRestaurant) bhuzLastOrderRestaurant.textContent = order.restaurantName || order.restaurant?.name || "BHUZ";
+    if (bhuzLastOrderStatus) bhuzLastOrderStatus.textContent = statusLabel;
+    if (bhuzLastOrderTotal) bhuzLastOrderTotal.textContent = formatLivePrice(order.total || 0);
+
+    bhuzLastOrderCard.style.display = "grid";
+    bhuzLastOrderCard.classList.remove("is-hiding");
+    bhuzLastOrderCard.classList.add("is-visible");
+
+    const progressBar = bhuzLastOrderCard.querySelector(".bhuz-last-order-progress span");
+    if (progressBar) {
+      progressBar.style.animation = "none";
+      void progressBar.offsetWidth;
+      progressBar.style.animation = "bhuzLastOrderTimer 15s linear forwards";
+    }
+
+    if (bhuzLastOrderTimer) clearTimeout(bhuzLastOrderTimer);
+    bhuzLastOrderTimer = setTimeout(hideLastOrderCard, 15000);
+  }
+
+  function initLastOrderLandingCard() {
+    if (!hasOrderSuccessParam()) return;
+
+    const lastOrder = readTemporaryLastOrder();
+
+    if (lastOrder && lastOrder.id) {
+      showLastOrderCard(lastOrder);
+
+      pushLiveNotification({
+        type: "created",
+        orderId: lastOrder.id,
+        restaurantName: lastOrder.restaurantName || lastOrder.restaurant?.name || "BHUZ",
+        status: lastOrder.status || "pendiente"
+      });
+    }
+
+    cleanOrderSuccessUrl();
+  }
+
   function currentUserSafe() {
     return (typeof getCurrentUser === "function" && getCurrentUser()) || null;
   }
@@ -375,6 +512,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (closeProfilePanel) closeProfilePanel.addEventListener("click", closeAllPanels);
+
+    if (bhuzLastOrderClose) {
+      bhuzLastOrderClose.addEventListener("click", hideLastOrderCard);
+    }
 
     if (bottomSearchBtn) {
       bottomSearchBtn.addEventListener("click", (e) => {
@@ -656,6 +797,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   bindLiveOrderEvents();
   hydrateLastCreatedOrder();
+  initLastOrderLandingCard();
   renderNotificationsPanel();
   updateNotificationBadge();
 
@@ -670,6 +812,56 @@ document.addEventListener("DOMContentLoaded", () => {
     startLivePolling();
   });
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

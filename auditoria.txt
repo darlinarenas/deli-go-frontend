@@ -1,0 +1,156 @@
+AUDITORÍA INICIAL DEL ZIP - BHUZ / DELI GO
+Archivo auditado: Deli-go-z.zip
+
+RESUMEN
+- El ZIP contiene una carpeta principal: Deli-go.
+- Se detectaron 82 archivos sin contar node_modules ni .git.
+- La estructura real activa parece estar en:
+  - Deli-go/*.html
+  - Deli-go/css/*
+  - Deli-go/js/*
+  - Deli-go/deligo-backend/*
+- Existe una copia duplicada/heredada dentro de Deli-go/js/admin/ con HTML, CSS y backend copiados.
+  Esa carpeta NO debe tocarse ni usarse como fuente principal hasta confirmar si está en producción.
+
+ESTRUCTURA PRINCIPAL DETECTADA
+Frontend:
+- index.html
+- restaurant.html
+- mis-pedidos.html
+- panel-restaurant.html
+- panel-administrativo.html
+- ventas-restaurante.html
+- acceso-administrativo.html
+
+CSS:
+- css/styles.css
+- css/restaurant.css
+- css/mis-pedidos.css
+- css/panel-restaurante.css
+- css/administrador.css
+
+JS principal:
+- js/database.js
+- js/restaurants.js
+- js/auth.js
+- js/orders.js
+- js/budget.js
+- js/app.js
+- js/header.js
+- js/restaurant-page.js
+- js/user-orders.js
+- js/panel-restaurante.js
+- js/panel-alerts.js
+- js/panel-balance.js
+- js/panel-ventas.js
+- js/administrador.js
+- js/admin/admin-orders.js
+- js/admin/admin-restaurants.js
+
+Backend:
+- deligo-backend/server.js
+- deligo-backend/db/postgres.js
+- deligo-backend/routes/auth.routes.js
+- deligo-backend/routes/usuarios.routes.js
+- deligo-backend/routes/restaurantes.routes.js
+- deligo-backend/routes/platos.routes.js
+- deligo-backend/routes/pedidos.routes.js
+- deligo-backend/routes/admin.routes.js
+- deligo-backend/utils/normalizadores.js
+
+ESTADO BACKEND
+- El backend está en Node/Express.
+- Usa PostgreSQL mediante pg.
+- server.js monta rutas separadas:
+  - /
+  - /users
+  - /restaurants
+  - /restaurants/:email/dishes
+  - /orders
+  - /admin
+- La base real contempla:
+  - users
+  - restaurants
+  - dishes
+  - orders
+  - order_items
+  - admins
+  - admin_sessions
+
+PEDIDOS / GPS / DIRECCIÓN
+- El flujo de creación de pedido nace en js/restaurant-page.js.
+- La función principal es handleCheckoutSubmit().
+- Esa función arma el objeto order y lo envía a saveOrder().
+- saveOrder() llama a window.DELI_ORDERS.createOrder().
+- window.DELI_ORDERS está en js/orders.js.
+- js/orders.js hace POST a:
+  https://deligo-backend-i554.onrender.com/orders
+- El backend recibe el pedido en:
+  deligo-backend/routes/pedidos.routes.js
+- La ruta POST /orders llama a createOrderInPostgres() definida en server.js.
+
+IMPORTANTE PARA LA PRÓXIMA MODIFICACIÓN
+El backend ya tiene columnas preparadas para ubicación:
+- orders.delivery_address
+- orders.delivery_reference
+- orders.latitude
+- orders.longitude
+
+Y createOrderInPostgres() ya intenta guardar:
+- body.deliveryAddress
+- customer.address
+- body.deliveryReference
+- customer.reference
+- body.latitude
+- body.location?.lat
+- customer.location?.lat
+- body.longitude
+- body.location?.lng
+- customer.location?.lng
+
+CONCLUSIÓN:
+No hace falta reestructurar todo para GPS.
+La modificación correcta debe ser mínima y segura:
+1. Agregar UI en restaurant.html para ubicación GPS y referencia.
+2. Agregar lógica en js/restaurant-page.js para capturar ubicación con navigator.geolocation.
+3. Enviar deliveryAddress, deliveryReference, latitude, longitude y customer.location dentro del order existente.
+4. Mantener js/orders.js prácticamente intacto, salvo que se detecte que normalizeOrder elimina esos campos.
+5. Verificar en server.js si normalize/build compatible ya devuelve los campos correctamente.
+6. No tocar paneles hasta confirmar que ya muestran deliveryAddress/reference/location o hasta implementar una mejora visual segura.
+
+ALERTAS
+1. index.html incluye js/api.js, pero ese archivo no existe en el ZIP.
+   Esto puede causar 404 en navegador. No necesariamente rompe si no se depende de él, pero está sucio.
+2. js/app.js tiene API_URL = "https://TU-BACKEND-AQUI.com".
+   Si ese archivo ejecuta llamadas reales, puede romper. Hay que revisar antes de tocar.
+3. Hay duplicación fuerte dentro de js/admin/.
+   No debe mezclarse con la app principal.
+4. localStorage aparece poco en el proyecto principal:
+   - js/app.js
+   - js/orders.js
+   En orders.js parece ser un comentario o uso no crítico; hay que verificar antes de modificar.
+5. sessionStorage sí se usa para sesión/resumen temporal, lo cual es aceptable si no es fuente real de datos.
+
+ARCHIVOS QUE SÍ HAY QUE TOCAR PARA GPS PRIMERO
+- restaurant.html
+- js/restaurant-page.js
+Posible revisión:
+- js/orders.js
+- deligo-backend/server.js
+- deligo-backend/routes/pedidos.routes.js
+
+ARCHIVOS QUE NO DEBEN TOCARSE EN LA PRIMERA FASE
+- panel-administrativo.html
+- js/administrador.js
+- panel-restaurant.html
+- js/panel-restaurante.js
+- ventas-restaurante.html
+- js/panel-ventas.js
+- carpeta js/admin/ duplicada
+
+REGLA DE TRABAJO PARA ESTE ZIP
+Trabajar siempre sobre los archivos completos reales del ZIP.
+No reemplazar archivos grandes por versiones pequeñas.
+No inventar estructura.
+No tocar la copia duplicada js/admin/ salvo que el usuario lo pida.
+Entregar archivos finales como .txt descargables completos.
