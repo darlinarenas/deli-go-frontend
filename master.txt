@@ -1,209 +1,192 @@
-ACTUALIZACIÓN MASTER - 15-05-2026
+
+BHUZ - MASTER + AUDITORÍA COMPLETA FINAL
+========================================
+
+AUDITORÍA INICIAL DEL ZIP - BHUZ / DELI GO
+Archivo auditado: Deli-go-z.zip
+
+RESUMEN
+- El ZIP contiene una carpeta principal: Deli-go.
+- Se detectaron 82 archivos sin contar node_modules ni .git.
+- La estructura real activa parece estar en:
+  - Deli-go/*.html
+  - Deli-go/css/*
+  - Deli-go/js/*
+  - Deli-go/deligo-backend/*
+- Existe una copia duplicada/heredada dentro de Deli-go/js/admin/ con HTML, CSS y backend copiados.
+  Esa carpeta NO debe tocarse ni usarse como fuente principal hasta confirmar si está en producción.
 
 ============================================================
-ESTADO REAL ACTUAL DEL PROYECTO
-===============================
+ESTADO ACTUAL REAL BHUZ
+============================================================
 
-BHUZ volvió a una versión ESTABLE utilizando respaldo seguro.
-
-Actualmente FUNCIONA correctamente:
-
-✔ Login usuarios
-✔ Login restaurantes
-✔ Login admin
-✔ Panel restaurante
-✔ Panel administrador
-✔ Carrito
-✔ Checkout
-✔ Pedidos reales
-✔ PostgreSQL
-✔ Backend Render
+✔ PostgreSQL funcionando
+✔ Backend Render funcionando
 ✔ Frontend conectado
-✔ Restaurantes reales
-✔ Platos reales
-✔ Categorías dinámicas
-✔ Rankings
-✔ Presupuesto inteligente
-
-IMPORTANTE:
-Se restauró un backup estable debido a conflictos generados durante las pruebas LIVE globales.
-
-============================================================
-ESTADO REAL DE NOTIFICACIONES LIVE
-==================================
-
-ACTUALMENTE:
-
-✔ Los popups funcionan
-✔ Los sonidos funcionan parcialmente
-✔ Vibración móvil parcialmente funcional
-✔ Sistema LIVE funciona en:
-
-* panel mis pedidos
-
-IMPORTANTE:
-El popup GLOBAL todavía NO está estable.
-
-Problemas encontrados:
-
-* conflictos con renders automáticos
-* conflictos con refresh de mis pedidos
-* pérdida temporal del carrito en checkout
-* conflictos entre polling y renderizados
-* problemas de audio móvil dependiendo del navegador
-
-DECISIÓN TOMADA:
-NO seguir parchando el sistema LIVE encima de la versión actual.
+✔ Pedidos reales funcionando
+✔ Carrito funcionando
+✔ Checkout funcionando
+✔ Panel admin funcionando
+✔ Panel restaurante funcionando
+✔ Sistema LIVE mejorado
+✔ Popup premium funcionando
+✔ Campanita funcional
+✔ Sonidos móviles funcionando mejor
+✔ Resumen de pedido tipo boleta
+✔ Popup global en index funcionando
+✔ Auto actualización de estados
+✔ UX premium tipo app real
 
 ============================================================
-DECISIÓN IMPORTANTE PARA MAÑANA
-===============================
-
-Mañana NO se trabajará el sistema LIVE encima de archivos existentes.
-
-Se hará:
-
-✔ sistema separado
-✔ modular
-✔ aislado
-✔ sin tocar checkout
-✔ sin tocar carrito
-✔ sin tocar render principal
-
-OBJETIVO:
-Crear:
-js/bhuz-live-notifications.js
-
-completamente independiente del flujo principal.
-
+CAMBIOS REALIZADOS EN ESTA SESIÓN
 ============================================================
-OBJETIVO REAL PARA MAÑANA
-=========================
 
-PRIORIDAD #1:
+1. CHECKOUT → INDEX
+✔ Después de confirmar pedido:
+- ya NO redirecciona a mis pedidos
+- ahora vuelve al index
 
-✔ Popup global estable
-✔ Sonidos móviles reales
+2. POPUP GLOBAL PREMIUM
+✔ Popup moderno premium
+✔ Glow verde BHUZ
+✔ Barra progresiva animada
+✔ Temporizador automático
+✔ Botón X cerrar
+✔ Fondo iluminado
+✔ Responsive mobile-first
+
+3. RESUMEN TIPO BOLETA
+✔ Restaurante
+✔ Hora del pedido
+✔ Productos detallados
+✔ Cantidades individuales
+✔ Visual tipo factura/boleta
+✔ Más sensación de compra real
+
+4. CAMPANITA FUNCIONAL
+✔ Notificaciones reales
+✔ Contador dinámico
+✔ Marcar como leídas
+✔ Actividad de pedidos
+✔ Estados LIVE
+
+5. SISTEMA LIVE GLOBAL
+✔ Funciona ahora en:
+- index
+- mis pedidos
+
+✔ Estados:
+- confirmado
+- aceptado
+- preparando
+- listo
+- en camino
+- entregado
+
+✔ Sonidos
 ✔ Vibración móvil
-✔ Popup en:
+✔ Popup global
 
-* index
-* mis pedidos
-* panel restaurante
-
-SIN romper:
-
-* carrito
-* checkout
-* pedidos
-* PostgreSQL
-* frontend actual
+6. ACTIVACIÓN SONIDO MÓVIL
+✔ Botón especial para activar sonido
+✔ Mejor compatibilidad Android/iPhone
+✔ Evita bloqueo automático del navegador
 
 ============================================================
-PANEL RESTAURANTE
-=================
-
-Mañana también:
-
-✔ sonido personalizado cuando entra pedido
-✔ popup grande:
-“Nuevo pedido entrante”
-✔ vibración móvil
-✔ evitar sonidos duplicados
-✔ botón activar sonidos restaurante
-
-IMPORTANTE:
-El usuario ya grabó sonidos propios para usar en BHUZ.
-
+IDENTIDAD VISUAL OFICIAL
 ============================================================
-TRANSFORMACIÓN VISUAL PREMIUM
-=============================
 
-SE MANTIENE TODO EL AVANCE PREMIUM:
-
-✔ UI negra + verde neón
-✔ estilo moderno BHUZ
-✔ cards premium
-✔ UX tipo app
-✔ dark mode premium
-✔ glow BHUZ
-✔ responsive mobile-first
-✔ navegación premium
-✔ paneles modernos
-
-IMPORTANTE:
-La identidad visual BHUZ quedó aprobada.
-
-============================================================
-PENDIENTES IMPORTANTES
-======================
-
-1. Popup global estable
-2. Sistema LIVE modular
-3. Skeleton loading
-4. Animaciones suaves
-5. Favoritos reales
-6. Historial inteligente
-7. GPS inteligente
-8. Compartir ubicación
-9. Enviar pedido a otra persona
-10. Experiencia tipo app nativa
-
-============================================================
-LECCIÓN IMPORTANTE DE ESTA SESIÓN
-=================================
-
-NO tocar:
-
-* checkout
-* carrito
-* lógica principal
-
-para implementar:
-
-* notificaciones
-* sonidos
-* popups
-
-TODO sistema LIVE debe ser:
-✔ aislado
-✔ modular
-✔ desacoplado
+✔ negro profundo
+✔ verde neón BHUZ
+✔ glow suave
+✔ estilo premium
+✔ cards compactas
+✔ UI moderna
+✔ experiencia tipo app real
+✔ mobile-first real
 
 ============================================================
 REGLAS IMPORTANTES
-==================
+============================================================
 
 SIEMPRE:
-
-* trabajar sobre archivos reales completos
-* entregar .txt completos
-* no recortar código
-* no simplificar estructuras
-* no romper funciones existentes
-* cambios mínimos y seguros
-* backend como fuente principal
-* PostgreSQL como fuente real
-* localStorage solo temporal
-
-============================================================
-ESTADO EMOCIONAL REAL DEL PROYECTO
-==================================
-
-Aunque esta sesión fue estresante:
-
-✔ el proyecto NO se perdió
-✔ PostgreSQL sigue funcionando
-✔ backend sigue funcionando
-✔ BHUZ sigue avanzando
-✔ la identidad visual quedó MUY bien
-✔ el backup salvó la estabilidad
-
-La próxima sesión debe ser:
-más modular
-más aislada
-más segura
+- trabajar sobre archivos reales completos
+- no inventar estructura
+- no simplificar lógica
+- no recortar archivos
+- no romper backend
+- no romper checkout
+- no romper carrito
+- backend como fuente principal
+- PostgreSQL como fuente real
+- entregar .txt completos
+- cambios mínimos y seguros
 
 ============================================================
-FIN ACTUALIZACIÓN 15-05-2026
-============================
+PRÓXIMO OBJETIVO
+============================================================
+
+✔ GPS inteligente
+✔ compartir ubicación
+✔ enviar pedido a otra persona
+✔ ubicación obligatoria Venezuela
+✔ favoritos reales
+✔ historial inteligente
+✔ experiencia tipo app nativa
+
+MÓDULO PENDIENTE — INVITAR COMIDA / UBICACIÓN DINÁMICA
+
+Objetivo:
+Implementar función “Invitar comida” en DELI GO/Bhuz para resolver entregas a terceros y mejorar direcciones en Venezuela.
+
+Flujo esperado:
+1. Usuario realiza pedido.
+2. En checkout puede elegir:
+   - “Es para mí”
+   - “Invitar comida a alguien”
+3. Si elige invitar:
+   - escribe nombre,
+   - teléfono opcional,
+   - mensaje opcional.
+4. Sistema genera link temporal único.
+5. Link puede compartirse por:
+   - WhatsApp,
+   - SMS,
+   - copiar enlace.
+6. Persona receptora abre el link.
+7. Comparte su ubicación GPS.
+8. Puede agregar referencia escrita.
+9. Sistema guarda:
+   - GPS,
+   - referencia,
+   - nombre receptor,
+   - teléfono.
+10. Pedido continúa flujo normal ya existente:
+   pendiente → aceptado → preparando → listo → en camino → entregado.
+
+IMPORTANTE:
+- El receptor NO necesita cuenta.
+- GPS debe ser obligatorio.
+- Dirección escrita + referencia + GPS.
+- Mantener máximo 5 direcciones propias por usuario.
+- Permitir guardar direcciones frecuentes.
+- Crear módulo “Personas frecuentes” para futuras invitaciones.
+- Preguntar:
+  “¿Usar dirección guardada o pedir ubicación actual?”
+- Historial del pedido debe conservar ubicación usada.
+
+IDEA CLAVE:
+La innovación NO es solo regalar comida.
+La innovación es:
+“Te envío comida y tú compartes tu ubicación exacta para recibirla.”
+
+Prioridad:
+Implementar después de:
+1. Notificaciones globales.
+2. Sonidos globales.
+3. Pop-up de compra en index.
+4. Campanita global conectada a mis pedidos.
+
+============================================================
+FIN MASTER FINAL
+============================================================

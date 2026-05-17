@@ -683,6 +683,132 @@
       display: none !important;
     }
 
+    /* ======================================================
+       CAMBIO BHUZ RESTAURANTE LIVE
+       Popup/tarjeta para avisar pedido nuevo al restaurante
+       y botón de activación de sonido en móviles.
+    ====================================================== */
+    .bhuz-live-root {
+      position: fixed;
+      top: 90px;
+      right: 18px;
+      z-index: 9999;
+      display: grid;
+      gap: 12px;
+      width: min(420px, calc(100vw - 28px));
+      pointer-events: none;
+    }
+
+    .bhuz-live-toast {
+      pointer-events: auto;
+      display: grid;
+      grid-template-columns: 52px 1fr 34px;
+      align-items: center;
+      gap: 12px;
+      padding: 16px;
+      border-radius: 22px;
+      background: rgba(17, 24, 39, 0.96);
+      color: #ffffff;
+      border: 1px solid rgba(34, 197, 94, 0.45);
+      box-shadow: 0 18px 48px rgba(0, 0, 0, 0.24), 0 0 24px rgba(34, 197, 94, 0.18);
+      animation: bhuzRestaurantToastIn 0.22s ease both;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .bhuz-live-toast::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      height: 4px;
+      width: 100%;
+      background: linear-gradient(90deg, #22c55e, #a3ff12);
+      animation: bhuzRestaurantToastTimer 8.5s linear forwards;
+    }
+
+    .bhuz-live-toast.is-hiding {
+      animation: bhuzRestaurantToastOut 0.24s ease both;
+    }
+
+    .bhuz-restaurant-new-order-toast {
+      border-color: rgba(34, 197, 94, 0.72);
+      box-shadow: 0 18px 52px rgba(0, 0, 0, 0.28), 0 0 32px rgba(34, 197, 94, 0.26);
+    }
+
+    .bhuz-live-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(34, 197, 94, 0.14);
+      border: 1px solid rgba(34, 197, 94, 0.36);
+      font-size: 1.55rem;
+    }
+
+    .bhuz-live-content {
+      min-width: 0;
+      display: grid;
+      gap: 4px;
+    }
+
+    .bhuz-live-content strong {
+      font-size: 1rem;
+      line-height: 1.2;
+    }
+
+    .bhuz-live-content span {
+      color: #d1fae5;
+      font-size: 0.92rem;
+      line-height: 1.35;
+    }
+
+    .bhuz-live-content small {
+      color: #a7f3d0;
+      font-size: 0.82rem;
+      font-weight: 800;
+    }
+
+    .bhuz-live-close {
+      width: 30px;
+      height: 30px;
+      border: none;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      cursor: pointer;
+      font-size: 1.15rem;
+      line-height: 1;
+    }
+
+    .bhuz-live-card-updated,
+    .updated-glow {
+      animation: bhuzRestaurantCardGlow 2.4s ease both;
+    }
+
+    @keyframes bhuzRestaurantToastIn {
+      from { opacity: 0; transform: translateY(-10px) scale(0.98); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes bhuzRestaurantToastOut {
+      from { opacity: 1; transform: translateY(0) scale(1); }
+      to { opacity: 0; transform: translateY(-8px) scale(0.98); }
+    }
+
+    @keyframes bhuzRestaurantToastTimer {
+      from { transform: translateX(0); }
+      to { transform: translateX(-100%); }
+    }
+
+    @keyframes bhuzRestaurantCardGlow {
+      0% { box-shadow: 0 0 0 rgba(34, 197, 94, 0); border-color: var(--border); }
+      20% { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.18), 0 16px 36px rgba(34, 197, 94, 0.18); border-color: rgba(34, 197, 94, 0.75); }
+      100% { box-shadow: none; border-color: var(--border); }
+    }
+
     @media (max-width: 1120px) {
       .stats { grid-template-columns: repeat(2, 1fr); }
       .grid-2,
@@ -724,6 +850,7 @@
         <div class="status-pill" id="storeStatusPill">● Local abierto</div>
         <button class="btn btn-light" id="toggleStoreStatusBtn" type="button">Cerrar local</button>
         <button class="btn btn-light" id="goPublicStore" type="button">Ver mi tienda</button>
+        <button class="btn btn-success" id="bhuzRestaurantSoundBtn" type="button">🔊 Activar sonido</button>
         <button class="btn btn-primary" onclick="logoutRestaurant()">Cerrar sesión</button>
       </div>
     </div>
@@ -1379,6 +1506,53 @@
 
   <script src="js/auth.js"></script>
 <script src="js/orders.js"></script>
+<script>
+  /* ======================================================
+     CAMBIO BHUZ RESTAURANTE LIVE
+     Botón manual para activar sonido del restaurante.
+     Importante en Android/iPhone: el navegador exige una interacción
+     del usuario antes de permitir reproducir bhuz-pedido-restaurant.mp3.
+  ====================================================== */
+  document.addEventListener("DOMContentLoaded", () => {
+    const soundButton = document.getElementById("bhuzRestaurantSoundBtn");
+
+    if (!soundButton) return;
+
+    function updateSoundButtonState() {
+      const live = window.BHUZ_LIVE_NOTIFICATIONS;
+
+      if (live && typeof live.isAudioUnlocked === "function" && live.isAudioUnlocked()) {
+        soundButton.textContent = "🔊 Sonido activo";
+        soundButton.classList.remove("btn-success");
+        soundButton.classList.add("btn-light");
+      }
+    }
+
+    soundButton.addEventListener("click", async () => {
+      const live = window.BHUZ_LIVE_NOTIFICATIONS;
+
+      if (!live || typeof live.unlockAudio !== "function") {
+        alert("El sistema de sonido todavía no está listo. Recarga el panel e intenta de nuevo.");
+        return;
+      }
+
+      await live.unlockAudio();
+
+      if (typeof live.playRestaurantNewOrderSound === "function") {
+        live.playRestaurantNewOrderSound();
+      }
+
+      soundButton.textContent = "🔊 Sonido activo";
+      soundButton.classList.remove("btn-success");
+      soundButton.classList.add("btn-light");
+    });
+
+    updateSoundButtonState();
+
+    window.addEventListener("click", updateSoundButtonState, { passive: true });
+    window.addEventListener("touchstart", updateSoundButtonState, { passive: true });
+  });
+</script>
 <script src="js/panel-restaurante.js"></script>
 <script src="js/panel-alerts.js"></script>
 <script src="js/panel-balance.js"></script>
