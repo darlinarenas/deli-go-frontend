@@ -565,6 +565,8 @@ img{ display:block; max-width:100%; }
 
 /* ======================================================
    BOTÓN CARRITO ABAJO
+   - CAMBIO BHUZ: tarjeta clara para distinguirse del fondo.
+   - Solo cambia la tarjeta/botón flotante de carrito.
 ====================================================== */
 
 .cart{
@@ -573,8 +575,10 @@ img{ display:block; max-width:100%; }
   transform:translateX(-50%);
   bottom:18px;
   width:min(760px, calc(100% - 24px));
-  background:linear-gradient(135deg, var(--color-principal), var(--color-secundario));
-  color:#031006;
+  background:
+    radial-gradient(circle at 12% 50%, rgba(0,210,106,.13), transparent 24%),
+    linear-gradient(180deg,#ffffff,#f5f7fb);
+  color:#111827;
   padding:16px 18px;
   border-radius:24px;
   text-align:center;
@@ -583,8 +587,24 @@ img{ display:block; max-width:100%; }
   cursor:pointer;
   display:none;
   z-index:90;
-  box-shadow:0 18px 38px rgba(0,210,106,.22);
+  border:1px solid rgba(0,210,106,.28);
+  box-shadow:
+    0 18px 38px rgba(0,0,0,.25),
+    0 0 34px rgba(0,210,106,.16);
+  transition:
+    transform .18s ease,
+    box-shadow .18s ease,
+    border-color .18s ease;
 }
+
+.cart:hover{
+  transform:translateX(-50%) translateY(-2px);
+  border-color:rgba(0,210,106,.42);
+  box-shadow:
+    0 24px 48px rgba(0,0,0,.30),
+    0 0 44px rgba(0,210,106,.22);
+}
+
 
 /* ======================================================
    PANEL CARRITO
@@ -950,4 +970,5 @@ img{ display:block; max-width:100%; }
   .hero-badge{ font-size:12px; padding:9px 11px; }
   .item{ padding:12px; border-radius:22px; }
 }
+
 
