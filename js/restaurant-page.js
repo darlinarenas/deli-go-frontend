@@ -66,6 +66,17 @@ document.addEventListener("DOMContentLoaded", () => {
   let cart = [];
 
   /* ======================================================
+     CAMBIO BHUZ DIRECCIONES CHECKOUT
+     - Direcciones guardadas desde backend.
+     - GPS obligatorio para entrega.
+     - No usa localStorage como fuente real.
+  ====================================================== */
+  let checkoutAddresses = [];
+  let selectedCheckoutAddress = null;
+  let checkoutGpsLocation = null;
+
+
+  /* ======================================================
      BLOQUE 4
      HELPERS GENERALES
   ====================================================== */
@@ -751,10 +762,213 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* ======================================================
+     BLOQUE 11.5
+     DIRECCIONES GUARDADAS + GPS PARA CHECKOUT
+  ====================================================== */
+  function ensureCheckoutAddressTools() {
+    if (!checkoutAddress || !checkoutAddress.parentElement) return;
+
+    const group = checkoutAddress.parentElement;
+
+    if (!document.getElementById("checkoutAddressSelect")) {
+      const select = document.createElement("select");
+      select.id = "checkoutAddressSelect";
+      select.style.marginTop = "10px";
+      select.innerHTML = `<option value="">Selecciona una dirección guardada</option>`;
+      group.insertBefore(select, restoreAddressBtn || checkoutAddress.nextSibling);
+
+      select.addEventListener("change", () => {
+        const selectedId = select.value;
+        const address = checkoutAddresses.find((item) => String(item.id) === String(selectedId));
+        applyCheckoutAddress(address || null);
+      });
+    }
+
+    if (!document.getElementById("checkoutReference")) {
+      const reference = document.createElement("textarea");
+      reference.id = "checkoutReference";
+      reference.placeholder = "Referencia obligatoria: casa azul, portón negro, al lado de...";
+      reference.style.marginTop = "10px";
+      group.insertBefore(reference, restoreAddressBtn || checkoutAddress.nextSibling);
+    }
+
+    if (!document.getElementById("checkoutGpsBtn")) {
+      const gpsBtn = document.createElement("button");
+      gpsBtn.id = "checkoutGpsBtn";
+      gpsBtn.type = "button";
+      gpsBtn.className = "helper-btn";
+      gpsBtn.textContent = "📍 Usar mi ubicación actual";
+      gpsBtn.style.marginTop = "10px";
+      group.insertBefore(gpsBtn, restoreAddressBtn || checkoutAddress.nextSibling);
+
+      gpsBtn.addEventListener("click", captureCheckoutLocation);
+    }
+
+    if (!document.getElementById("checkoutLocationStatus")) {
+      const status = document.createElement("small");
+      status.id = "checkoutLocationStatus";
+      status.style.display = "block";
+      status.style.marginTop = "8px";
+      status.style.color = "#6b7280";
+      status.textContent = "Ubicación GPS pendiente.";
+      group.insertBefore(status, restoreAddressBtn || checkoutAddress.nextSibling);
+    }
+  }
+
+  function getCheckoutReferenceEl() {
+    return document.getElementById("checkoutReference");
+  }
+
+  function getCheckoutAddressSelectEl() {
+    return document.getElementById("checkoutAddressSelect");
+  }
+
+  function getCheckoutLocationStatusEl() {
+    return document.getElementById("checkoutLocationStatus");
+  }
+
+  function getUserLocationFromSession(user) {
+    const lat = String(user?.location?.lat || user?.latitude || "").trim();
+    const lng = String(user?.location?.lng || user?.longitude || "").trim();
+
+    if (!lat || !lng) return null;
+
+    return { lat, lng };
+  }
+
+  function setCheckoutLocationStatus(message, isOk = false) {
+    const status = getCheckoutLocationStatusEl();
+    if (!status) return;
+
+    status.textContent = message;
+    status.style.color = isOk ? "#16a34a" : "#6b7280";
+  }
+
+  function applyCheckoutAddress(address) {
+    selectedCheckoutAddress = address || null;
+
+    if (!address) return;
+
+    if (checkoutAddress) {
+      checkoutAddress.value = address.address || "";
+    }
+
+    const referenceEl = getCheckoutReferenceEl();
+    if (referenceEl) {
+      referenceEl.value = address.reference || "";
+    }
+
+    checkoutGpsLocation = {
+      lat: String(address.latitude || address.location?.lat || "").trim(),
+      lng: String(address.longitude || address.location?.lng || "").trim()
+    };
+
+    if (checkoutGpsLocation.lat && checkoutGpsLocation.lng) {
+      setCheckoutLocationStatus("✅ Ubicación GPS cargada desde tu dirección guardada.", true);
+    } else {
+      setCheckoutLocationStatus("Ubicación GPS pendiente para esta dirección.", false);
+    }
+  }
+
+  function renderCheckoutAddresses() {
+    const select = getCheckoutAddressSelectEl();
+    if (!select) return;
+
+    select.innerHTML = `<option value="">Selecciona una dirección guardada</option>`;
+
+    checkoutAddresses.forEach((address) => {
+      const option = document.createElement("option");
+      option.value = address.id;
+      option.textContent = `${address.label || "Dirección"}${address.isDefault ? " · Principal" : ""} - ${address.address || "Sin dirección"}`;
+      select.appendChild(option);
+    });
+
+    const defaultAddress =
+      checkoutAddresses.find((address) => address.isDefault) ||
+      checkoutAddresses[0] ||
+      null;
+
+    if (defaultAddress) {
+      select.value = defaultAddress.id;
+      applyCheckoutAddress(defaultAddress);
+    }
+  }
+
+  async function loadCheckoutAddresses() {
+    const currentUser = getCurrentUserSafe();
+    const email = normalizeText(currentUser?.email || checkoutEmail?.value || "");
+
+    checkoutAddresses = [];
+    selectedCheckoutAddress = null;
+
+    if (!email) {
+      renderCheckoutAddresses();
+      return [];
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/users/${encodeURIComponent(email)}/addresses`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.ok && Array.isArray(data.addresses)) {
+        checkoutAddresses = data.addresses;
+      }
+    } catch (error) {
+      console.warn("No se pudieron cargar las direcciones guardadas:", error);
+    }
+
+    renderCheckoutAddresses();
+    return checkoutAddresses;
+  }
+
+  async function captureCheckoutLocation() {
+    if (!navigator.geolocation) {
+      alert("Tu navegador no permite obtener ubicación GPS.");
+      return null;
+    }
+
+    setCheckoutLocationStatus("Solicitando ubicación GPS...", false);
+
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          checkoutGpsLocation = {
+            lat: String(position.coords.latitude),
+            lng: String(position.coords.longitude)
+          };
+
+          setCheckoutLocationStatus("✅ Ubicación GPS capturada correctamente.", true);
+          resolve(checkoutGpsLocation);
+        },
+        (error) => {
+          console.warn("No se pudo obtener ubicación GPS:", error);
+          setCheckoutLocationStatus("No se pudo obtener ubicación. Debes permitir el GPS para entregar el pedido.", false);
+          alert("No se pudo obtener tu ubicación. Permite el GPS para confirmar el pedido.");
+          resolve(null);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 12000,
+          maximumAge: 0
+        }
+      );
+    });
+  }
+
+  /* ======================================================
      BLOQUE 12
      CHECKOUT
   ====================================================== */
-  function fillCheckoutUserData() {
+  async function fillCheckoutUserData() {
+    ensureCheckoutAddressTools();
+
     const currentUser = getCurrentUserSafe();
     if (!currentUser) return;
 
@@ -773,12 +987,25 @@ document.addEventListener("DOMContentLoaded", () => {
     if (checkoutEmail) {
       checkoutEmail.value = currentUser.email || "";
     }
+
+    const referenceEl = getCheckoutReferenceEl();
+    if (referenceEl) {
+      referenceEl.value = currentUser.reference || "";
+    }
+
+    const sessionLocation = getUserLocationFromSession(currentUser);
+    if (sessionLocation) {
+      checkoutGpsLocation = sessionLocation;
+      setCheckoutLocationStatus("✅ Ubicación GPS cargada desde tu cuenta.", true);
+    }
+
+    await loadCheckoutAddresses();
   }
 
-  function openCheckout() {
+  async function openCheckout() {
     if (!checkoutModal || !cart.length) return;
 
-    fillCheckoutUserData();
+    await fillCheckoutUserData();
 
     if (checkoutOrderSummary) {
       checkoutOrderSummary.innerHTML = cart.map((item) => `
@@ -855,9 +1082,25 @@ document.addEventListener("DOMContentLoaded", () => {
       checkoutAddress?.value.trim() || currentUser?.address || "";
     const finalCustomerEmail =
       checkoutEmail?.value.trim() || currentUser?.email || "";
+    const finalCustomerReference =
+      getCheckoutReferenceEl()?.value.trim() || selectedCheckoutAddress?.reference || currentUser?.reference || "";
+
+    const finalLocation = checkoutGpsLocation || getUserLocationFromSession(currentUser);
+    const finalLatitude = String(finalLocation?.lat || "").trim();
+    const finalLongitude = String(finalLocation?.lng || "").trim();
 
     if (!finalCustomerName || !finalCustomerPhone || !finalCustomerAddress || !finalCustomerEmail) {
       alert("Completa nombre, teléfono, dirección y correo para confirmar el pedido.");
+      return;
+    }
+
+    if (!finalCustomerReference) {
+      alert("Agrega una referencia de entrega. Ejemplo: casa azul, portón negro, al lado de...");
+      return;
+    }
+
+    if (!finalLatitude || !finalLongitude) {
+      alert("Debes usar o cargar una ubicación GPS para que el repartidor llegue exacto.");
       return;
     }
 
@@ -898,11 +1141,24 @@ document.addEventListener("DOMContentLoaded", () => {
         hour: "2-digit",
         minute: "2-digit"
       }),
+      deliveryAddress: finalCustomerAddress,
+      deliveryReference: finalCustomerReference,
+      latitude: finalLatitude,
+      longitude: finalLongitude,
+      location: {
+        lat: finalLatitude,
+        lng: finalLongitude
+      },
       customer: {
         fullName: finalCustomerName,
         phone: finalCustomerPhone,
         address: finalCustomerAddress,
-        email: finalCustomerEmail
+        email: finalCustomerEmail,
+        reference: finalCustomerReference,
+        location: {
+          lat: finalLatitude,
+          lng: finalLongitude
+        }
       }
     };
 
@@ -1012,8 +1268,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   checkoutForm?.addEventListener("submit", handleCheckoutSubmit);
 
-  restoreAddressBtn?.addEventListener("click", () => {
-    fillCheckoutUserData();
+  restoreAddressBtn?.addEventListener("click", async () => {
+    await fillCheckoutUserData();
   });
 
   checkoutModal?.addEventListener("click", (event) => {
@@ -1024,6 +1280,653 @@ document.addEventListener("DOMContentLoaded", () => {
 
   init();
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

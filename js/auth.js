@@ -1,5 +1,5 @@
 /* =========================================================
-   DELI FOODS
+   BHUZ
    AUTH.JS
 
    AUTENTICACIÓN CON BACKEND
@@ -31,6 +31,13 @@ const emailInput = document.getElementById("email");
 const passwordInput = document.getElementById("password");
 const confirmPasswordInput = document.getElementById("confirmPassword");
 const messageEl = document.getElementById("message");
+
+/* =========================================================
+   REGISTRO CLIENTE - DIRECCIÓN + GPS OBLIGATORIO
+   - Estado temporal de la ubicación capturada desde el navegador.
+   - No usa localStorage como fuente de datos.
+========================================================= */
+let customerGpsLocation = null;
 
 /* LOGIN */
 const loginRoleInput = document.getElementById("loginRole");
@@ -148,6 +155,173 @@ function normalizeRole(role) {
   return "customer";
 }
 
+
+/* =========================================================
+   HELPERS REGISTRO CLIENTE - DIRECCIÓN + GPS
+   - Inserta campos sin tocar el HTML base.
+   - Funciona en index.html y restaurant.html porque ambos usan los mismos IDs.
+========================================================= */
+function getCustomerReferenceInput() {
+  return document.getElementById("reference");
+}
+
+function getCustomerLocationStatus() {
+  return document.getElementById("customerLocationStatus");
+}
+
+function getCustomerLocationButton() {
+  return document.getElementById("customerLocationBtn");
+}
+
+function updateCustomerLocationStatus(message, isOk = false) {
+  const status = getCustomerLocationStatus();
+
+  if (!status) return;
+
+  status.textContent = message || "";
+  status.style.color = isOk ? "#00a846" : "#ef4444";
+}
+
+function setCustomerLocationButtonLoading(isLoading) {
+  const button = getCustomerLocationButton();
+
+  if (!button) return;
+
+  button.disabled = Boolean(isLoading);
+  button.textContent = isLoading
+    ? "📍 Obteniendo ubicación..."
+    : customerGpsLocation
+      ? "✅ Ubicación capturada"
+      : "📍 Usar mi ubicación";
+}
+
+function requestCustomerLocation() {
+  if (!navigator.geolocation) {
+    customerGpsLocation = null;
+    updateCustomerLocationStatus(
+      "Tu navegador no permite obtener ubicación GPS.",
+      false
+    );
+    return;
+  }
+
+  setCustomerLocationButtonLoading(true);
+  updateCustomerLocationStatus(
+    "Acepta el permiso de ubicación para guardar tu dirección correctamente.",
+    false
+  );
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      customerGpsLocation = {
+        lat: String(position.coords.latitude),
+        lng: String(position.coords.longitude)
+      };
+
+      setCustomerLocationButtonLoading(false);
+      updateCustomerLocationStatus(
+        "Ubicación GPS capturada correctamente.",
+        true
+      );
+    },
+    (error) => {
+      customerGpsLocation = null;
+      setCustomerLocationButtonLoading(false);
+
+      let message = "No se pudo obtener la ubicación. Debes permitir el GPS para registrarte.";
+
+      if (error && error.code === 1) {
+        message = "Permiso de ubicación rechazado. Activa el GPS para poder registrarte.";
+      }
+
+      if (error && error.code === 2) {
+        message = "No se pudo detectar tu ubicación. Revisa el GPS o la señal del teléfono.";
+      }
+
+      if (error && error.code === 3) {
+        message = "La ubicación tardó demasiado. Intenta nuevamente.";
+      }
+
+      updateCustomerLocationStatus(message, false);
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 12000,
+      maximumAge: 0
+    }
+  );
+}
+
+function ensureCustomerAddressFields() {
+  if (!addressInput) return;
+
+  const formContainer = addressInput.parentElement;
+  if (!formContainer) return;
+
+  if (!getCustomerReferenceInput()) {
+    const referenceInput = document.createElement("textarea");
+    referenceInput.id = "reference";
+    referenceInput.placeholder = "Referencia de entrega: color de casa, punto cercano, piso, local, etc.";
+    referenceInput.rows = 3;
+    referenceInput.style.width = "100%";
+    referenceInput.style.resize = "vertical";
+    referenceInput.style.minHeight = "74px";
+    referenceInput.style.marginTop = "8px";
+
+    addressInput.insertAdjacentElement("afterend", referenceInput);
+  }
+
+  if (!getCustomerLocationButton()) {
+    const locationButton = document.createElement("button");
+    locationButton.id = "customerLocationBtn";
+    locationButton.type = "button";
+    locationButton.textContent = "📍 Usar mi ubicación";
+    locationButton.style.marginTop = "8px";
+    locationButton.style.width = "100%";
+    locationButton.style.border = "0";
+    locationButton.style.borderRadius = "12px";
+    locationButton.style.padding = "12px 14px";
+    locationButton.style.fontWeight = "800";
+    locationButton.style.cursor = "pointer";
+    locationButton.style.background = "#00c853";
+    locationButton.style.color = "#ffffff";
+    locationButton.addEventListener("click", requestCustomerLocation);
+
+    const referenceInput = getCustomerReferenceInput();
+    if (referenceInput) {
+      referenceInput.insertAdjacentElement("afterend", locationButton);
+    } else {
+      addressInput.insertAdjacentElement("afterend", locationButton);
+    }
+  }
+
+  if (!getCustomerLocationStatus()) {
+    const status = document.createElement("p");
+    status.id = "customerLocationStatus";
+    status.textContent = "La ubicación GPS es obligatoria para registrar una dirección exacta.";
+    status.style.margin = "8px 0 0";
+    status.style.fontSize = "0.86rem";
+    status.style.lineHeight = "1.35";
+    status.style.color = "#6b7280";
+
+    const locationButton = getCustomerLocationButton();
+    if (locationButton) {
+      locationButton.insertAdjacentElement("afterend", status);
+    }
+  }
+}
+
+function getCustomerRegistrationLocation() {
+  if (!customerGpsLocation || !customerGpsLocation.lat || !customerGpsLocation.lng) {
+    return null;
+  }
+
+  return {
+    lat: customerGpsLocation.lat,
+    lng: customerGpsLocation.lng
+  };
+}
+
 function getRestaurantPanelUrl() {
   return "panel-restaurant.html";
 }
@@ -233,6 +407,8 @@ async function getRestaurantApprovalStatusByEmail(email) {
    MODALES
 ========================================================= */
 function showRegister() {
+  ensureCustomerAddressFields();
+
   if (registerScreen) {
     registerScreen.style.display = "flex";
   }
@@ -280,17 +456,34 @@ function closeRestaurantRegister() {
    REGISTRO CLIENTE
 ========================================================= */
 async function registerUser() {
+  ensureCustomerAddressFields();
+
   const fullName = fullNameInput ? fullNameInput.value.trim() : "";
   const address = addressInput ? addressInput.value.trim() : "";
+  const referenceInput = getCustomerReferenceInput();
+  const reference = referenceInput ? referenceInput.value.trim() : "";
   const phone = phoneInput ? phoneInput.value.trim() : "";
   const email = emailInput ? normalizeEmail(emailInput.value) : "";
   const password = passwordInput ? passwordInput.value : "";
   const confirm = confirmPasswordInput ? confirmPasswordInput.value : "";
+  const location = getCustomerRegistrationLocation();
 
-  if (!fullName || !address || !phone || !email || !password || !confirm) {
+  if (!fullName || !address || !reference || !phone || !email || !password || !confirm) {
     if (messageEl) {
-      messageEl.textContent = "Completa todos los campos";
+      messageEl.textContent = "Completa todos los campos, incluyendo referencia de entrega";
     }
+    return;
+  }
+
+  if (!location) {
+    if (messageEl) {
+      messageEl.textContent = "Debes tocar 'Usar mi ubicación' y permitir el GPS para registrarte";
+    }
+
+    updateCustomerLocationStatus(
+      "La ubicación GPS es obligatoria para que el repartidor llegue exactamente.",
+      false
+    );
     return;
   }
 
@@ -305,9 +498,11 @@ async function registerUser() {
     const { res, data } = await postToBackend("/register", {
       fullName,
       address,
+      reference,
       phone,
       email,
-      password
+      password,
+      location
     });
 
     if (!res.ok) {
@@ -542,6 +737,7 @@ function protectRestaurantPanel() {
 }
 
 async function initAuth() {
+  ensureCustomerAddressFields();
   await loadCurrentSession();
   protectRestaurantPanel();
 }
@@ -552,6 +748,7 @@ async function initAuth() {
 window.showRegister = showRegister;
 window.closeRegister = closeRegister;
 window.registerUser = registerUser;
+window.requestCustomerLocation = requestCustomerLocation;
 
 window.showLogin = showLogin;
 window.closeLogin = closeLogin;
@@ -573,6 +770,21 @@ window.loadUser = loadUser;
 window.loadCurrentSession = loadCurrentSession;
 
 initAuth();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
