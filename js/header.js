@@ -591,6 +591,17 @@ document.addEventListener("DOMContentLoaded", () => {
     alert(`${label} estará disponible pronto. Lo vamos a conectar en el siguiente paso con datos reales.`);
   }
 
+  /* ======================================================
+     CAMBIO BHUZ PERFIL / DIRECCIONES - PASO 1
+     - Navegación segura hacia perfil.html.
+     - No toca backend, PostgreSQL, pedidos, checkout ni sonidos.
+     - perfil.html se creará en el siguiente paso del módulo.
+  ====================================================== */
+  function goToUserProfile() {
+    closeAllPanels();
+    window.location.href = "perfil.html";
+  }
+
   function openLoginModal(role = "customer") {
     closeAllPanels();
 
@@ -695,7 +706,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (bottomProfileBtn) {
       bottomProfileBtn.addEventListener("click", (e) => {
         e.preventDefault();
-        openPanel(profilePanel);
+        goToUserProfile();
       });
     }
   }
@@ -724,8 +735,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (drawerAddressBtn) {
       drawerAddressBtn.addEventListener("click", (e) => {
         e.preventDefault();
-        closeAllPanels();
-        showComingSoonMessage("Direcciones y ubicación GPS");
+        goToUserProfile();
       });
     }
 
@@ -757,7 +767,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (drawerProfileBtn) {
       drawerProfileBtn.addEventListener("click", (e) => {
         e.preventDefault();
-        openPanel(profilePanel);
+        goToUserProfile();
       });
     }
 
@@ -869,7 +879,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const profileSupportBtn = document.getElementById("profileSupportBtn");
 
       if (profileLogoutBtn) profileLogoutBtn.addEventListener("click", logoutSafe);
-      if (profileAddressBtn) profileAddressBtn.addEventListener("click", () => showComingSoonMessage("Direcciones y ubicación GPS"));
+      if (profileAddressBtn) profileAddressBtn.addEventListener("click", goToUserProfile);
       if (profilePaymentBtn) profilePaymentBtn.addEventListener("click", () => showComingSoonMessage("Métodos de pago"));
       if (profileSupportBtn) profileSupportBtn.addEventListener("click", () => showComingSoonMessage("Soporte y ayuda"));
       return;
@@ -974,6 +984,158 @@ document.addEventListener("DOMContentLoaded", () => {
     startLivePolling();
   });
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -337,6 +337,635 @@ Cuando haya errores de descarga o archivos TXT:
 FIN ACTUALIZACIÓN ÚLTIMA SESIÓN
 ============================================================
 
+
+
+============================================================
+ACTUALIZACIÓN SESIÓN ACTUAL — REGISTRO, DIRECCIONES, GPS, CHECKOUT Y UI
+============================================================
+
+Fecha de actualización:
+- Sesión en la que se trabajó registro real de usuario, direcciones guardadas, GPS obligatorio, pedidos en PostgreSQL y mejoras visuales del carrito/checkout.
+
+============================================================
+RESUMEN DE LO HECHO HOY
+============================================================
+
+1. REGISTRO REAL DE USUARIO + GPS OBLIGATORIO
+
+Estado:
+✔ Se implementó registro de usuario con dirección real.
+✔ Se agregó referencia obligatoria.
+✔ Se agregó ubicación GPS obligatoria.
+✔ Se confirmó que el usuario nuevo se guarda correctamente en PostgreSQL.
+✔ Se confirmó que la ubicación GPS se guarda correctamente en base de datos.
+
+Tabla usada:
+- users
+- user_addresses
+
+Datos confirmados:
+✔ user_email
+✔ label
+✔ address
+✔ reference
+✔ latitude
+✔ longitude
+✔ is_default
+✔ created_at
+✔ updated_at
+
+Regla clave:
+- En Venezuela no basta con dirección escrita.
+- La dirección correcta debe ser:
+  dirección escrita + referencia + GPS obligatorio.
+
+============================================================
+2. TABLA user_addresses
+============================================================
+
+Se creó la tabla:
+- user_addresses
+
+Objetivo:
+Guardar varias direcciones por usuario sin meter todo dentro de users.
+
+Campos base:
+- id
+- user_email
+- label
+- address
+- reference
+- latitude
+- longitude
+- is_default
+- created_at
+- updated_at
+
+Estado:
+✔ La tabla quedó creada en Supabase/PostgreSQL.
+✔ Se confirmó con datos reales.
+✔ Se confirmó que latitude y longitude se guardan.
+✔ Se confirmó que la dirección principal queda marcada como is_default = true.
+
+IMPORTANTE:
+- Por ahora RLS quedó desactivado porque el frontend NO se conecta directo a Supabase.
+- El backend en Render es quien lee/escribe usando DATABASE_URL.
+- Más adelante se puede reforzar seguridad/políticas si se decide abrir Supabase directo, pero por ahora NO es necesario para el flujo actual.
+
+============================================================
+3. BACKEND DIRECCIONES
+============================================================
+
+Archivo nuevo creado:
+- deligo-backend/routes/direcciones.routes.js
+
+Funcionalidad:
+✔ GET /users/:email/addresses
+✔ POST /users/:email/addresses
+✔ PUT /users/:email/addresses/:addressId/default
+✔ DELETE /users/:email/addresses/:addressId
+
+Reglas implementadas:
+✔ GPS obligatorio para nueva dirección.
+✔ Referencia obligatoria.
+✔ Dirección escrita obligatoria.
+✔ Si es la primera dirección, queda como principal.
+✔ Si una dirección se marca como principal, actualiza también users.
+✔ No permite eliminar la única dirección guardada.
+
+Archivo modificado:
+- deligo-backend/server.js
+
+Cambio:
+✔ Se conectó la ruta:
+  app.use("/users/:email/addresses", crearRutasDirecciones(...))
+
+============================================================
+4. AUTH / REGISTRO
+============================================================
+
+Archivo modificado:
+- deligo-backend/routes/auth.routes.js
+
+Cambios:
+✔ Registro cliente exige:
+  - nombre
+  - teléfono
+  - email
+  - contraseña
+  - dirección
+  - referencia
+  - GPS latitude
+  - GPS longitude
+
+✔ Al registrar usuario:
+  - guarda en users
+  - crea automáticamente dirección principal en user_addresses
+
+Regla:
+- El registro ya no debe aceptar usuario sin GPS.
+
+============================================================
+5. FRONTEND REGISTRO
+============================================================
+
+Archivo modificado:
+- js/auth.js
+
+Cambios:
+✔ Se agregó botón:
+  “📍 Usar mi ubicación”
+✔ Se agregó campo referencia.
+✔ Se valida GPS obligatorio.
+✔ Se envía al backend:
+  - reference
+  - location.lat
+  - location.lng
+
+Estado:
+✔ Probado.
+✔ Registro real guardó usuario.
+✔ user_addresses recibió dirección, referencia y GPS.
+
+============================================================
+6. CHECKOUT + DIRECCIONES GUARDADAS
+============================================================
+
+Archivo revisado/modificado:
+- js/restaurant-page.js
+
+Estado encontrado:
+✔ El checkout ya estaba bien preparado.
+✔ Carga direcciones guardadas desde backend.
+✔ Selecciona dirección principal.
+✔ Carga referencia.
+✔ Carga GPS.
+✔ Permite botón “Usar mi ubicación actual”.
+✔ Envía en el pedido:
+  - deliveryAddress
+  - deliveryReference
+  - latitude
+  - longitude
+  - location.lat
+  - location.lng
+  - customer.address
+  - customer.reference
+  - customer.location
+
+Confirmación:
+✔ Se confirmó visualmente que el checkout muestra:
+  “✅ Ubicación GPS cargada desde tu dirección guardada.”
+
+IMPORTANTE:
+- No hace falta mostrar latitud/longitud al cliente.
+- Es mejor UX ocultarlas.
+- Lo importante es que el pedido las guarde para restaurante/repartidor.
+
+============================================================
+7. PEDIDOS EN POSTGRESQL
+============================================================
+
+Archivo revisado/modificado:
+- deligo-backend/server.js
+
+Función crítica:
+- createOrderInPostgres()
+
+Problema detectado:
+- El pedido sí se guardaba en PostgreSQL.
+- GPS sí entraba.
+- delivery_address y delivery_reference podían quedar inconsistentes por uso de normalizeText en campos de dirección/referencia.
+
+Corrección aplicada:
+✔ Se cambió el uso de normalizeText a toNullableText para:
+  - customer_address
+  - delivery_address
+  - delivery_reference
+
+Objetivo:
+- No convertir direcciones/referencias como si fueran categorías/status.
+- Mantener texto real de dirección.
+- Evitar pérdida o limpieza agresiva de datos.
+
+Confirmación por SQL:
+Se ejecutó consulta en Supabase:
+
+SELECT
+  id,
+  customer_email,
+  customer_address,
+  delivery_address,
+  delivery_reference,
+  latitude,
+  longitude,
+  status,
+  created_at
+FROM orders
+ORDER BY created_at DESC
+LIMIT 5;
+
+Resultado:
+✔ El último pedido aparece en orders.
+✔ delivery_address aparece.
+✔ delivery_reference aparece.
+✔ latitude aparece.
+✔ longitude aparece.
+✔ Confirmado: pedidos reales guardándose en Supabase/PostgreSQL.
+✔ No depende de localStorage como fuente real.
+
+IMPORTANTE:
+- Para confirmar último pedido, usar siempre SQL:
+  SELECT * FROM orders ORDER BY created_at DESC LIMIT 1;
+
+============================================================
+8. UI CHECKOUT PREMIUM CLARO
+============================================================
+
+Archivos modificados:
+- restaurant.html
+- css/restaurant.css
+
+Cambio visual:
+✔ Checkout pasó de tarjeta oscura a tarjeta clara premium.
+✔ Fondo general sigue oscuro.
+✔ Tarjeta de checkout ahora resalta.
+✔ Inputs claros.
+✔ Resumen tipo boleta.
+✔ Botones verdes BHUZ se mantienen.
+✔ Estilo más cercano a app real.
+
+Objetivo:
+- Evitar confusión visual.
+- Mejorar confianza del usuario al confirmar pedido.
+- Dar sensación de pago/compra real.
+
+Estado:
+✔ Usuario aprobó el cambio.
+✔ Se entregaron archivos completos en TXT.
+
+============================================================
+9. UI PANEL CARRITO
+============================================================
+
+Archivo modificado:
+- css/restaurant.css
+
+Problema:
+- El panel del carrito se veía negro sobre fondo negro.
+- Se confundía con el resto de la pantalla.
+
+Cambio aplicado:
+✔ Se cambió SOLO el panel/tarjeta del carrito a estilo claro premium.
+✔ Se mantuvo el botón flotante inferior verde original.
+✔ Productos ahora se leen mejor.
+✔ Botones + y - se conservan.
+✔ Total y acciones se distinguen.
+✔ El panel se parece a la referencia visual aprobada por el usuario.
+
+Estado:
+✔ Usuario aprobó el resultado.
+✔ Quedó excelente visualmente.
+
+IMPORTANTE:
+- No cambiar el botón verde inferior salvo que el usuario lo pida.
+- El cambio correcto es en .cart-panel y .cart-item, no en .cart.
+- El botón flotante .cart debe mantenerse verde como antes.
+
+============================================================
+10. ARCHIVOS TOCADOS / GENERADOS HOY
+============================================================
+
+Backend:
+- deligo-backend/routes/direcciones.routes.js
+- deligo-backend/server.js
+- deligo-backend/routes/auth.routes.js
+
+Frontend:
+- js/auth.js
+- js/restaurant-page.js
+- js/orders.js
+- restaurant.html
+- css/restaurant.css
+
+Base de datos:
+- user_addresses
+- orders
+
+TXT entregados durante la sesión:
+- direcciones.routes.js.txt
+- server_actualizado_direcciones.js.txt
+- auth.routes_actualizado_gps.js.txt
+- auth_actualizado_gps_frontend.js.txt
+- restaurant-page_actualizado_direcciones.js.txt
+- orders_actualizado_direcciones.js.txt
+- server_corregido_delivery_address.js.txt
+- restaurant_css_checkout_premium.txt
+- restaurant_html_checkout_premium.txt
+- restaurant_css_panel_carrito_claro_completo.txt
+
+============================================================
+ESTADO ACTUAL CONFIRMADO
+============================================================
+
+✔ Usuario se registra con dirección + referencia + GPS.
+✔ user_addresses guarda dirección principal.
+✔ Checkout carga dirección guardada.
+✔ Checkout carga GPS desde dirección guardada.
+✔ Pedido se crea en PostgreSQL.
+✔ orders guarda delivery_address.
+✔ orders guarda delivery_reference.
+✔ orders guarda latitude.
+✔ orders guarda longitude.
+✔ Restaurante recibe pedido.
+✔ Restaurante puede aceptar/entregar.
+✔ Popup restaurante sigue funcionando.
+✔ Panel carrito ahora se distingue del fondo.
+✔ Checkout ahora se distingue del fondo.
+✔ Botón inferior carrito sigue verde.
+✔ PostgreSQL sigue siendo fuente real.
+✔ localStorage NO es fuente real de negocio.
+
+============================================================
+REGLAS REFORZADAS DESPUÉS DE ESTA SESIÓN
+============================================================
+
+1. No tocar backend si el cambio es solo visual.
+2. No tocar lógica de pedidos si solo se cambia CSS.
+3. No tocar .cart si el usuario pide cambiar la tarjeta interna del carrito.
+4. Para panel carrito:
+   - .cart-panel = tarjeta/panel abierto
+   - .cart = botón flotante inferior
+5. Para direcciones:
+   - dirección y referencia NO deben normalizarse como texto técnico.
+   - usar toNullableText en backend para preservar contenido.
+6. Para verificar pedidos:
+   - usar SQL ORDER BY created_at DESC LIMIT 1.
+7. No confiar solo en Table Editor visual de Supabase porque puede estar desordenado, sin refrescar o con scroll.
+8. Siempre confirmar datos críticos con SQL.
+9. No asumir que un pedido está en localStorage si aparece en SQL/PostgreSQL.
+10. Mantener el método de trabajo:
+   - archivos reales completos
+   - TXT descargables
+   - cambios mínimos
+   - sin recortar
+   - sin reescribir desde cero
+
+============================================================
+PRÓXIMO BLOQUE DE TRABAJO — MÁS TARDE / PRÓXIMA SESIÓN
+============================================================
+
+Objetivo principal:
+Cerrar bien el módulo de direcciones del usuario y preparar “Invitar comida”.
+
+============================================================
+A. GUARDAR NUEVAS DIRECCIONES PARA FUTURAS COMPRAS
+============================================================
+
+Objetivo:
+Permitir que el usuario agregue nuevas direcciones y las use en compras futuras.
+
+Pendiente:
+1. Crear/definir vista de perfil o sección “Mis direcciones”.
+2. Desde perfil, permitir:
+   - ver direcciones guardadas
+   - agregar nueva dirección
+   - poner alias:
+     Casa, Trabajo, Mamá, Novia, Amigo, Otro
+   - escribir dirección
+   - escribir referencia
+   - capturar GPS
+   - marcar como principal
+   - eliminar dirección si no es la única
+3. Limitar máximo de direcciones si se decide:
+   - sugerencia actual: máximo 5 direcciones por usuario.
+4. Guardar todo en user_addresses.
+5. La dirección principal debe actualizar también users.
+
+Regla:
+- El checkout debe consumir direcciones.
+- El checkout NO debe ser el lugar principal para editar datos permanentes.
+
+============================================================
+B. CHECKOUT NO EDITABLE / SOLO SELECCIÓN
+============================================================
+
+Decisión del usuario:
+Los campos del checkout NO deben poder editarse libremente desde la tarjeta de compra.
+
+Motivo:
+- No conviene que el usuario modifique datos permanentes desde checkout.
+- La edición debe hacerse desde perfil.
+- El checkout debe ser una pantalla de confirmación/selección, no un formulario de perfil.
+
+Pendiente:
+1. Convertir campos de checkout a modo lectura o controlado:
+   - nombre
+   - teléfono
+   - correo
+   - dirección
+   - referencia
+2. Permitir solo:
+   - seleccionar dirección guardada
+   - usar ubicación actual si está permitido para esa dirección/pedido
+   - botón “Cambiar / administrar direcciones” que lleve al perfil
+3. Si el usuario no tiene dirección:
+   - mostrar mensaje:
+     “Agrega una dirección en tu perfil para poder pedir.”
+4. Evitar que se guarde información escrita manualmente en checkout si no pasa por backend/perfil.
+
+Opción recomendada:
+- En checkout mostrar:
+  “Dirección de entrega”
+  [selector de direcciones guardadas]
+  “Referencia”
+  [texto en modo lectura]
+  “GPS cargado”
+  botón:
+  “Administrar direcciones”
+
+============================================================
+C. BOTÓN “USAR MI DIRECCIÓN”
+============================================================
+
+Estado actual:
+- El botón existe en checkout como “Usar dirección guardada”.
+- Ya carga datos desde user_addresses.
+
+Pendiente:
+1. Mejorar UX:
+   - Si hay dirección principal, cargarla automáticamente.
+   - El botón debe forzar recarga de la dirección principal.
+   - Si no hay dirección, enviar al perfil.
+2. Cambiar texto si hace falta:
+   - “Usar mi dirección principal”
+   - “Cambiar dirección”
+   - “Administrar mis direcciones”
+3. Evitar duplicidad/confusión con:
+   - selector de direcciones
+   - botón GPS
+   - botón dirección guardada
+
+============================================================
+D. INVITAR COMIDA / ENVIAR COMIDA A OTRA PERSONA
+============================================================
+
+Objetivo:
+Permitir que el usuario compre comida para otra persona.
+
+Nombre funcional:
+- Invitar comida
+- Enviar comida
+- Compartir comida
+- Pedido para otra persona
+
+Flujo esperado:
+1. En checkout, el usuario elige:
+   - “Es para mí”
+   - “Enviar a otra persona”
+2. Si elige “Enviar a otra persona”:
+   - escribe nombre del receptor
+   - teléfono opcional
+   - mensaje opcional
+3. Sistema genera link único temporal.
+4. Usuario comparte link por WhatsApp/SMS/copia.
+5. Receptor abre link.
+6. Receptor ve mensaje:
+   “Darlin te envió un pedido con BHUZ. Comparte tu ubicación para recibirlo.”
+7. Receptor comparte GPS obligatorio.
+8. Receptor agrega referencia escrita.
+9. Pedido queda asociado al GPS del receptor.
+10. Restaurante/repartidor reciben la ubicación final.
+
+Reglas:
+- Receptor NO necesita cuenta.
+- GPS obligatorio.
+- Referencia obligatoria.
+- Dirección escrita opcional o simplificada.
+- El pedido debe guardar:
+  - invited = true
+  - invited_recipient_name
+  - invited_recipient_phone
+  - invited_message
+  - invite_token
+  - invite_status
+  - recipient_latitude
+  - recipient_longitude
+  - recipient_reference
+  - recipient_confirmed_at
+
+Pendiente técnico probable:
+1. Crear tabla invite_orders o delivery_invites.
+2. Crear endpoints:
+   - POST /orders/:id/invite
+   - GET /invite/:token
+   - POST /invite/:token/location
+3. Crear página pública:
+   - invite.html
+   - js/invite.js
+4. Conectar con pedido real en orders.
+5. No romper flujo normal de pedidos.
+
+============================================================
+E. PERFIL DEL USUARIO
+============================================================
+
+Probable próximo archivo/módulo a crear:
+- perfil.html
+- js/profile.js
+- css/profile.css
+
+O integrar en una vista existente si ya hay “Mi cuenta”.
+
+Funciones deseadas:
+1. Datos personales:
+   - nombre
+   - teléfono
+   - email
+2. Direcciones:
+   - listar direcciones
+   - crear dirección
+   - editar dirección
+   - marcar principal
+   - eliminar
+3. Historial:
+   - pedidos recientes
+   - direcciones usadas
+4. Futuro:
+   - personas frecuentes
+   - favoritos
+   - método de pago
+
+Regla:
+- El perfil sí puede editar datos.
+- El checkout NO debe editar datos permanentes.
+
+============================================================
+ORDEN RECOMENDADO PARA CONTINUAR
+============================================================
+
+Cuando se retome el proyecto, NO empezar por “Invitar comida” directamente.
+
+Orden correcto:
+
+1. Crear/ajustar perfil de usuario.
+2. Hacer módulo “Mis direcciones”.
+3. Permitir agregar nuevas direcciones desde perfil.
+4. Cambiar checkout para que solo seleccione dirección guardada.
+5. Probar pedido normal con dirección seleccionada.
+6. Después crear “Invitar comida”.
+7. Después crear link público para receptor.
+8. Después conectar receptor GPS con pedido.
+
+Motivo:
+Invitar comida depende de tener muy sólido:
+- usuarios
+- direcciones
+- GPS
+- pedidos
+- checkout
+
+============================================================
+COMANDOS GIT RECOMENDADOS AL CERRAR ESTA SESIÓN
+============================================================
+
+Backend:
+git add .
+git commit -m "agregar direcciones usuario gps pedidos postgres"
+git push
+
+Frontend:
+git add .
+git commit -m "mejorar checkout y carrito BHUZ direcciones gps"
+git push
+
+Si ya se hizo commit parcial, usar mensajes específicos:
+- "corregir delivery address reference en orders"
+- "mejorar checkout premium BHUZ"
+- "mejorar panel carrito claro BHUZ"
+
+============================================================
+NOTA FINAL PARA CONTINUAR
+============================================================
+
+No perder tiempo revisando otra vez si GPS se guarda:
+YA se confirmó.
+
+No perder tiempo revisando si orders guarda delivery_address:
+YA se confirmó con SQL.
+
+No volver a tocar el backend de pedidos salvo que se agregue:
+- múltiples direcciones
+- perfil
+- invitar comida
+- campos nuevos en orders
+
+Próximo trabajo real:
+PERFIL + MIS DIRECCIONES + CHECKOUT NO EDITABLE + INVITAR COMIDA.
+
+============================================================
+FIN ACTUALIZACIÓN SESIÓN ACTUAL
+============================================================
+
 ============================================================
 FIN MASTER FINAL
-============================================================
+=============================================================

@@ -123,27 +123,43 @@
       <p>Revisa tus datos antes de confirmar el pedido.</p>
 
       <form id="checkoutForm">
+        <!-- =====================================================
+             CAMBIO BHUZ - CHECKOUT EN MODO CONFIRMACIÓN
+             - Los datos personales NO se editan desde el checkout.
+             - La edición real debe hacerse desde perfil.html.
+             - Se preservan los IDs originales para restaurant-page.js.
+             - No toca backend, pedidos, carrito ni PostgreSQL.
+        ====================================================== -->
         <div class="checkout-form-group">
           <label for="checkoutName">Nombre completo</label>
-          <input id="checkoutName" type="text" placeholder="Tu nombre completo">
+          <input id="checkoutName" type="text" placeholder="Tu nombre completo" readonly>
         </div>
 
         <div class="checkout-form-group">
           <label for="checkoutPhone">Teléfono</label>
-          <input id="checkoutPhone" type="text" placeholder="Tu teléfono">
+          <input id="checkoutPhone" type="text" placeholder="Tu teléfono" readonly>
         </div>
 
         <div class="checkout-form-group">
           <label for="checkoutAddress">Dirección de entrega</label>
-          <textarea id="checkoutAddress" placeholder="Dirección donde recibirás el pedido"></textarea>
+          <textarea id="checkoutAddress" placeholder="Dirección donde recibirás el pedido" readonly></textarea>
+
           <button type="button" class="helper-btn" id="restoreAddressBtn">
-            Usar dirección guardada
+            Usar mi dirección principal
           </button>
+
+          <button type="button" class="helper-btn" id="manageAddressesBtn" onclick="window.location.href='perfil.html'">
+            Administrar direcciones
+          </button>
+
+          <small class="checkout-helper-text">
+            Para cambiar tus datos o agregar una nueva dirección, entra a tu perfil.
+          </small>
         </div>
 
         <div class="checkout-form-group">
           <label for="checkoutEmail">Correo</label>
-          <input id="checkoutEmail" type="email" placeholder="Tu correo">
+          <input id="checkoutEmail" type="email" placeholder="Tu correo" readonly>
         </div>
 
         <div class="checkout-summary">
@@ -225,4 +241,6 @@
 <script src="js/restaurant-page.js"></script>
 </body>
 </html>
+
+
 
