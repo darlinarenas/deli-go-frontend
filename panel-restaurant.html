@@ -1100,17 +1100,427 @@
       .layout { padding: 0 14px 28px; }
       .order-toolbar input { min-width: 100%; }
     }
+
+    /* ======================================================
+       CAMBIO BHUZ RESTAURANTE LIVE FINAL SEGURO
+       - No reescribe lógica.
+       - Mantiene header y sidebar negros.
+       - Usa assets/image/bhuz.png como imagen principal.
+       - Popup centrado tipo boleta, con scroll interno real.
+       - Al cerrarse, orders.js elimina el overlay para que el panel vuelva a funcionar.
+    ====================================================== */
+    .brand-bhuz-image {
+      gap: 12px;
+      letter-spacing: normal;
+    }
+
+    .brand-bhuz-image .brand-badge {
+      width: 158px;
+      height: 54px;
+      flex: 0 0 158px;
+      background: transparent;
+      border-radius: 0;
+      box-shadow: none;
+      padding: 0;
+    }
+
+    .brand-bhuz-image .brand-badge img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: left center;
+      display: block;
+      filter: drop-shadow(0 0 10px rgba(0, 212, 101, 0.28));
+    }
+
+    .brand-panel-label small {
+      display: block;
+      color: rgba(255,255,255,0.76);
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+      margin-left: -42px;
+      margin-top: 34px;
+    }
+
+    .topbar {
+      background: #020617 !important;
+      border-bottom: 1px solid rgba(0, 212, 101, 0.16) !important;
+    }
+
+    .sidebar {
+      background: #020617 !important;
+      color: #ffffff !important;
+    }
+
+    .content,
+    .panel,
+    .order-card,
+    .empty-box,
+    .stat-card {
+      background: #ffffff !important;
+      color: #111827 !important;
+    }
+
+    .bhuz-live-root {
+      position: fixed !important;
+      inset: 0 !important;
+      z-index: 99999 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 18px !important;
+      background: rgba(2, 6, 23, 0.46) !important;
+      backdrop-filter: blur(2px) !important;
+      pointer-events: auto !important;
+    }
+
+    .bhuz-live-root:empty {
+      display: none !important;
+      pointer-events: none !important;
+      background: transparent !important;
+      backdrop-filter: none !important;
+    }
+
+    .bhuz-restaurant-receipt-toast {
+      width: min(520px, calc(100vw - 28px)) !important;
+      max-height: min(88vh, 780px) !important;
+      overflow-y: auto !important;
+      display: block !important;
+      position: relative !important;
+      padding: 34px 28px 26px !important;
+      background: #ffffff !important;
+      color: #050505 !important;
+      border: 1px solid rgba(0, 212, 101, 0.72) !important;
+      border-radius: 24px !important;
+      box-shadow:
+        0 0 34px rgba(0, 212, 101, 0.34),
+        0 24px 80px rgba(0,0,0,0.36) !important;
+      animation: bhuzRestaurantToastIn 0.22s ease both !important;
+      scrollbar-width: thin;
+    }
+
+    .bhuz-restaurant-receipt-toast::after {
+      content: "" !important;
+      position: absolute !important;
+      left: 0 !important;
+      bottom: 0 !important;
+      height: 4px !important;
+      width: 100% !important;
+      background: linear-gradient(90deg, #00d465, #a3ff12) !important;
+      animation: bhuzRestaurantToastTimer 20s linear forwards !important;
+    }
+
+    .bhuz-restaurant-receipt-close {
+      position: absolute !important;
+      top: 14px !important;
+      right: 14px !important;
+      width: 34px !important;
+      height: 34px !important;
+      border-radius: 999px !important;
+      border: 1px solid rgba(255,255,255,0.18) !important;
+      background: #050505 !important;
+      color: #ffffff !important;
+      font-size: 1.3rem !important;
+      line-height: 1 !important;
+      cursor: pointer !important;
+      z-index: 3 !important;
+    }
+
+    .bhuz-restaurant-boleta-icon-wrap {
+      width: 82px;
+      height: 82px;
+      margin: 0 auto 18px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .bhuz-restaurant-boleta-icon {
+      width: 72px;
+      height: 72px;
+      border-radius: 999px;
+      background: #050505;
+      border: 2px solid #00d465;
+      color: #00d465;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      box-shadow: 0 0 22px rgba(0, 212, 101, 0.34);
+    }
+
+    .bhuz-restaurant-boleta-icon-wrap > span {
+      position: absolute;
+      top: 2px;
+      right: 4px;
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #00d465;
+      color: white;
+      font-size: 0.9rem;
+      font-weight: 900;
+    }
+
+    .bhuz-restaurant-boleta-title-row {
+      display: grid;
+      grid-template-columns: 32px 1fr 32px;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .bhuz-restaurant-boleta-title-row span {
+      height: 16px;
+      display: block;
+      background:
+        linear-gradient(#00d465,#00d465) center/22px 2px no-repeat;
+      transform: rotate(28deg);
+    }
+
+    .bhuz-restaurant-boleta-title-row span:last-child {
+      transform: rotate(-28deg);
+    }
+
+    .bhuz-restaurant-boleta-title-row h2 {
+      text-align: center;
+      font-size: 1.25rem;
+      line-height: 1.2;
+      color: #050505;
+      font-weight: 900;
+      margin: 0;
+    }
+
+    .bhuz-restaurant-boleta-order-id {
+      text-align: center;
+      color: #050505;
+      font-size: 1.08rem;
+      font-weight: 900;
+      margin-bottom: 5px;
+    }
+
+    .bhuz-restaurant-boleta-order-id strong {
+      color: #00b85a;
+    }
+
+    .bhuz-restaurant-boleta-date {
+      text-align: center;
+      color: #4b5563;
+      font-size: 0.88rem;
+      margin-bottom: 16px;
+      font-weight: 700;
+    }
+
+    .bhuz-restaurant-boleta-paper {
+      border: 1px solid rgba(0, 212, 101, 0.46);
+      background: linear-gradient(180deg, #ffffff 0%, #fafffc 100%);
+      padding: 18px 18px 16px;
+      margin-bottom: 18px;
+      color: #050505;
+      box-shadow: 0 14px 28px rgba(15, 23, 42, 0.10);
+    }
+
+    .bhuz-restaurant-boleta-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-bottom: 14px;
+    }
+
+    .bhuz-restaurant-boleta-info small,
+    .bhuz-restaurant-boleta-address small {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 900;
+      color: #111827;
+      margin-bottom: 6px;
+    }
+
+    .bhuz-restaurant-boleta-info strong,
+    .bhuz-restaurant-boleta-address strong {
+      display: block;
+      color: #050505;
+      font-size: 0.94rem;
+      line-height: 1.35;
+    }
+
+    .bhuz-restaurant-boleta-info span {
+      display: block;
+      color: #00a846;
+      font-size: 0.82rem;
+      margin-top: 6px;
+      font-weight: 800;
+    }
+
+    .bhuz-restaurant-boleta-address {
+      border-top: 1px solid rgba(17,24,39,0.14);
+      padding-top: 12px;
+      margin-bottom: 14px;
+    }
+
+    .bhuz-restaurant-boleta-table-head,
+    .bhuz-restaurant-boleta-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1.6fr) 54px 84px 92px;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .bhuz-restaurant-boleta-table-head {
+      border-top: 1px solid rgba(17,24,39,0.14);
+      padding-top: 14px;
+      margin-bottom: 10px;
+      color: #111827;
+      font-size: 0.7rem;
+      font-weight: 900;
+    }
+
+    .bhuz-restaurant-boleta-items {
+      display: grid;
+      gap: 10px;
+      max-height: 190px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .bhuz-restaurant-boleta-row {
+      color: #050505;
+      font-size: 0.86rem;
+      line-height: 1.35;
+    }
+
+    .bhuz-restaurant-boleta-product {
+      font-weight: 700;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .bhuz-restaurant-boleta-qty,
+    .bhuz-restaurant-boleta-price,
+    .bhuz-restaurant-boleta-subtotal {
+      text-align: right;
+      white-space: nowrap;
+      color: #050505;
+    }
+
+    .bhuz-restaurant-boleta-divider {
+      border-top: 1px dashed rgba(17, 24, 39, 0.28);
+      margin: 16px 0 12px;
+    }
+
+    .bhuz-restaurant-boleta-total {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 34px;
+      font-weight: 900;
+    }
+
+    .bhuz-restaurant-boleta-total span {
+      color: #050505;
+      font-size: 1rem;
+    }
+
+    .bhuz-restaurant-boleta-total strong {
+      color: #00b85a;
+      font-size: 1.22rem;
+    }
+
+    .bhuz-restaurant-boleta-thanks {
+      text-align: center;
+      color: #050505;
+      margin: 0 0 18px;
+      font-size: 0.92rem;
+      font-weight: 700;
+    }
+
+    .bhuz-restaurant-boleta-thanks strong {
+      color: #00b85a;
+    }
+
+    .bhuz-restaurant-boleta-understood {
+      width: 100%;
+      border: 1px solid rgba(0, 212, 101, 0.58);
+      background: #050505;
+      color: #ffffff;
+      border-radius: 12px;
+      padding: 15px 18px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(0, 212, 101, 0.24);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .bhuz-restaurant-boleta-understood span {
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      border: 2px solid #00d465;
+      color: #00d465;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    .bhuz-restaurant-boleta-timer {
+      color: #6b7280;
+      text-align: center;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    @media (max-width: 620px) {
+      .brand-bhuz-image .brand-badge {
+        width: 128px;
+        flex-basis: 128px;
+      }
+
+      .brand-panel-label small {
+        margin-left: -34px;
+        font-size: 0.68rem;
+      }
+
+      .bhuz-restaurant-receipt-toast {
+        padding: 30px 16px 22px !important;
+      }
+
+      .bhuz-restaurant-boleta-table-head,
+      .bhuz-restaurant-boleta-row {
+        grid-template-columns: minmax(0, 1fr) 42px 76px;
+      }
+
+      .bhuz-restaurant-boleta-table-head span:nth-child(3),
+      .bhuz-restaurant-boleta-price {
+        display: none;
+      }
+
+      .bhuz-restaurant-boleta-info {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+    }
+
   </style>
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-inner">
-      <div class="brand">
+      <div class="brand brand-bhuz-image">
         <div class="brand-badge">
           <img src="assets/image/bhuz.png" alt="BHUZ" />
         </div>
-        <div>
-          BHUZ
+        <div class="brand-panel-label">
           <small>Panel restaurante</small>
         </div>
       </div>

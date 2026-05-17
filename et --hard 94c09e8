@@ -1,0 +1,49 @@
+[33m55ae2ba[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m mejoras card y logo
+[33mf58e8f9[m mejoras color panel restaurant y target
+[33m9e4b584[m logo letra b en panel restaurant
+[33m94c09e8[m mejora target panel restaurant
+[33m6c6b6b0[m mejoras panel-restaurant sonido de pedidos y target
+[33me566419[m actualizacion tarjetas y boton sonido
+[33m068065e[m mejora tarjeta descripcion ms boton sonido index
+[33m06bac7c[m tarjetas estados clicleables
+[33m6e59ec5[m popup globales y tarjeta de descipcion index
+[33m98490ac[m mejoras lectura de status y card pedidos index
+[33mb87bb15[m tarjetas y popup clicleables para lectura
+[33m7e27a85[m tarjetas de resumen de compra y act. campanita
+[33m170e997[m BHUZ LIVE global notifications
+[33m7151bfc[m popup globales y sonidos
+[33m618cfdc[m BHUZ LIVE global notifications and index tracking
+[33me5eb82c[m Restore stable backup
+[33m2c52f0f[m Fix global BHUZ live notifications and mobile sound permission
+[33m60ee8e4[m mejora popup global mas sonido
+[33m344328a[m pop-up notificacion pedidos mas sonidos
+[33md2f6eb0[m BHUZ live notifications with sounds
+[33m1d784b4[m sonidos en  panel mis pedidos
+[33m2ddabaa[m panel mensajes y sonidos de status usuario
+[33m6f2b141[m mejoras vista restaurante premium bhuz
+[33m621a0bd[m actualizacion vista mis pedidos
+[33m0ff2b60[m mejora tarjetas index
+[33m15aef5b[m actualizacion plus menu Bhuz
+[33mfcd5a6c[m navegacion menu izquierdo corregido
+[33mf0aeb44[m Corrige botones de header BHUZ
+[33m95ae375[m mejora index premium
+[33m4b73f78[m Nueva interfaz premium BHUZ mobile-first
+[33m445ce5d[m Nueva interfaz BHUZ dark premium
+[33m52c2b72[m Actualizacion interfaz y css deli go
+[33m0a890c1[m fix: cargar rankings reales en index
+[33m357ccaf[m feat: mostrar platos mas pedidos reales
+[33mc497803[m fix: index populares y mas pedidos
+[33mc36a458[m fix: admin restaurants edit
+[33mb9a57a0[m fix: admin frontend save users/restaurants
+[33m9b6705f[m fix admin frontend
+[33m0aca60d[m fix session admin real
+[33m4820cfe[m fix pedidos credentials
+[33mfa50820[m fix pedidos credentials
+[33m3e7b8d9[m fix auth sin recortar
+[33mf9c3f1d[m fix auth completo
+[33ma2b73f6[m fix auth session
+[33m8aa7d10[m fix cors backend
+[33ma2645cb[m Corrige URLs locales del backend
+[33m3778e39[m Eliminado localStorage y conectado sistema al backend
+[33m72d5721[m fix presupuesto backend
+[33m695cc7c[m frontend deli go
