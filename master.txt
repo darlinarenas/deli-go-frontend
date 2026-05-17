@@ -1,4 +1,3 @@
-
 BHUZ - MASTER + AUDITORÍA COMPLETA FINAL
 ========================================
 
@@ -186,6 +185,157 @@ Implementar después de:
 2. Sonidos globales.
 3. Pop-up de compra en index.
 4. Campanita global conectada a mis pedidos.
+
+
+============================================================
+ACTUALIZACIÓN FINAL DE LA ÚLTIMA SESIÓN — PANEL RESTAURANTE BHUZ
+============================================================
+
+Estado alcanzado:
+✔ El panel restaurante quedó funcionando con pedidos reales.
+✔ El sonido de nuevo pedido para restaurante quedó definido en:
+  assets/sounds/bhuz-pedido-restaurant.mp3
+✔ Se agregó activación de sonido para evitar bloqueos del navegador.
+✔ Se agregó popup/tarjeta de pedido nuevo para restaurante.
+✔ El popup del restaurante quedó tipo boleta/factura.
+✔ El popup queda centrado en pantalla.
+✔ El popup permite scroll interno para ver el pedido completo.
+✔ El popup dura 20 segundos.
+✔ Al cerrarse el popup, el overlay debe desaparecer completamente para que el restaurante pueda seguir usando el panel.
+✔ Se eliminó el costo de delivery del resumen tipo boleta.
+✔ Se mantuvo la información real del pedido:
+  - ID del pedido
+  - restaurante
+  - cliente
+  - teléfono
+  - dirección
+  - productos
+  - cantidades
+  - precio
+  - subtotal
+  - total
+
+Cambio visual final acordado:
+✔ Solo el panel superior debe quedar negro.
+✔ Solo el panel lateral izquierdo debe quedar negro.
+✔ El centro donde se ven los pedidos debe quedar blanco.
+✔ El diseño visual objetivo es:
+  - negro profundo en header y sidebar
+  - centro blanco limpio
+  - acentos verdes BHUZ
+  - cards de pedidos claras
+  - botones verdes/negros
+  - estilo premium sin oscurecer el área principal
+
+Logos/rutas oficiales usados:
+✔ Letra B grande:
+  assets/image/letrab.png
+
+✔ Logo BHUZ:
+  assets/image/bhuz.png
+
+Último cambio realizado:
+✔ En el header superior se pidió colocar:
+  - la imagen de la B desde assets/image/letrab.png
+  - la imagen BHUZ desde assets/image/bhuz.png
+  - debajo/acompañando el texto “Panel restaurante”
+✔ Se generaron archivos TXT finales para copiar/pegar:
+  - panel-restaurant_FINAL_LOGOS_BHUZ.txt
+  - orders_FINAL_LOGOS_BHUZ.txt
+
+IMPORTANTE:
+El último ajuste fue SOLO visual de logos.
+No debía tocar backend.
+No debía tocar lógica de pedidos.
+No debía tocar flujo de sonido/popup.
+No debía reescribir el panel completo.
+
+============================================================
+ARCHIVOS TOCADOS EN LA ÚLTIMA SESIÓN
+============================================================
+
+1. panel-restaurant.html
+Cambios:
+- Header negro.
+- Sidebar negro.
+- Centro blanco.
+- Logo B desde assets/image/letrab.png.
+- Logo BHUZ desde assets/image/bhuz.png.
+- Ajuste de tamaño de logos.
+- Conservación del botón de sonido activo.
+- Conservación del popup visual.
+
+2. orders.js
+Cambios:
+- Conserva la lógica del sonido del restaurante.
+- Conserva la detección de pedidos nuevos.
+- Conserva popup tipo boleta.
+- Conserva temporizador de 20 segundos.
+- Conserva limpieza del overlay al cerrar.
+- No se debía modificar para el último ajuste visual, pero se entregó junto al panel por seguridad.
+
+============================================================
+PUNTO EXACTO PARA CONTINUAR MAÑANA
+============================================================
+
+Mañana NO empezar desde cero.
+Mañana NO rehacer el panel.
+Mañana NO tocar backend salvo que se pida explícitamente.
+
+Primero:
+1. Probar visualmente el panel restaurante en producción/local.
+2. Confirmar que se ven correctamente:
+   - assets/image/letrab.png
+   - assets/image/bhuz.png
+   - header negro
+   - sidebar negro
+   - centro blanco
+3. Crear un pedido nuevo de prueba.
+4. Confirmar:
+   - sonido al restaurante
+   - popup centrado tipo boleta
+   - scroll interno del popup
+   - cierre automático en 20 segundos
+   - al cerrar, la pantalla queda manipulable
+5. Si todo funciona, hacer commit con mensaje claro.
+
+Comando sugerido:
+git add .
+git commit -m "ajuste final panel restaurante BHUZ logos sonido popup"
+git push
+
+============================================================
+PRÓXIMO OBJETIVO FUNCIONAL
+============================================================
+
+Después de validar el panel restaurante:
+1. Pasar al módulo GPS inteligente.
+2. Trabajar “Invitar comida”.
+3. Implementar ubicación dinámica:
+   - cliente puede pedir para sí
+   - cliente puede invitar comida a otra persona
+   - receptor abre link
+   - receptor comparte GPS obligatorio
+   - receptor puede escribir referencia
+4. Mantener backend/PostgreSQL como fuente real.
+5. No usar localStorage como fuente de datos de negocio.
+
+============================================================
+REGLA REFORZADA POR ERRORES DE ESTA SESIÓN
+============================================================
+
+Cuando haya errores de descarga o archivos TXT:
+- NO generar placeholders.
+- NO pasar resúmenes en lugar de archivos reales.
+- SIEMPRE leer el archivo real completo y escribir el TXT completo real.
+- Si se pierde un cambio visual, reconocerlo y volver al último archivo bueno.
+- No entregar archivos más cortos o vacíos.
+- No reemplazar el diseño premium por una versión anterior.
+- No tocar CSS/HTML sin conservar lo ya aprobado visualmente.
+
+============================================================
+FIN ACTUALIZACIÓN ÚLTIMA SESIÓN
+============================================================
 
 ============================================================
 FIN MASTER FINAL
