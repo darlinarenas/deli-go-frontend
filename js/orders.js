@@ -875,32 +875,38 @@ function createBhuzLiveNotifications() {
   }
 
   // CAMBIO BHUZ RESTAURANTE LIVE:
-  // Devuelve una línea corta con productos para el popup del restaurante.
-  function getRestaurantOrderItemsPreview(order) {
+  // Genera el detalle tipo boleta/factura para el popup del restaurante.
+  function getRestaurantOrderReceiptHtml(order) {
     const items = Array.isArray(order?.items) ? order.items : [];
 
     if (!items.length) {
-      return "Pedido nuevo sin detalle de productos.";
+      return `
+        <div class="bhuz-restaurant-receipt-empty">
+          Pedido nuevo sin detalle de productos.
+        </div>
+      `;
     }
 
-    const preview = items
-      .slice(0, 3)
-      .map((item) => {
-        const qty = Number(item?.qty || 1);
-        const name = item?.name || "Producto";
-        return `${qty}x ${name}`;
-      })
-      .join(" · ");
+    return items.map((item) => {
+      const qty = Number(item?.qty || 1);
+      const name = item?.name || "Producto";
+      const subtotal = Number(
+        item?.subtotal != null
+          ? item.subtotal
+          : qty * Number(item?.price || 0)
+      );
 
-    if (items.length > 3) {
-      return `${preview} · +${items.length - 3} más`;
-    }
-
-    return preview;
+      return `
+        <div class="bhuz-restaurant-receipt-row">
+          <span>${escapeLiveHtml(qty)}x ${escapeLiveHtml(name)}</span>
+          <strong>${escapeLiveHtml(formatPrice(subtotal))}</strong>
+        </div>
+      `;
+    }).join("");
   }
 
   // CAMBIO BHUZ RESTAURANTE LIVE:
-  // Popup/tarjeta breve para avisar al restaurante de un pedido nuevo.
+  // Popup/tarjeta tipo boleta para avisar al restaurante de un pedido nuevo.
   function showRestaurantNewOrderToast(order) {
     if (typeof document === "undefined" || !document.body) return;
 
@@ -911,16 +917,57 @@ function createBhuzLiveNotifications() {
       order?.fullName ||
       "Cliente";
 
+    const customerPhone =
+      order?.customer?.phone ||
+      order?.phone ||
+      "Sin teléfono";
+
+    const orderTime =
+      order?.time ||
+      (order?.createdAt ? new Date(order.createdAt).toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" }) : "Ahora");
+
     const toast = document.createElement("div");
-    toast.className = "bhuz-live-toast bhuz-restaurant-new-order-toast";
+    toast.className = "bhuz-live-toast bhuz-restaurant-new-order-toast bhuz-restaurant-receipt-toast";
     toast.innerHTML = `
-      <div class="bhuz-live-icon">🔔</div>
-      <div class="bhuz-live-content">
-        <strong>Nuevo pedido recibido</strong>
-        <span>${escapeLiveHtml(getRestaurantOrderItemsPreview(order))}</span>
-        <small>${escapeLiveHtml(customerName)} · ${escapeLiveHtml(formatPrice(order?.total || 0))}</small>
+      <button class="bhuz-live-close bhuz-restaurant-receipt-close" type="button" aria-label="Cerrar notificación">×</button>
+
+      <div class="bhuz-restaurant-receipt-head">
+        <div class="bhuz-restaurant-receipt-icon">🧾</div>
+        <div>
+          <strong>Nuevo pedido recibido</strong>
+          <span>Boleta rápida para cocina</span>
+        </div>
       </div>
-      <button class="bhuz-live-close" type="button" aria-label="Cerrar notificación">×</button>
+
+      <div class="bhuz-restaurant-receipt-meta">
+        <div>
+          <small>Pedido</small>
+          <strong>#${escapeLiveHtml(String(order?.id || "nuevo").slice(-6))}</strong>
+        </div>
+        <div>
+          <small>Hora</small>
+          <strong>${escapeLiveHtml(orderTime)}</strong>
+        </div>
+      </div>
+
+      <div class="bhuz-restaurant-receipt-customer">
+        <span>Cliente</span>
+        <strong>${escapeLiveHtml(customerName)}</strong>
+        <small>${escapeLiveHtml(customerPhone)}</small>
+      </div>
+
+      <div class="bhuz-restaurant-receipt-items">
+        ${getRestaurantOrderReceiptHtml(order)}
+      </div>
+
+      <div class="bhuz-restaurant-receipt-total">
+        <span>Total</span>
+        <strong>${escapeLiveHtml(formatPrice(order?.total || 0))}</strong>
+      </div>
+
+      <div class="bhuz-restaurant-receipt-note">
+        Revisa el panel para aceptar y cambiar el estado del pedido.
+      </div>
     `;
 
     root.appendChild(toast);
@@ -930,7 +977,7 @@ function createBhuzLiveNotifications() {
       closeBtn.addEventListener("click", () => removeToast(toast));
     }
 
-    setTimeout(() => removeToast(toast), 8500);
+    setTimeout(() => removeToast(toast), 20000);
 
     playRestaurantNewOrderSound();
 
@@ -1043,6 +1090,8 @@ window.DELI_ORDERS = {
   normalizeOrderStatus,
   bhuzLiveNotifications: window.BHUZ_LIVE_NOTIFICATIONS
 };
+
+
 
 
 

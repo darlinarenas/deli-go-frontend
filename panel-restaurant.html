@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Deli - Panel Restaurante</title>
+  <title>BHUZ - Panel Restaurante</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -724,7 +724,7 @@
       height: 4px;
       width: 100%;
       background: linear-gradient(90deg, #22c55e, #a3ff12);
-      animation: bhuzRestaurantToastTimer 8.5s linear forwards;
+      animation: bhuzRestaurantToastTimer 20s linear forwards;
     }
 
     .bhuz-live-toast.is-hiding {
@@ -734,6 +734,173 @@
     .bhuz-restaurant-new-order-toast {
       border-color: rgba(34, 197, 94, 0.72);
       box-shadow: 0 18px 52px rgba(0, 0, 0, 0.28), 0 0 32px rgba(34, 197, 94, 0.26);
+    }
+
+    .bhuz-restaurant-receipt-toast {
+      display: block;
+      padding: 18px;
+      width: min(460px, calc(100vw - 28px));
+      background:
+        radial-gradient(circle at top left, rgba(34, 197, 94, 0.18), transparent 36%),
+        linear-gradient(180deg, rgba(10, 15, 27, 0.98), rgba(17, 24, 39, 0.98));
+    }
+
+    .bhuz-restaurant-receipt-close {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 2;
+    }
+
+    .bhuz-restaurant-receipt-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding-right: 34px;
+      margin-bottom: 14px;
+    }
+
+    .bhuz-restaurant-receipt-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(34, 197, 94, 0.16);
+      border: 1px solid rgba(34, 197, 94, 0.38);
+      font-size: 1.5rem;
+    }
+
+    .bhuz-restaurant-receipt-head strong {
+      display: block;
+      font-size: 1.08rem;
+      line-height: 1.2;
+    }
+
+    .bhuz-restaurant-receipt-head span {
+      display: block;
+      color: #a7f3d0;
+      font-size: 0.86rem;
+      margin-top: 3px;
+    }
+
+    .bhuz-restaurant-receipt-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .bhuz-restaurant-receipt-meta div,
+    .bhuz-restaurant-receipt-customer {
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 11px 12px;
+    }
+
+    .bhuz-restaurant-receipt-meta small,
+    .bhuz-restaurant-receipt-customer span,
+    .bhuz-restaurant-receipt-customer small {
+      display: block;
+      color: #9ca3af;
+      font-size: 0.78rem;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .bhuz-restaurant-receipt-meta strong,
+    .bhuz-restaurant-receipt-customer strong {
+      display: block;
+      color: #ffffff;
+      font-size: 0.96rem;
+    }
+
+    .bhuz-restaurant-receipt-customer {
+      margin-bottom: 12px;
+    }
+
+    .bhuz-restaurant-receipt-customer small {
+      margin-top: 5px;
+      margin-bottom: 0;
+      color: #d1fae5;
+      font-weight: 700;
+    }
+
+    .bhuz-restaurant-receipt-items {
+      display: grid;
+      gap: 8px;
+      max-height: 180px;
+      overflow: auto;
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.94);
+      color: #111827;
+      margin-bottom: 12px;
+    }
+
+    .bhuz-restaurant-receipt-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px dashed rgba(17, 24, 39, 0.16);
+      padding-bottom: 8px;
+      font-size: 0.92rem;
+      line-height: 1.35;
+    }
+
+    .bhuz-restaurant-receipt-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .bhuz-restaurant-receipt-row span {
+      color: #111827;
+      font-weight: 700;
+    }
+
+    .bhuz-restaurant-receipt-row strong {
+      white-space: nowrap;
+      color: #111827;
+    }
+
+    .bhuz-restaurant-receipt-empty {
+      color: #4b5563;
+      font-weight: 700;
+      text-align: center;
+      padding: 8px;
+    }
+
+    .bhuz-restaurant-receipt-total {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(34, 197, 94, 0.16);
+      border: 1px solid rgba(34, 197, 94, 0.38);
+      margin-bottom: 10px;
+    }
+
+    .bhuz-restaurant-receipt-total span {
+      color: #a7f3d0;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-size: 0.78rem;
+    }
+
+    .bhuz-restaurant-receipt-total strong {
+      color: #ffffff;
+      font-size: 1.2rem;
+    }
+
+    .bhuz-restaurant-receipt-note {
+      color: #d1fae5;
+      font-size: 0.84rem;
+      line-height: 1.35;
     }
 
     .bhuz-live-icon {
@@ -839,10 +1006,10 @@
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand">
-        <div class="brand-badge">D</div>
+        <div class="brand-badge">R</div>
         <div>
-          Deli Delivery
-          <small>Panel del restaurante</small>
+          BHUZ
+          <small>Panel restaurante</small>
         </div>
       </div>
 
