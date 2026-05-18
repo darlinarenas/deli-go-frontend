@@ -7,8 +7,9 @@
    - Cargar usuario actual desde auth.js / sesión temporal.
    - Cargar direcciones guardadas desde backend/PostgreSQL.
    - Crear nuevas direcciones usando endpoints existentes.
+   - Editar direcciones usando endpoint PUT si está disponible en backend.
    - Marcar dirección principal usando endpoints existentes.
-   - Eliminar direcciones usando endpoints existentes.
+   - Eliminar direcciones usando endpoints existentes con confirmación segura.
 
    IMPORTANTE:
    - NO crea tablas.
@@ -59,6 +60,8 @@
   const saveAddressBtn = document.getElementById("saveAddressBtn");
   const addressMessage = document.getElementById("addressMessage");
 
+  let cancelEditAddressBtn = document.getElementById("cancelEditAddressBtn");
+
   /* =========================================================
      ESTADO INTERNO DE ESTA PÁGINA
   ========================================================= */
@@ -67,6 +70,7 @@
   let capturedGpsLocation = null;
   let isSavingAddress = false;
   let isLoadingAddresses = false;
+  let editingAddressId = null;
 
   /* =========================================================
      HELPERS GENERALES
@@ -131,6 +135,35 @@
 
     button.disabled = Boolean(isLoading);
     button.textContent = isLoading ? loadingText : normalText;
+  }
+
+  function ensureEditControls() {
+    if (!saveAddressBtn || cancelEditAddressBtn) return;
+
+    cancelEditAddressBtn = document.createElement("button");
+    cancelEditAddressBtn.id = "cancelEditAddressBtn";
+    cancelEditAddressBtn.type = "button";
+    cancelEditAddressBtn.className = "profile-btn secondary";
+    cancelEditAddressBtn.textContent = "Cancelar edición";
+    cancelEditAddressBtn.style.display = "none";
+
+    saveAddressBtn.insertAdjacentElement("afterend", cancelEditAddressBtn);
+  }
+
+  function setAddressEditMode(address) {
+    editingAddressId = address ? getAddressId(address) : null;
+
+    if (saveAddressBtn) {
+      saveAddressBtn.textContent = editingAddressId ? "Guardar cambios" : "Guardar dirección";
+    }
+
+    if (cancelEditAddressBtn) {
+      cancelEditAddressBtn.style.display = editingAddressId ? "inline-flex" : "none";
+    }
+
+    if (!addressForm) return;
+
+    addressForm.classList.toggle("is-editing", Boolean(editingAddressId));
   }
 
   function getCurrentUserSafe() {
@@ -314,7 +347,8 @@
         </div>
 
         <div class="address-card-actions">
-          ${!isDefault ? `<button type="button" class="profile-btn secondary js-set-default-address" data-address-id="${escapeHtml(id)}">Marcar principal</button>` : ""}
+          ${!isDefault ? `<button type="button" class="profile-btn primary js-set-default-address" data-address-id="${escapeHtml(id)}">Usar esta dirección</button>` : `<button type="button" class="profile-btn secondary" disabled>Dirección en uso</button>`}
+          <button type="button" class="profile-btn secondary js-edit-address" data-address-id="${escapeHtml(id)}">Editar</button>
           <button type="button" class="profile-btn danger js-delete-address" data-address-id="${escapeHtml(id)}">Eliminar</button>
         </div>
       </article>
@@ -416,6 +450,7 @@
     if (addressLongitudeInput) addressLongitudeInput.value = "";
 
     capturedGpsLocation = null;
+    setAddressEditMode(null);
     setGpsStatus("GPS pendiente. Debes capturar ubicación antes de guardar.", false);
 
     if (captureGpsBtn) {
@@ -490,6 +525,41 @@
     );
   }
 
+  function startEditAddress(addressId) {
+    const address = userAddresses.find((item) => getAddressId(item) === safeText(addressId));
+
+    if (!address) {
+      setAddressMessage("No se encontró la dirección que quieres editar.", "error");
+      return;
+    }
+
+    setAddressEditMode(address);
+
+    if (addressLabelInput) addressLabelInput.value = getAddressLabel(address);
+    if (addressTextInput) addressTextInput.value = getAddressText(address);
+    if (addressReferenceInput) addressReferenceInput.value = getAddressReference(address);
+    if (addressLatitudeInput) addressLatitudeInput.value = getAddressLatitude(address);
+    if (addressLongitudeInput) addressLongitudeInput.value = getAddressLongitude(address);
+    if (addressDefaultInput) addressDefaultInput.checked = isDefaultAddress(address);
+
+    capturedGpsLocation = {
+      lat: getAddressLatitude(address),
+      lng: getAddressLongitude(address)
+    };
+
+    if (capturedGpsLocation.lat && capturedGpsLocation.lng) {
+      setGpsStatus("GPS cargado desde esta dirección. Puedes capturarlo de nuevo si cambiaste de ubicación.", true);
+    } else {
+      setGpsStatus("Esta dirección no tiene GPS. Captura ubicación antes de guardar cambios.", false);
+    }
+
+    setAddressMessage("Modo edición activo. Cambia los datos y presiona Guardar cambios.", "info");
+
+    if (addressForm) {
+      addressForm.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
   async function saveAddress(event) {
     if (event) event.preventDefault();
     if (isSavingAddress) return;
@@ -501,12 +571,18 @@
       return;
     }
 
-    const label = safeText(addressLabelInput?.value || "Casa");
+    const label = safeText(addressLabelInput?.value);
     const address = safeText(addressTextInput?.value);
     const reference = safeText(addressReferenceInput?.value);
     const latitude = safeText(addressLatitudeInput?.value || capturedGpsLocation?.lat);
     const longitude = safeText(addressLongitudeInput?.value || capturedGpsLocation?.lng);
     const isDefault = Boolean(addressDefaultInput?.checked) || userAddresses.length === 0;
+
+    if (!label) {
+      setAddressMessage("Escribe un alias para esta dirección. Ejemplo: Casa, Trabajo, Mamá, Oficina.", "error");
+      addressLabelInput?.focus();
+      return;
+    }
 
     if (!address) {
       setAddressMessage("Escribe la dirección antes de guardar.", "error");
@@ -525,36 +601,55 @@
       return;
     }
 
+    const isEditing = Boolean(editingAddressId);
+    const normalButtonText = isEditing ? "Guardar cambios" : "Guardar dirección";
+
     isSavingAddress = true;
-    setButtonLoading(saveAddressBtn, true, "Guardando dirección...", "Guardar dirección");
-    setAddressMessage("Guardando dirección en backend/PostgreSQL...", "info");
+    setButtonLoading(saveAddressBtn, true, isEditing ? "Guardando cambios..." : "Guardando dirección...", normalButtonText);
+    setAddressMessage(isEditing ? "Actualizando dirección en backend/PostgreSQL..." : "Guardando dirección en backend/PostgreSQL...", "info");
 
     try {
-      await fetchJson(`${API_URL}/users/${encodeURIComponent(email)}/addresses`, {
-        method: "POST",
-        body: JSON.stringify({
-          label,
-          address,
-          reference,
-          latitude,
-          longitude,
-          location: {
-            lat: latitude,
-            lng: longitude
-          },
-          isDefault
-        })
-      });
+      const payload = {
+        label,
+        address,
+        reference,
+        latitude,
+        longitude,
+        location: {
+          lat: latitude,
+          lng: longitude
+        },
+        isDefault
+      };
 
-      setAddressMessage("Dirección guardada correctamente.", "ok");
+      if (isEditing) {
+        await fetchJson(`${API_URL}/users/${encodeURIComponent(email)}/addresses/${encodeURIComponent(editingAddressId)}`, {
+          method: "PUT",
+          body: JSON.stringify(payload)
+        });
+
+        setAddressMessage("Dirección actualizada correctamente.", "ok");
+      } else {
+        await fetchJson(`${API_URL}/users/${encodeURIComponent(email)}/addresses`, {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+
+        setAddressMessage("Dirección guardada correctamente.", "ok");
+      }
+
       resetAddressForm();
       await loadAddresses();
     } catch (error) {
       console.error("Error guardando dirección BHUZ:", error);
-      setAddressMessage(error.message || "No se pudo guardar la dirección.", "error");
+      setAddressMessage(
+        error.message || (isEditing ? "No se pudo actualizar la dirección." : "No se pudo guardar la dirección."),
+        "error"
+      );
     } finally {
       isSavingAddress = false;
-      setButtonLoading(saveAddressBtn, false, "Guardando dirección...", "Guardar dirección");
+      setButtonLoading(saveAddressBtn, false, isEditing ? "Guardando cambios..." : "Guardando dirección...", normalButtonText);
+      if (saveAddressBtn) saveAddressBtn.textContent = editingAddressId ? "Guardar cambios" : "Guardar dirección";
     }
   }
 
@@ -563,14 +658,14 @@
 
     if (!email || !addressId) return;
 
-    setAddressMessage("Actualizando dirección principal...", "info");
+    setAddressMessage("Usando esta dirección como principal...", "info");
 
     try {
       await fetchJson(`${API_URL}/users/${encodeURIComponent(email)}/addresses/${encodeURIComponent(addressId)}/default`, {
         method: "PUT"
       });
 
-      setAddressMessage("Dirección principal actualizada.", "ok");
+      setAddressMessage("Esta dirección quedó como principal para tus próximos pedidos.", "ok");
       await loadAddresses();
     } catch (error) {
       console.error("Error marcando dirección principal:", error);
@@ -583,7 +678,7 @@
 
     if (!email || !addressId) return;
 
-    const confirmed = window.confirm("¿Seguro que quieres eliminar esta dirección?");
+    const confirmed = window.confirm("¿Estás seguro de que deseas eliminar esta dirección?\n\nEsta acción no se puede deshacer. Si eliminas esta dirección, tendrás que crearla nuevamente con su referencia y GPS.");
     if (!confirmed) return;
 
     setAddressMessage("Eliminando dirección...", "info");
@@ -631,14 +726,28 @@
       addressForm.addEventListener("submit", saveAddress);
     }
 
+    if (cancelEditAddressBtn) {
+      cancelEditAddressBtn.addEventListener("click", () => {
+        resetAddressForm();
+        setAddressMessage("Edición cancelada. No se guardaron cambios.", "info");
+      });
+    }
+
     if (addressesList) {
       addressesList.addEventListener("click", (event) => {
         const defaultButton = event.target.closest(".js-set-default-address");
+        const editButton = event.target.closest(".js-edit-address");
         const deleteButton = event.target.closest(".js-delete-address");
 
         if (defaultButton) {
           event.preventDefault();
           setDefaultAddress(defaultButton.dataset.addressId || "");
+          return;
+        }
+
+        if (editButton) {
+          event.preventDefault();
+          startEditAddress(editButton.dataset.addressId || "");
           return;
         }
 
@@ -651,6 +760,7 @@
   }
 
   async function init() {
+    ensureEditControls();
     bindEvents();
     setGpsStatus("GPS pendiente. Debes capturar ubicación antes de guardar.", false);
 
@@ -690,3 +800,4 @@
     init();
   }
 })();
+
