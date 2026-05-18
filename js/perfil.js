@@ -29,6 +29,9 @@
      - Si más adelante existe window.DELI_API_URL, la respeta.
   ========================================================= */
   const API_URL = window.DELI_API_URL || "https://deligo-backend-i554.onrender.com";
+  const profileParams = new URLSearchParams(window.location.search || "");
+  const checkoutReturnUrl = profileParams.get("returnTo") || "";
+  const cameFromCheckout = profileParams.get("from") === "checkout" && Boolean(checkoutReturnUrl);
 
   /* =========================================================
      ELEMENTOS DOM
@@ -59,6 +62,9 @@
   const addressDefaultInput = document.getElementById("addressDefault");
   const saveAddressBtn = document.getElementById("saveAddressBtn");
   const addressMessage = document.getElementById("addressMessage");
+  const openAddressFormBtn = document.getElementById("openAddressFormBtn");
+  const addressFormSection = document.getElementById("nuevaDireccion");
+  const addressFormTitle = document.getElementById("addressFormTitle");
 
   let cancelEditAddressBtn = document.getElementById("cancelEditAddressBtn");
 
@@ -150,6 +156,44 @@
     saveAddressBtn.insertAdjacentElement("afterend", cancelEditAddressBtn);
   }
 
+  function showAddressForm(mode) {
+    if (addressFormSection) {
+      addressFormSection.classList.add("is-visible");
+      addressFormSection.style.display = "block";
+    }
+
+    if (addressFormTitle) {
+      addressFormTitle.textContent = mode === "edit" ? "Editar dirección guardada" : "Agregar dirección guardada";
+    }
+
+    if (openAddressFormBtn) {
+      openAddressFormBtn.textContent = mode === "edit" ? "Editando dirección" : "Formulario abierto";
+      openAddressFormBtn.disabled = mode === "edit";
+    }
+
+    if (addressFormSection) {
+      setTimeout(() => {
+        addressFormSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 80);
+    }
+  }
+
+  function hideAddressForm() {
+    if (addressFormSection) {
+      addressFormSection.classList.remove("is-visible");
+      addressFormSection.style.display = "none";
+    }
+
+    if (addressFormTitle) {
+      addressFormTitle.textContent = "Agregar dirección guardada";
+    }
+
+    if (openAddressFormBtn) {
+      openAddressFormBtn.disabled = false;
+      openAddressFormBtn.textContent = "＋ Agregar nueva dirección";
+    }
+  }
+
   function setAddressEditMode(address) {
     editingAddressId = address ? getAddressId(address) : null;
 
@@ -164,6 +208,31 @@
     if (!addressForm) return;
 
     addressForm.classList.toggle("is-editing", Boolean(editingAddressId));
+  }
+
+  function isSafeReturnUrl(url) {
+    const value = safeText(url);
+    if (!value) return false;
+    if (value.startsWith("http://") || value.startsWith("https://") || value.startsWith("//")) return false;
+    return value.includes("restaurant.html");
+  }
+
+  function returnToCheckoutAfterSelectingAddress(addressId) {
+    if (!cameFromCheckout || !isSafeReturnUrl(checkoutReturnUrl)) return false;
+
+    try {
+      sessionStorage.setItem("bhuzSelectedCheckoutAddressId", String(addressId || ""));
+    } catch (error) {
+      console.warn("No se pudo guardar temporalmente la dirección seleccionada:", error);
+    }
+
+    setAddressMessage("Dirección seleccionada. Volviendo al checkout para confirmar tu pedido...", "ok");
+
+    setTimeout(() => {
+      window.location.href = checkoutReturnUrl;
+    }, 650);
+
+    return true;
   }
 
   function getCurrentUserSafe() {
@@ -281,14 +350,21 @@
 
     if (profileNameInput) {
       profileNameInput.value = displayName === "Usuario" ? "" : displayName;
+      profileNameInput.disabled = true;
     }
 
     if (profilePhoneInput) {
       profilePhoneInput.value = phone;
+      profilePhoneInput.disabled = true;
     }
 
     if (profileEmailInput) {
       profileEmailInput.value = email;
+      profileEmailInput.disabled = true;
+    }
+
+    if (saveProfileBtn) {
+      saveProfileBtn.style.display = "none";
     }
   }
 
@@ -327,6 +403,7 @@
     const latitude = getAddressLatitude(address);
     const longitude = getAddressLongitude(address);
     const isDefault = isDefaultAddress(address);
+    const useButtonText = cameFromCheckout ? "Usar esta dirección y volver al checkout" : "Usar esta dirección";
 
     return `
       <article class="address-card${isDefault ? " is-default" : ""}" data-address-id="${escapeHtml(id)}">
@@ -335,19 +412,19 @@
             <strong>${escapeHtml(label)}</strong>
             ${isDefault ? '<span class="default-badge">Principal</span>' : ""}
           </div>
-          <span class="gps-mini-badge">📍 GPS</span>
+          <span class="gps-mini-badge">📍 GPS guardado</span>
         </div>
 
         <p class="address-text">${escapeHtml(text)}</p>
         <p class="address-reference"><strong>Referencia:</strong> ${escapeHtml(reference)}</p>
 
-        <div class="address-gps-line">
+        <div class="address-gps-line" aria-hidden="true">
           <span>Lat: ${escapeHtml(latitude || "—")}</span>
           <span>Lng: ${escapeHtml(longitude || "—")}</span>
         </div>
 
         <div class="address-card-actions">
-          ${!isDefault ? `<button type="button" class="profile-btn primary js-set-default-address" data-address-id="${escapeHtml(id)}">Usar esta dirección</button>` : `<button type="button" class="profile-btn secondary" disabled>Dirección en uso</button>`}
+          <button type="button" class="profile-btn primary js-set-default-address" data-address-id="${escapeHtml(id)}">${escapeHtml(useButtonText)}</button>
           <button type="button" class="profile-btn secondary js-edit-address" data-address-id="${escapeHtml(id)}">Editar</button>
           <button type="button" class="profile-btn danger js-delete-address" data-address-id="${escapeHtml(id)}">Eliminar</button>
         </div>
@@ -451,12 +528,28 @@
 
     capturedGpsLocation = null;
     setAddressEditMode(null);
+    hideAddressForm();
     setGpsStatus("GPS pendiente. Debes capturar ubicación antes de guardar.", false);
 
     if (captureGpsBtn) {
       captureGpsBtn.disabled = false;
       captureGpsBtn.textContent = "📍 Usar mi ubicación actual";
     }
+  }
+
+  function prepareNewAddressForm() {
+    if (addressForm) addressForm.reset();
+    if (addressLatitudeInput) addressLatitudeInput.value = "";
+    if (addressLongitudeInput) addressLongitudeInput.value = "";
+    if (addressDefaultInput) addressDefaultInput.checked = userAddresses.length === 0;
+
+    capturedGpsLocation = null;
+    setAddressEditMode(null);
+    setGpsStatus("GPS pendiente. Debes capturar ubicación antes de guardar.", false);
+    setAddressMessage("Completa la dirección, referencia y GPS para guardarla.", "info");
+    showAddressForm("new");
+
+    if (addressLabelInput) addressLabelInput.focus();
   }
 
   function captureGpsLocation() {
@@ -533,6 +626,7 @@
       return;
     }
 
+    showAddressForm("edit");
     setAddressEditMode(address);
 
     if (addressLabelInput) addressLabelInput.value = getAddressLabel(address);
@@ -554,10 +648,6 @@
     }
 
     setAddressMessage("Modo edición activo. Cambia los datos y presiona Guardar cambios.", "info");
-
-    if (addressForm) {
-      addressForm.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
   }
 
   async function saveAddress(event) {
@@ -658,15 +748,17 @@
 
     if (!email || !addressId) return;
 
-    setAddressMessage("Usando esta dirección como principal...", "info");
+    setAddressMessage(cameFromCheckout ? "Seleccionando dirección para este pedido..." : "Usando esta dirección como principal...", "info");
 
     try {
       await fetchJson(`${API_URL}/users/${encodeURIComponent(email)}/addresses/${encodeURIComponent(addressId)}/default`, {
         method: "PUT"
       });
 
-      setAddressMessage("Esta dirección quedó como principal para tus próximos pedidos.", "ok");
+      setAddressMessage(cameFromCheckout ? "Dirección seleccionada. Volviendo al checkout..." : "Esta dirección quedó como principal para tus próximos pedidos.", "ok");
       await loadAddresses();
+
+      returnToCheckoutAfterSelectingAddress(addressId);
     } catch (error) {
       console.error("Error marcando dirección principal:", error);
       setAddressMessage(error.message || "No se pudo marcar la dirección principal.", "error");
@@ -699,16 +791,8 @@
   async function handleProfileSubmit(event) {
     if (event) event.preventDefault();
 
-    /*
-      IMPORTANTE:
-      En el backend actual del proyecto sí existe GET /users/:email,
-      pero no se confirmó una ruta segura PUT /users/:email para editar datos.
-      Por eso este paso NO inventa endpoint ni toca backend.
-      La edición real de nombre/teléfono queda para el siguiente paso si se decide crear
-      o confirmar una ruta existente.
-    */
     setProfileMessage(
-      "Datos visibles cargados. La edición real de nombre/teléfono necesita confirmar o crear endpoint seguro en backend.",
+      "Tus datos personales están bloqueados por seguridad. Más adelante activamos edición con endpoint seguro.",
       "info"
     );
   }
@@ -716,6 +800,10 @@
   function bindEvents() {
     if (profileForm) {
       profileForm.addEventListener("submit", handleProfileSubmit);
+    }
+
+    if (openAddressFormBtn) {
+      openAddressFormBtn.addEventListener("click", prepareNewAddressForm);
     }
 
     if (captureGpsBtn) {
@@ -761,6 +849,7 @@
 
   async function init() {
     ensureEditControls();
+    hideAddressForm();
     bindEvents();
     setGpsStatus("GPS pendiente. Debes capturar ubicación antes de guardar.", false);
 
@@ -791,6 +880,10 @@
     updateSummary();
     setProfileMessage("Perfil cargado correctamente.", "ok");
 
+    if (cameFromCheckout) {
+      setAddressMessage("Selecciona una dirección y volverás al checkout para confirmar el pedido.", "info");
+    }
+
     await loadAddresses();
   }
 
@@ -800,4 +893,6 @@
     init();
   }
 })();
+
+
 

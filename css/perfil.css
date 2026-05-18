@@ -636,3 +636,103 @@ body.profile-page {
     width: fit-content;
   }
 }
+
+
+/* ======================================================
+   CAMBIO BHUZ PERFIL - FORMULARIOS CERRADOS / LECTURA
+====================================================== */
+.profile-account-readonly input:disabled,
+.profile-field input:disabled {
+  color: #526059;
+  background: #eef3f0;
+  cursor: not-allowed;
+  opacity: 1;
+  -webkit-text-fill-color: #526059;
+}
+
+.profile-form-toggle-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.profile-hidden-section {
+  display: none;
+}
+
+.profile-hidden-section.is-visible {
+  display: block;
+}
+
+.address-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 6px;
+}
+
+.default-badge,
+.gps-mini-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 6px 9px;
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.default-badge {
+  margin-left: 8px;
+  color: #00140c;
+  background: linear-gradient(135deg, var(--bhuz-green), #7cff9e);
+}
+
+.gps-mini-badge {
+  color: var(--bhuz-green);
+  background: rgba(16, 233, 129, 0.12);
+  border: 1px solid rgba(16, 233, 129, 0.24);
+}
+
+.address-gps-line {
+  display: none;
+}
+
+.profile-btn.danger,
+.profile-btn-danger {
+  color: #ffffff;
+  background: #cf2f2f;
+  box-shadow: 0 0 22px rgba(207, 47, 47, 0.18);
+}
+
+.message-box.is-ok,
+.message-box.is-info,
+.message-box.is-error,
+.profile-message.is-ok,
+.profile-message.is-info,
+.profile-message.is-error {
+  display: block;
+}
+
+.message-box.is-ok,
+.profile-message.is-ok {
+  color: #07512f;
+  background: rgba(16, 233, 129, 0.16);
+  border: 1px solid rgba(16, 233, 129, 0.28);
+}
+
+.message-box.is-info,
+.profile-message.is-info {
+  color: #26443a;
+  background: rgba(16, 233, 129, 0.08);
+  border: 1px solid rgba(16, 233, 129, 0.18);
+}
+
+.message-box.is-error,
+.profile-message.is-error {
+  color: #7a1d1d;
+  background: rgba(255, 76, 76, 0.12);
+  border: 1px solid rgba(255, 76, 76, 0.24);
+}
+

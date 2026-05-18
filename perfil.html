@@ -7,6 +7,7 @@
   <title>Mi perfil | BHUZ</title>
   <link rel="icon" type="image/jpeg" href="assets/image/logo-bhuz.jpeg">
   <link rel="apple-touch-icon" href="assets/image/logo-bhuz.jpeg">
+  <link rel="stylesheet" href="css/perfil.css">
 
   <!-- =========================================================
        BHUZ - PERFIL DEL USUARIO
@@ -567,6 +568,100 @@
         display: grid;
       }
     }
+
+
+    /* =========================================================
+       CAMBIO BHUZ PERFIL - FORMULARIOS CERRADOS Y LECTURA
+       - Datos personales bloqueados.
+       - Formulario de dirección oculto hasta presionar botón.
+    ========================================================== */
+    .profile-account-readonly input:disabled {
+      color: #526059;
+      background: #eef3f0;
+      cursor: not-allowed;
+      opacity: 1;
+      -webkit-text-fill-color: #526059;
+    }
+
+    .profile-form-toggle-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .profile-hidden-section {
+      display: none;
+    }
+
+    .profile-hidden-section.is-visible {
+      display: block;
+    }
+
+    .profile-btn.danger {
+      color: #ffffff;
+      background: #cf2f2f;
+      box-shadow: 0 0 22px rgba(207, 47, 47, 0.18);
+    }
+
+    .address-card-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-top: 6px;
+    }
+
+    .default-badge,
+    .gps-mini-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 6px 9px;
+      font-size: 11px;
+      font-weight: 950;
+    }
+
+    .default-badge {
+      margin-left: 8px;
+      color: #00140c;
+      background: linear-gradient(135deg, var(--bhuz-green), #7cff9e);
+    }
+
+    .gps-mini-badge {
+      color: var(--bhuz-green);
+      background: rgba(16, 233, 129, 0.12);
+      border: 1px solid rgba(16, 233, 129, 0.24);
+    }
+
+    .address-gps-line {
+      display: none;
+    }
+
+    .message-box.is-ok,
+    .message-box.is-info,
+    .message-box.is-error {
+      display: block;
+    }
+
+    .message-box.is-ok {
+      color: #07512f;
+      background: rgba(16, 233, 129, 0.16);
+      border: 1px solid rgba(16, 233, 129, 0.28);
+    }
+
+    .message-box.is-info {
+      color: #26443a;
+      background: rgba(16, 233, 129, 0.08);
+      border: 1px solid rgba(16, 233, 129, 0.18);
+    }
+
+    .message-box.is-error {
+      color: #7a1d1d;
+      background: rgba(255, 76, 76, 0.12);
+      border: 1px solid rgba(255, 76, 76, 0.24);
+    }
+
   </style>
 </head>
 
@@ -652,26 +747,24 @@
           </div>
         </div>
 
-        <form class="form-grid" id="profileForm">
+        <form class="form-grid profile-account-readonly" id="profileForm">
           <div class="form-row">
             <label for="profileName">Nombre completo</label>
-            <input id="profileName" name="profileName" type="text" placeholder="Nombre del usuario" autocomplete="name">
+            <input id="profileName" name="profileName" type="text" placeholder="Nombre del usuario" autocomplete="name" disabled>
           </div>
 
           <div class="form-row">
             <label for="profilePhone">Teléfono</label>
-            <input id="profilePhone" name="profilePhone" type="tel" placeholder="Teléfono" autocomplete="tel">
+            <input id="profilePhone" name="profilePhone" type="tel" placeholder="Teléfono" autocomplete="tel" disabled>
           </div>
 
           <div class="form-row">
             <label for="profileEmail">Correo</label>
-            <input id="profileEmail" name="profileEmail" type="email" placeholder="correo@ejemplo.com" autocomplete="email" readonly>
+            <input id="profileEmail" name="profileEmail" type="email" placeholder="correo@ejemplo.com" autocomplete="email" disabled>
           </div>
 
-          <button class="profile-btn primary" id="saveProfileBtn" type="submit">Guardar cambios</button>
-
           <p class="readonly-note">
-            El correo queda bloqueado porque es la llave principal que usa el backend para relacionar usuario, direcciones y pedidos.
+            Estos datos se muestran solo como información. Por seguridad, no se editan desde esta pantalla por ahora.
           </p>
 
           <div class="message-box" id="profileMessage"></div>
@@ -688,6 +781,7 @@
             <h2>Mis direcciones</h2>
             <p>Guarda casa, trabajo o direcciones frecuentes con referencia y ubicación exacta.</p>
           </div>
+          <button class="profile-btn primary" id="openAddressFormBtn" type="button">＋ Agregar nueva dirección</button>
         </div>
 
         <div class="addresses-list" id="addressesList">
@@ -701,11 +795,11 @@
     <!-- =========================================================
          FORMULARIO NUEVA DIRECCIÓN
     ========================================================== -->
-    <section class="profile-card" id="nuevaDireccion" style="margin-top: 18px;">
+    <section class="profile-card profile-hidden-section" id="nuevaDireccion" style="margin-top: 18px;">
       <div class="card-head">
         <div>
           <span class="mini-label">Nueva dirección</span>
-          <h2>Agregar dirección guardada</h2>
+          <h2 id="addressFormTitle">Agregar dirección guardada</h2>
           <p>La dirección debe tener texto, referencia y GPS para evitar errores de entrega.</p>
         </div>
       </div>
@@ -713,14 +807,7 @@
       <form class="form-grid" id="addressForm">
         <div class="form-row">
           <label for="addressLabel">Alias</label>
-          <select id="addressLabel" name="addressLabel">
-            <option value="Casa">Casa</option>
-            <option value="Trabajo">Trabajo</option>
-            <option value="Mamá">Mamá</option>
-            <option value="Familia">Familia</option>
-            <option value="Amigo">Amigo</option>
-            <option value="Otro">Otro</option>
-          </select>
+          <input id="addressLabel" name="addressLabel" type="text" placeholder="Ej: Casa, Trabajo, Mamá, Oficina..." autocomplete="off">
         </div>
 
         <div class="form-row">
@@ -774,3 +861,4 @@
 </body>
 
 </html>
+
