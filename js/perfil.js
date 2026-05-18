@@ -7,7 +7,7 @@
    - Cargar usuario actual desde auth.js / sesión temporal.
    - Cargar direcciones guardadas desde backend/PostgreSQL.
    - Crear nuevas direcciones usando endpoints existentes.
-   - Editar direcciones usando endpoint PUT si está disponible en backend.
+   - Editar direcciones con PUT si existe o reemplazo seguro si el backend aún no soporta PUT.
    - Marcar dirección principal usando endpoints existentes.
    - Eliminar direcciones usando endpoints existentes con confirmación segura.
 
@@ -713,12 +713,36 @@
       };
 
       if (isEditing) {
-        await fetchJson(`${API_URL}/users/${encodeURIComponent(email)}/addresses/${encodeURIComponent(editingAddressId)}`, {
-          method: "PUT",
-          body: JSON.stringify(payload)
-        });
+        /* =========================================================
+           CAMBIO BHUZ - EDICIÓN SEGURA DE DIRECCIONES
+           - Primero intenta editar con PUT si el backend lo soporta.
+           - Si el backend actual todavía no tiene PUT para direcciones,
+             hace un reemplazo seguro: crea la dirección corregida y luego
+             elimina la anterior.
+           - No crea rutas nuevas ni toca backend.
+        ========================================================= */
+        try {
+          await fetchJson(`${API_URL}/users/${encodeURIComponent(email)}/addresses/${encodeURIComponent(editingAddressId)}`, {
+            method: "PUT",
+            body: JSON.stringify(payload)
+          });
 
-        setAddressMessage("Dirección actualizada correctamente.", "ok");
+          setAddressMessage("Dirección actualizada correctamente.", "ok");
+        } catch (updateError) {
+          console.warn("El backend no permitió PUT para editar dirección. Aplicando reemplazo seguro:", updateError);
+          setAddressMessage("Actualizando dirección con método seguro...", "info");
+
+          await fetchJson(`${API_URL}/users/${encodeURIComponent(email)}/addresses`, {
+            method: "POST",
+            body: JSON.stringify(payload)
+          });
+
+          await fetchJson(`${API_URL}/users/${encodeURIComponent(email)}/addresses/${encodeURIComponent(editingAddressId)}`, {
+            method: "DELETE"
+          });
+
+          setAddressMessage("Dirección actualizada correctamente.", "ok");
+        }
       } else {
         await fetchJson(`${API_URL}/users/${encodeURIComponent(email)}/addresses`, {
           method: "POST",
@@ -893,6 +917,8 @@
     init();
   }
 })();
+
+
 
 
 
