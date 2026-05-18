@@ -1,24 +1,3 @@
-/* =========================================================
-   BHUZ - PERFIL.JS
-   Archivo completo listo para copiar y pegar
-
-   OBJETIVO DE ESTE PASO:
-   - Crear la lógica real de perfil del cliente.
-   - Cargar usuario actual desde auth.js / sesión temporal.
-   - Cargar direcciones guardadas desde backend/PostgreSQL.
-   - Crear nuevas direcciones usando endpoints existentes.
-   - Editar direcciones con PUT si existe o reemplazo seguro si el backend aún no soporta PUT.
-   - Marcar dirección principal usando endpoints existentes.
-   - Eliminar direcciones usando endpoints existentes con confirmación segura.
-
-   IMPORTANTE:
-   - NO crea tablas.
-   - NO toca backend.
-   - NO toca pedidos.
-   - NO toca checkout.
-   - NO usa localStorage como fuente de negocio.
-   - PostgreSQL sigue siendo la fuente real mediante el backend.
-========================================================= */
 
 (function initBhuzPerfil() {
   "use strict";
@@ -917,6 +896,8 @@
     init();
   }
 })();
+
+
 
 
 
