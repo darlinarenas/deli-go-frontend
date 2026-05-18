@@ -1012,6 +1012,90 @@ img{ display:block; max-width:100%; }
 }
 
 
+/* ======================================================
+   CAMBIO BHUZ - UBICACIÓN ACTUAL EN CHECKOUT
+   - Destaca cuando el cliente usa GPS actual.
+   - Oculta la dirección guardada para evitar confusión.
+   - Muestra referencia extra opcional para el delivery.
+====================================================== */
+
+.checkout-current-location-btn.is-active {
+  color: #031006;
+  background: linear-gradient(135deg, var(--color-principal), var(--color-secundario));
+  border-color: rgba(0, 210, 106, 0.55);
+  box-shadow:
+    0 0 0 4px rgba(0, 210, 106, 0.12),
+    0 16px 32px rgba(0, 210, 106, 0.22);
+}
+
+.checkout-current-location-info {
+  margin-top: 12px;
+  gap: 5px;
+  padding: 14px;
+  border-radius: 18px;
+  color: #064526;
+  background:
+    radial-gradient(circle at top left, rgba(0, 210, 106, 0.18), transparent 38%),
+    rgba(0, 210, 106, 0.10);
+  border: 1px solid rgba(0, 210, 106, 0.32);
+}
+
+.checkout-current-location-info strong {
+  color: #037a3f;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.checkout-current-location-info span {
+  color: #34433b;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.checkout-current-reference-box {
+  margin-top: 12px;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 18px;
+  background: #f8fbf9;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.checkout-current-reference-box label {
+  color: #05733e;
+  font-size: 13px;
+  font-weight: 950;
+}
+
+.checkout-current-reference-box textarea {
+  width: 100%;
+  min-height: 84px;
+  resize: vertical;
+  border-radius: 16px;
+  padding: 13px 14px;
+  border: 1px solid rgba(0, 210, 106, 0.22);
+  background: #ffffff;
+  color: #111827;
+  outline: none;
+  font-size: 14px;
+  font-weight: 750;
+}
+
+.checkout-current-reference-box textarea:focus {
+  border-color: var(--color-principal);
+  box-shadow: 0 0 0 4px rgba(0, 210, 106, 0.12);
+}
+
+.checkout-current-reference-box small {
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+
+
 
 
 
