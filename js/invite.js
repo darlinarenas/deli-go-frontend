@@ -35,6 +35,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveInviteGuestCheck = document.getElementById("saveInviteGuestCheck");
   const saveInviteGuestAlias = document.getElementById("saveInviteGuestAlias");
   const inviteSuccessBox = document.getElementById("inviteSuccessBox");
+  const postConfirmSaveGuestBox = document.getElementById("postConfirmSaveGuestBox");
+  const postConfirmGuestAlias = document.getElementById("postConfirmGuestAlias");
+  const saveConfirmedGuestBtn = document.getElementById("saveConfirmedGuestBtn");
+  const saveConfirmedGuestMessage = document.getElementById("saveConfirmedGuestMessage");
 
   let currentInvite = null;
   let capturedLocation = null;
@@ -138,6 +142,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (invite?.status === "location_confirmed") {
       if (inviteLocationForm) inviteLocationForm.style.display = "none";
       if (inviteSuccessBox) inviteSuccessBox.style.display = "block";
+
+      if (postConfirmGuestAlias && invite?.recipientName && !postConfirmGuestAlias.value.trim()) {
+        postConfirmGuestAlias.value = invite.recipientName;
+      }
+
       setGpsStatus("Ubicación ya confirmada.", true);
       return;
     }
@@ -273,6 +282,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (inviteLocationForm) inviteLocationForm.style.display = "none";
       if (inviteSuccessBox) inviteSuccessBox.style.display = "block";
+
+      if (postConfirmGuestAlias && currentInvite?.recipientName && !postConfirmGuestAlias.value.trim()) {
+        postConfirmGuestAlias.value = currentInvite.recipientName;
+      }
+
+      if (data.savedGuest && saveConfirmedGuestMessage) {
+        saveConfirmedGuestMessage.textContent = "✅ Invitado guardado correctamente para futuras invitaciones.";
+        if (saveConfirmedGuestBtn) saveConfirmedGuestBtn.disabled = true;
+      }
+
       setGpsStatus("✅ Ubicación confirmada y enviada a BHUZ.", true);
     } catch (error) {
       console.error("Error confirmando ubicación:", error);
@@ -280,6 +299,49 @@ document.addEventListener("DOMContentLoaded", () => {
       setButtonLoading(confirmInviteLocationBtn, false);
     } finally {
       isSubmittingLocation = false;
+    }
+  }
+
+
+  async function saveConfirmedGuest() {
+    const alias = String(postConfirmGuestAlias?.value || "").trim();
+
+    if (!alias) {
+      alert("Escribe un apodo para guardar este invitado.");
+      return;
+    }
+
+    setButtonLoading(saveConfirmedGuestBtn, true, "Guardando invitado...");
+
+    try {
+      const response = await fetch(`${API_URL}/invite/${encodeURIComponent(token)}/save-guest`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          guestAlias: alias
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        throw new Error(data.message || "No se pudo guardar el invitado");
+      }
+
+      if (saveConfirmedGuestMessage) {
+        saveConfirmedGuestMessage.textContent = "✅ Invitado guardado correctamente para futuras invitaciones.";
+      }
+
+      if (saveConfirmedGuestBtn) {
+        saveConfirmedGuestBtn.disabled = true;
+        saveConfirmedGuestBtn.textContent = "Invitado guardado";
+      }
+    } catch (error) {
+      console.error("Error guardando invitado confirmado:", error);
+      alert(error.message || "No se pudo guardar el invitado.");
+      setButtonLoading(saveConfirmedGuestBtn, false);
     }
   }
 
@@ -295,9 +357,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   captureInviteGpsBtn?.addEventListener("click", captureGps);
   inviteLocationForm?.addEventListener("submit", submitLocation);
+  saveConfirmedGuestBtn?.addEventListener("click", saveConfirmedGuest);
 
   loadInvite();
 });
+
+
+
+
 
 
 
