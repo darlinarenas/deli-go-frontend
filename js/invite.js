@@ -8,6 +8,13 @@
    - Muestra información básica del pedido.
    - Captura GPS obligatorio + referencia.
    - Envía la ubicación al backend.
+
+   CAMBIO BHUZ - GPS INVITADO FINAL
+   - Mantiene el endpoint existente POST /invite/:token/location.
+   - No cambia backend ni flujo de pedidos.
+   - Mejora la captura GPS para pruebas reales en móvil/HTTPS.
+   - Muestra coordenadas cargadas para confirmar visualmente que sí tomó GPS.
+   - Da mensajes claros si el navegador bloqueó permisos o si no está en HTTPS.
 ====================================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -24,10 +31,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const inviteReceiverAddress = document.getElementById("inviteReceiverAddress");
   const inviteGpsStatus = document.getElementById("inviteGpsStatus");
   const captureInviteGpsBtn = document.getElementById("captureInviteGpsBtn");
+  const confirmInviteLocationBtn = document.getElementById("confirmInviteLocationBtn");
   const inviteSuccessBox = document.getElementById("inviteSuccessBox");
 
   let currentInvite = null;
   let capturedLocation = null;
+  let isSubmittingLocation = false;
 
   function escapeHtml(text) {
     return String(text || "")
@@ -54,6 +63,51 @@ document.addEventListener("DOMContentLoaded", () => {
 
     inviteGpsStatus.textContent = message;
     inviteGpsStatus.classList.toggle("ok", Boolean(ok));
+  }
+
+  function setButtonLoading(button, loading, loadingText) {
+    if (!button) return;
+
+    if (loading) {
+      if (!button.dataset.originalText) {
+        button.dataset.originalText = button.textContent;
+      }
+      button.textContent = loadingText || "Procesando...";
+      button.disabled = true;
+      return;
+    }
+
+    button.textContent = button.dataset.originalText || button.textContent;
+    button.disabled = false;
+  }
+
+  function isSecureGeolocationContext() {
+    const protocol = window.location.protocol;
+    const host = window.location.hostname;
+
+    return (
+      window.isSecureContext === true ||
+      protocol === "https:" ||
+      host === "localhost" ||
+      host === "127.0.0.1"
+    );
+  }
+
+  function getGpsErrorMessage(error) {
+    if (!error) {
+      return "No se pudo obtener la ubicación. Activa el GPS y vuelve a intentar.";
+    }
+
+    switch (error.code) {
+      case 1:
+        return "Permiso de ubicación bloqueado. Activa la ubicación desde el candado del navegador y vuelve a intentar.";
+      case 2:
+        return "No se pudo detectar tu ubicación. Activa el GPS del teléfono y vuelve a intentar.";
+      case 3:
+        return "La ubicación tardó demasiado. Muévete a un lugar con mejor señal y vuelve a intentar.";
+      default:
+        return "No se pudo obtener la ubicación. Activa el GPS y vuelve a intentar.";
+    }
   }
 
   function renderInvite(invite, order) {
@@ -119,30 +173,51 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function captureGps() {
+    capturedLocation = null;
+
+    if (!isSecureGeolocationContext()) {
+      setGpsStatus("El GPS solo funciona en HTTPS. Prueba desde la página publicada en Vercel.", false);
+      alert("El GPS solo funciona en HTTPS. Abre este link desde la página real publicada, no desde file://.");
+      return;
+    }
+
     if (!navigator.geolocation) {
+      setGpsStatus("Tu navegador no permite compartir ubicación GPS.", false);
       alert("Tu navegador no permite compartir ubicación GPS.");
       return;
     }
 
-    setGpsStatus("Solicitando ubicación GPS...", false);
+    setButtonLoading(captureInviteGpsBtn, true, "📍 Solicitando GPS...");
+    setGpsStatus("Solicitando ubicación GPS... acepta el permiso del navegador.", false);
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        const lat = Number(position.coords.latitude);
+        const lng = Number(position.coords.longitude);
+        const accuracy = Number(position.coords.accuracy || 0);
+
         capturedLocation = {
-          lat: String(position.coords.latitude),
-          lng: String(position.coords.longitude)
+          lat: String(lat),
+          lng: String(lng),
+          accuracy: Number.isFinite(accuracy) ? Math.round(accuracy) : ""
         };
 
-        setGpsStatus("✅ Ubicación GPS cargada correctamente.", true);
+        setGpsStatus(
+          `✅ GPS cargado: ${lat.toFixed(6)}, ${lng.toFixed(6)}${accuracy ? ` · precisión aprox. ${Math.round(accuracy)} m` : ""}`,
+          true
+        );
+
+        setButtonLoading(captureInviteGpsBtn, false);
       },
       (error) => {
         console.warn("Error GPS invitación:", error);
         capturedLocation = null;
-        setGpsStatus("No se pudo obtener la ubicación. Activa el GPS y vuelve a intentar.", false);
+        setGpsStatus(getGpsErrorMessage(error), false);
+        setButtonLoading(captureInviteGpsBtn, false);
       },
       {
         enableHighAccuracy: true,
-        timeout: 15000,
+        timeout: 25000,
         maximumAge: 0
       }
     );
@@ -150,6 +225,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function submitLocation(event) {
     event.preventDefault();
+
+    if (isSubmittingLocation) return;
 
     const reference = String(inviteReceiverReference?.value || "").trim();
     const address = String(inviteReceiverAddress?.value || "").trim();
@@ -160,9 +237,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (!capturedLocation?.lat || !capturedLocation?.lng) {
-      alert("Primero debes compartir tu ubicación GPS.");
+      alert("Primero debes tocar el botón ‘Compartir mi ubicación GPS’ y permitir la ubicación.");
       return;
     }
+
+    isSubmittingLocation = true;
+    setButtonLoading(confirmInviteLocationBtn, true, "Confirmando ubicación...");
 
     try {
       const response = await fetch(`${API_URL}/invite/${encodeURIComponent(token)}/location`, {
@@ -185,12 +265,17 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error(data.message || "No se pudo confirmar la ubicación");
       }
 
+      currentInvite = data.invite || currentInvite;
+
       if (inviteLocationForm) inviteLocationForm.style.display = "none";
       if (inviteSuccessBox) inviteSuccessBox.style.display = "block";
-      setGpsStatus("✅ Ubicación confirmada.", true);
+      setGpsStatus("✅ Ubicación confirmada y enviada a BHUZ.", true);
     } catch (error) {
       console.error("Error confirmando ubicación:", error);
       alert(error.message || "No se pudo confirmar la ubicación.");
+      setButtonLoading(confirmInviteLocationBtn, false);
+    } finally {
+      isSubmittingLocation = false;
     }
   }
 
@@ -199,3 +284,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
   loadInvite();
 });
+
