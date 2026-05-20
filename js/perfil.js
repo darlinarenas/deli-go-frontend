@@ -24,12 +24,9 @@
   const profileNameInput = document.getElementById("profileName");
   const profilePhoneInput = document.getElementById("profilePhone");
   const profileEmailInput = document.getElementById("profileEmail");
-  const editProfileBtn = document.getElementById("editProfileBtn");
-  const cancelProfileEditBtn = document.getElementById("cancelProfileEditBtn");
-  const currentPasswordInput = document.getElementById("currentPassword");
-  const newPasswordInput = document.getElementById("newPassword");
-  const confirmPasswordInput = document.getElementById("confirmPassword");
-  const profilePasswordSection = document.getElementById("profilePasswordSection");
+  const profileCurrentPasswordInput = document.getElementById("profileCurrentPassword");
+  const profileNewPasswordInput = document.getElementById("profileNewPassword");
+  const profileConfirmPasswordInput = document.getElementById("profileConfirmPassword");
   const saveProfileBtn = document.getElementById("saveProfileBtn");
   const profileMessage = document.getElementById("profileMessage");
 
@@ -60,10 +57,9 @@
   let userAddresses = [];
   let capturedGpsLocation = null;
   let isSavingAddress = false;
+  let isSavingProfile = false;
   let isLoadingAddresses = false;
   let editingAddressId = null;
-  let isEditingProfile = false;
-  let isSavingProfile = false;
 
   /* =========================================================
      HELPERS GENERALES
@@ -326,104 +322,6 @@
     }
   }
 
-  function clearPasswordFields() {
-    if (currentPasswordInput) currentPasswordInput.value = "";
-    if (newPasswordInput) newPasswordInput.value = "";
-    if (confirmPasswordInput) confirmPasswordInput.value = "";
-  }
-
-  function setProfileEditMode(enabled) {
-    isEditingProfile = Boolean(enabled);
-
-    if (profileForm) {
-      profileForm.classList.toggle("is-editing-profile", isEditingProfile);
-    }
-
-    if (profileNameInput) profileNameInput.disabled = !isEditingProfile;
-    if (profilePhoneInput) profilePhoneInput.disabled = !isEditingProfile;
-
-    /*
-      BHUZ - SEGURIDAD:
-      El correo se mantiene bloqueado porque es la llave que conecta usuarios,
-      direcciones y pedidos. Cambiar correo requiere una migración aparte.
-    */
-    if (profileEmailInput) profileEmailInput.disabled = true;
-
-    if (currentPasswordInput) currentPasswordInput.disabled = !isEditingProfile;
-    if (newPasswordInput) newPasswordInput.disabled = !isEditingProfile;
-    if (confirmPasswordInput) confirmPasswordInput.disabled = !isEditingProfile;
-
-    if (profilePasswordSection) {
-      profilePasswordSection.style.display = isEditingProfile ? "grid" : "none";
-    }
-
-    if (editProfileBtn) {
-      editProfileBtn.style.display = isEditingProfile ? "none" : "inline-flex";
-    }
-
-    if (cancelProfileEditBtn) {
-      cancelProfileEditBtn.style.display = isEditingProfile ? "inline-flex" : "none";
-    }
-
-    if (saveProfileBtn) {
-      saveProfileBtn.style.display = isEditingProfile ? "inline-flex" : "none";
-      saveProfileBtn.disabled = false;
-      saveProfileBtn.textContent = "Guardar cambios";
-    }
-
-    if (!isEditingProfile) {
-      clearPasswordFields();
-    }
-  }
-
-  function updateLocalSessionUser(updatedUser) {
-    if (!updatedUser) return;
-
-    currentUser = {
-      ...(currentUser || {}),
-      ...updatedUser
-    };
-
-    window.DELI_CURRENT_USER = currentUser;
-
-    /*
-      BHUZ - COMPATIBILIDAD:
-      No usamos localStorage como fuente real. Solo intentamos refrescar
-      cachés de sesión existentes para que otras vistas no queden mostrando
-      el nombre/teléfono anterior hasta recargar sesión.
-    */
-    const possibleKeys = [
-      "deliUser",
-      "currentUser",
-      "DELI_CURRENT_USER",
-      "bhuzUser",
-      "bhuzCurrentUser"
-    ];
-
-    possibleKeys.forEach((key) => {
-      try {
-        const raw = localStorage.getItem(key);
-        if (!raw) return;
-
-        const parsed = JSON.parse(raw);
-        if (!parsed || typeof parsed !== "object") return;
-
-        const merged = {
-          ...parsed,
-          ...updatedUser,
-          fullName: getUserDisplayName(updatedUser),
-          name: getUserDisplayName(updatedUser),
-          phone: getUserPhone(updatedUser),
-          telefono: getUserPhone(updatedUser)
-        };
-
-        localStorage.setItem(key, JSON.stringify(merged));
-      } catch (error) {
-        /* No detenemos el flujo si una caché vieja no es JSON válido. */
-      }
-    });
-  }
-
   function fillProfileForm(user) {
     const displayName = getUserDisplayName(user);
     const phone = getUserPhone(user);
@@ -435,17 +333,39 @@
 
     if (profileNameInput) {
       profileNameInput.value = displayName === "Usuario" ? "" : displayName;
+      profileNameInput.disabled = !user;
     }
 
     if (profilePhoneInput) {
       profilePhoneInput.value = phone;
+      profilePhoneInput.disabled = !user;
     }
 
     if (profileEmailInput) {
       profileEmailInput.value = email;
+      profileEmailInput.disabled = true;
     }
 
-    setProfileEditMode(false);
+    if (profileCurrentPasswordInput) {
+      profileCurrentPasswordInput.value = "";
+      profileCurrentPasswordInput.disabled = !user;
+    }
+
+    if (profileNewPasswordInput) {
+      profileNewPasswordInput.value = "";
+      profileNewPasswordInput.disabled = !user;
+    }
+
+    if (profileConfirmPasswordInput) {
+      profileConfirmPasswordInput.value = "";
+      profileConfirmPasswordInput.disabled = !user;
+    }
+
+    if (saveProfileBtn) {
+      saveProfileBtn.style.display = user ? "inline-flex" : "none";
+      saveProfileBtn.disabled = !user;
+      saveProfileBtn.textContent = "Guardar cambios del perfil";
+    }
   }
 
   function renderLoggedOutState() {
@@ -892,88 +812,59 @@
     }
   }
 
-  function cancelProfileEdit() {
-    fillProfileForm(currentUser);
-    setProfileMessage("Edición cancelada. No se guardaron cambios.", "info");
-  }
-
-  function startProfileEdit() {
-    if (!currentUser) {
-      setProfileMessage("Debes iniciar sesión para editar tu perfil.", "error");
-      return;
-    }
-
-    setProfileEditMode(true);
-    setProfileMessage(
-      "Puedes actualizar tu nombre, teléfono o contraseña. Para cambiar contraseña debes escribir la contraseña actual.",
-      "info"
-    );
-
-    if (profileNameInput) profileNameInput.focus();
-  }
-
   async function handleProfileSubmit(event) {
     if (event) event.preventDefault();
     if (isSavingProfile) return;
 
-    if (!isEditingProfile) {
-      startProfileEdit();
-      return;
-    }
-
     const email = getUserEmail(currentUser);
 
     if (!email) {
-      setProfileMessage("Debes iniciar sesión para actualizar tu perfil.", "error");
+      setProfileMessage("Debes iniciar sesión para editar tu perfil.", "error");
       return;
     }
 
     const fullName = safeText(profileNameInput?.value);
     const phone = safeText(profilePhoneInput?.value);
-    const currentPassword = String(currentPasswordInput?.value || "");
-    const newPassword = String(newPasswordInput?.value || "");
-    const confirmPassword = String(confirmPasswordInput?.value || "");
-    const wantsPasswordChange = Boolean(currentPassword || newPassword || confirmPassword);
+    const currentPassword = String(profileCurrentPasswordInput?.value || "");
+    const newPassword = String(profileNewPasswordInput?.value || "");
+    const confirmPassword = String(profileConfirmPasswordInput?.value || "");
 
     if (!fullName) {
-      setProfileMessage("El nombre no puede quedar vacío.", "error");
+      setProfileMessage("Escribe tu nombre completo.", "error");
       profileNameInput?.focus();
       return;
     }
 
     if (!phone) {
-      setProfileMessage("El teléfono no puede quedar vacío.", "error");
+      setProfileMessage("Escribe tu número de teléfono.", "error");
       profilePhoneInput?.focus();
       return;
     }
 
-    if (wantsPasswordChange) {
+    if (newPassword || confirmPassword || currentPassword) {
       if (!currentPassword) {
-        setProfileMessage("Escribe tu contraseña actual para poder cambiarla.", "error");
-        currentPasswordInput?.focus();
+        setProfileMessage("Para cambiar la contraseña debes escribir la contraseña actual.", "error");
+        profileCurrentPasswordInput?.focus();
         return;
       }
 
-      if (!newPassword || newPassword.length < 6) {
+      if (!newPassword) {
+        setProfileMessage("Escribe la nueva contraseña.", "error");
+        profileNewPasswordInput?.focus();
+        return;
+      }
+
+      if (newPassword.length < 6) {
         setProfileMessage("La nueva contraseña debe tener mínimo 6 caracteres.", "error");
-        newPasswordInput?.focus();
+        profileNewPasswordInput?.focus();
         return;
       }
 
       if (newPassword !== confirmPassword) {
         setProfileMessage("La confirmación no coincide con la nueva contraseña.", "error");
-        confirmPasswordInput?.focus();
+        profileConfirmPasswordInput?.focus();
         return;
       }
-    }
-
-    const currentName = getUserDisplayName(currentUser);
-    const currentPhone = getUserPhone(currentUser);
-    const changedProfile = fullName !== currentName || phone !== currentPhone;
-
-    if (!changedProfile && !wantsPasswordChange) {
-      setProfileMessage("No hiciste cambios para guardar.", "info");
-      return;
     }
 
     const payload = {
@@ -982,15 +873,13 @@
       phone
     };
 
-    if (wantsPasswordChange) {
+    if (newPassword) {
       payload.currentPassword = currentPassword;
       payload.newPassword = newPassword;
     }
 
     isSavingProfile = true;
-    setButtonLoading(saveProfileBtn, true, "Guardando perfil...", "Guardar cambios");
-    if (editProfileBtn) editProfileBtn.disabled = true;
-    if (cancelProfileEditBtn) cancelProfileEditBtn.disabled = true;
+    setButtonLoading(saveProfileBtn, true, "Guardando perfil...", "Guardar cambios del perfil");
     setProfileMessage("Guardando cambios en backend/PostgreSQL...", "info");
 
     try {
@@ -999,44 +888,38 @@
         body: JSON.stringify(payload)
       });
 
-      const updatedUser = data?.user || {
-        ...(currentUser || {}),
-        fullName,
-        name: fullName,
-        phone
-      };
+      const updatedUser = data?.user || null;
 
-      updateLocalSessionUser(updatedUser);
-      fillProfileForm(currentUser);
+      if (updatedUser) {
+        currentUser = {
+          ...currentUser,
+          ...updatedUser,
+          role: currentUser?.role || updatedUser.role || "customer"
+        };
 
-      setProfileMessage(
-        wantsPasswordChange
-          ? "Perfil y contraseña actualizados correctamente."
-          : "Perfil actualizado correctamente.",
-        "ok"
-      );
+        if (typeof setCurrentUser === "function") {
+          setCurrentUser(currentUser);
+        } else {
+          window.DELI_CURRENT_USER = currentUser;
+        }
+
+        fillProfileForm(currentUser);
+        updateSummary();
+      }
+
+      setProfileMessage("Perfil actualizado correctamente.", "ok");
     } catch (error) {
       console.error("Error actualizando perfil BHUZ:", error);
-      setProfileMessage(error.message || "No se pudo actualizar tu perfil.", "error");
+      setProfileMessage(error.message || "No se pudo completar la solicitud.", "error");
     } finally {
       isSavingProfile = false;
-      setButtonLoading(saveProfileBtn, false, "Guardando perfil...", "Guardar cambios");
-      if (editProfileBtn) editProfileBtn.disabled = false;
-      if (cancelProfileEditBtn) cancelProfileEditBtn.disabled = false;
+      setButtonLoading(saveProfileBtn, false, "Guardando perfil...", "Guardar cambios del perfil");
     }
   }
 
   function bindEvents() {
     if (profileForm) {
       profileForm.addEventListener("submit", handleProfileSubmit);
-    }
-
-    if (editProfileBtn) {
-      editProfileBtn.addEventListener("click", startProfileEdit);
-    }
-
-    if (cancelProfileEditBtn) {
-      cancelProfileEditBtn.addEventListener("click", cancelProfileEdit);
     }
 
     if (openAddressFormBtn) {
@@ -1130,6 +1013,14 @@
     init();
   }
 })();
+
+
+
+
+
+
+
+
 
 
 

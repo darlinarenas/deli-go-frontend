@@ -571,8 +571,10 @@
 
 
     /* =========================================================
-       CAMBIO BHUZ PERFIL - FORMULARIOS CERRADOS Y LECTURA
-       - Datos personales bloqueados.
+       CAMBIO BHUZ PERFIL - EDICIÓN SEGURA
+       - Nombre y teléfono editables.
+       - Correo bloqueado.
+       - Contraseña editable con validación.
        - Formulario de dirección oculto hasta presionar botón.
     ========================================================== */
     .profile-account-readonly input:disabled {
@@ -662,50 +664,6 @@
       border: 1px solid rgba(255, 76, 76, 0.24);
     }
 
-
-    /* =========================================================
-       CAMBIO BHUZ - EDICIÓN DE PERFIL + CONTRASEÑA
-       - Permite abrir/cerrar edición de datos personales.
-       - El correo sigue bloqueado porque es llave de usuario/pedidos.
-       - La contraseña solo se actualiza con contraseña actual.
-    ========================================================== */
-    .profile-account-readonly.is-editing-profile input:not(#profileEmail):not(:disabled) {
-      color: var(--bhuz-text);
-      background: #ffffff;
-      cursor: text;
-      opacity: 1;
-      -webkit-text-fill-color: var(--bhuz-text);
-    }
-
-    .profile-actions-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 4px;
-    }
-
-    .profile-password-section {
-      display: none;
-      gap: 12px;
-      border: 1px solid rgba(16, 233, 129, 0.18);
-      border-radius: 22px;
-      padding: 14px;
-      background: rgba(16, 233, 129, 0.06);
-    }
-
-    .profile-password-section.is-visible {
-      display: grid;
-    }
-
-    .password-help-note {
-      margin: 0;
-      color: var(--bhuz-muted);
-      font-size: 12px;
-      line-height: 1.45;
-      font-weight: 750;
-    }
-
-
   </style>
 </head>
 
@@ -794,12 +752,12 @@
         <form class="form-grid profile-account-readonly" id="profileForm">
           <div class="form-row">
             <label for="profileName">Nombre completo</label>
-            <input id="profileName" name="profileName" type="text" placeholder="Nombre del usuario" autocomplete="name" disabled>
+            <input id="profileName" name="profileName" type="text" placeholder="Nombre del usuario" autocomplete="name" required>
           </div>
 
           <div class="form-row">
             <label for="profilePhone">Teléfono</label>
-            <input id="profilePhone" name="profilePhone" type="tel" placeholder="Teléfono" autocomplete="tel" disabled>
+            <input id="profilePhone" name="profilePhone" type="tel" placeholder="Teléfono" autocomplete="tel" required>
           </div>
 
           <div class="form-row">
@@ -807,43 +765,26 @@
             <input id="profileEmail" name="profileEmail" type="email" placeholder="correo@ejemplo.com" autocomplete="email" disabled>
           </div>
 
-          <!-- =====================================================
-               CAMBIO BHUZ - CONTRASEÑA
-               - La contraseña se actualiza solo si el usuario llena
-                 estos campos.
-               - Se exige contraseña actual desde el backend.
-               - El correo no se edita porque conecta pedidos/direcciones.
-          ====================================================== -->
-          <div class="profile-password-section" id="profilePasswordSection" style="display:none;">
-            <p class="password-help-note">
-              Para cambiar tu contraseña, escribe tu contraseña actual y luego la nueva. Si no quieres cambiarla, deja estos campos vacíos.
-            </p>
+          <div class="form-row">
+            <label for="profileCurrentPassword">Contraseña actual</label>
+            <input id="profileCurrentPassword" name="profileCurrentPassword" type="password" placeholder="Solo si vas a cambiar la contraseña" autocomplete="current-password">
+          </div>
 
-            <div class="form-row">
-              <label for="currentPassword">Contraseña actual</label>
-              <input id="currentPassword" name="currentPassword" type="password" placeholder="Tu contraseña actual" autocomplete="current-password" disabled>
-            </div>
+          <div class="form-row">
+            <label for="profileNewPassword">Nueva contraseña</label>
+            <input id="profileNewPassword" name="profileNewPassword" type="password" placeholder="Nueva contraseña" autocomplete="new-password">
+          </div>
 
-            <div class="form-row">
-              <label for="newPassword">Nueva contraseña</label>
-              <input id="newPassword" name="newPassword" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" disabled>
-            </div>
-
-            <div class="form-row">
-              <label for="confirmPassword">Confirmar nueva contraseña</label>
-              <input id="confirmPassword" name="confirmPassword" type="password" placeholder="Repite la nueva contraseña" autocomplete="new-password" disabled>
-            </div>
+          <div class="form-row">
+            <label for="profileConfirmPassword">Confirmar nueva contraseña</label>
+            <input id="profileConfirmPassword" name="profileConfirmPassword" type="password" placeholder="Repite la nueva contraseña" autocomplete="new-password">
           </div>
 
           <p class="readonly-note">
-            Puedes actualizar tu nombre, teléfono y contraseña desde aquí. El correo queda bloqueado porque es la llave que conecta tus pedidos y direcciones.
+            Puedes editar nombre, teléfono, contraseña y tus direcciones guardadas. El correo queda bloqueado porque identifica tu cuenta y tus pedidos.
           </p>
 
-          <div class="profile-actions-row">
-            <button class="profile-btn primary" id="editProfileBtn" type="button">Editar perfil</button>
-            <button class="profile-btn primary" id="saveProfileBtn" type="submit" style="display:none;">Guardar cambios</button>
-            <button class="profile-btn secondary" id="cancelProfileEditBtn" type="button" style="display:none;">Cancelar</button>
-          </div>
+          <button class="profile-btn primary" id="saveProfileBtn" type="submit">Guardar cambios del perfil</button>
 
           <div class="message-box" id="profileMessage"></div>
         </form>
@@ -939,6 +880,11 @@
 </body>
 
 </html>
+
+
+
+
+
 
 
 
