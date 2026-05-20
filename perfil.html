@@ -664,6 +664,39 @@
       border: 1px solid rgba(255, 76, 76, 0.24);
     }
 
+    /* =========================================================
+       CAMBIO BHUZ - BOTÓN EDITAR PERFIL VISIBLE Y MODO SEGURO
+       - El formulario inicia bloqueado por defecto.
+       - Solo "Editar perfil" queda visible al cargar.
+       - Guardar y Cancelar aparecen únicamente en modo edición.
+    ========================================================== */
+    #editProfileBtn,
+    #saveProfileBtn,
+    #cancelProfileEditBtn {
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+    }
+
+    #profileForm:not(.is-editing) #editProfileBtn {
+      display: inline-flex;
+    }
+
+    #profileForm:not(.is-editing) #saveProfileBtn,
+    #profileForm:not(.is-editing) #cancelProfileEditBtn {
+      display: none;
+    }
+
+    #profileForm.is-editing #editProfileBtn {
+      display: none;
+    }
+
+    #profileForm.is-editing #saveProfileBtn,
+    #profileForm.is-editing #cancelProfileEditBtn {
+      display: inline-flex;
+    }
+
+
   </style>
 </head>
 
@@ -752,12 +785,12 @@
         <form class="form-grid profile-account-readonly" id="profileForm">
           <div class="form-row">
             <label for="profileName">Nombre completo</label>
-            <input id="profileName" name="profileName" type="text" placeholder="Nombre del usuario" autocomplete="name" required>
+            <input id="profileName" name="profileName" type="text" placeholder="Nombre del usuario" autocomplete="name" required disabled>
           </div>
 
           <div class="form-row">
             <label for="profilePhone">Teléfono</label>
-            <input id="profilePhone" name="profilePhone" type="tel" placeholder="Teléfono" autocomplete="tel" required>
+            <input id="profilePhone" name="profilePhone" type="tel" placeholder="Teléfono" autocomplete="tel" required disabled>
           </div>
 
           <div class="form-row">
@@ -767,17 +800,17 @@
 
           <div class="form-row">
             <label for="profileCurrentPassword">Contraseña actual</label>
-            <input id="profileCurrentPassword" name="profileCurrentPassword" type="password" placeholder="Solo si vas a cambiar la contraseña" autocomplete="current-password">
+            <input id="profileCurrentPassword" name="profileCurrentPassword" type="password" placeholder="Solo si vas a cambiar la contraseña" autocomplete="current-password" disabled>
           </div>
 
           <div class="form-row">
             <label for="profileNewPassword">Nueva contraseña</label>
-            <input id="profileNewPassword" name="profileNewPassword" type="password" placeholder="Nueva contraseña" autocomplete="new-password">
+            <input id="profileNewPassword" name="profileNewPassword" type="password" placeholder="Nueva contraseña" autocomplete="new-password" disabled>
           </div>
 
           <div class="form-row">
             <label for="profileConfirmPassword">Confirmar nueva contraseña</label>
-            <input id="profileConfirmPassword" name="profileConfirmPassword" type="password" placeholder="Repite la nueva contraseña" autocomplete="new-password">
+            <input id="profileConfirmPassword" name="profileConfirmPassword" type="password" placeholder="Repite la nueva contraseña" autocomplete="new-password" disabled>
           </div>
 
           <p class="readonly-note">
@@ -785,9 +818,10 @@
           </p>
 
           <div class="profile-form-toggle-row">
-            <button class="profile-btn secondary" id="editProfileBtn" type="button">Editar perfil</button>
-            <button class="profile-btn primary" id="saveProfileBtn" type="submit">Guardar cambios del perfil</button>
-            <button class="profile-btn secondary" id="cancelProfileEditBtn" type="button">Cancelar</button>
+            <!-- CAMBIO BHUZ: el perfil inicia bloqueado; este botón habilita edición de datos personales. -->
+            <button class="profile-btn secondary" id="editProfileBtn" type="button">✏️ Editar perfil</button>
+            <button class="profile-btn primary" id="saveProfileBtn" type="submit" style="display:none;">Guardar cambios del perfil</button>
+            <button class="profile-btn secondary" id="cancelProfileEditBtn" type="button" style="display:none;">Cancelar</button>
           </div>
 
           <div class="message-box" id="profileMessage"></div>
@@ -884,6 +918,26 @@
 </body>
 
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

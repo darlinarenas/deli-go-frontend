@@ -381,7 +381,7 @@
     }
 
     const confirmed = window.confirm(
-      "¿Quieres habilitar la edición de tu perfil?\n\nPodrás cambiar tu nombre, teléfono y contraseña. El correo seguirá bloqueado por seguridad."
+      "¿Quieres habilitar la edición de tu perfil?\n\nPodrás cambiar tu nombre, teléfono y contraseña. El correo seguirá bloqueado por seguridad. Las direcciones se editan abajo en Mis direcciones."
     );
 
     if (!confirmed) return;
@@ -1050,6 +1050,15 @@
     ensureEditControls();
     hideAddressForm();
     bindEvents();
+
+    /* =========================================================
+       CAMBIO BHUZ - PERFIL BLOQUEADO AL CARGAR
+       - Evita que el usuario edite por accidente.
+       - El botón Editar perfil queda visible cuando hay sesión.
+       - Guardar/Cancelar quedan ocultos hasta activar edición.
+    ========================================================= */
+    setProfileEditMode(false);
+
     setGpsStatus("GPS pendiente. Debes capturar ubicación antes de guardar.", false);
 
     currentUser = await waitForSessionReady();
@@ -1092,6 +1101,38 @@
     init();
   }
 })();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
