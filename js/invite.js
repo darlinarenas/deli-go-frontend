@@ -32,6 +32,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const inviteGpsStatus = document.getElementById("inviteGpsStatus");
   const captureInviteGpsBtn = document.getElementById("captureInviteGpsBtn");
   const confirmInviteLocationBtn = document.getElementById("confirmInviteLocationBtn");
+  const saveInviteGuestCheck = document.getElementById("saveInviteGuestCheck");
+  const saveInviteGuestAlias = document.getElementById("saveInviteGuestAlias");
   const inviteSuccessBox = document.getElementById("inviteSuccessBox");
 
   let currentInvite = null;
@@ -255,7 +257,9 @@ document.addEventListener("DOMContentLoaded", () => {
           reference,
           latitude: capturedLocation.lat,
           longitude: capturedLocation.lng,
-          location: capturedLocation
+          location: capturedLocation,
+          saveGuest: Boolean(saveInviteGuestCheck?.checked),
+          guestAlias: String(saveInviteGuestAlias?.value || "").trim()
         })
       });
 
@@ -279,9 +283,21 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  saveInviteGuestCheck?.addEventListener("change", () => {
+    if (!saveInviteGuestAlias) return;
+
+    saveInviteGuestAlias.style.display = saveInviteGuestCheck.checked ? "block" : "none";
+
+    if (saveInviteGuestCheck.checked && currentInvite?.recipientName && !saveInviteGuestAlias.value.trim()) {
+      saveInviteGuestAlias.value = currentInvite.recipientName;
+    }
+  });
+
   captureInviteGpsBtn?.addEventListener("click", captureGps);
   inviteLocationForm?.addEventListener("submit", submitLocation);
 
   loadInvite();
 });
+
+
 

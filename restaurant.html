@@ -186,8 +186,28 @@
         </div>
 
         <div class="checkout-form-group invite-recipient-box" id="inviteRecipientBox" style="display:none;">
-          <label for="inviteRecipientName">Nombre de quien recibirá</label>
-          <input id="inviteRecipientName" type="text" placeholder="Ejemplo: Mamá, José, Ana">
+          <!-- =====================================================
+               CAMBIO BHUZ - INVITADOS FRECUENTES
+               - Búsqueda limpia de invitados guardados.
+               - El usuario escribe el apodo libremente; no usamos listas fijas.
+               - No rompe el flujo normal: solo ayuda a llenar datos.
+          ====================================================== -->
+          <div class="saved-guests-box" id="savedGuestsBox">
+            <label for="savedGuestSearchInput">Mis invitados guardados</label>
+            <div class="saved-guest-search-row">
+              <input id="savedGuestSearchInput" type="text" placeholder="Buscar por apodo, nombre o teléfono">
+              <button type="button" class="helper-btn" id="refreshSavedGuestsBtn">
+                Buscar
+              </button>
+            </div>
+
+            <div class="saved-guests-list" id="savedGuestsList">
+              <small class="checkout-helper-text">Busca un invitado guardado o escribe uno nuevo abajo.</small>
+            </div>
+          </div>
+
+          <label for="inviteRecipientName">Nombre o apodo de quien recibirá</label>
+          <input id="inviteRecipientName" type="text" placeholder="Ejemplo: Abuela, mi pana, Laura, vecino">
 
           <label for="inviteRecipientPhone">Teléfono del receptor (opcional)</label>
           <input id="inviteRecipientPhone" type="text" placeholder="Teléfono o WhatsApp">
@@ -296,7 +316,23 @@
 <script src="js/orders.js"></script>
 <script src="js/restaurant-page.js"></script>
 </body>
-</html>
+</html>  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -46,6 +46,23 @@
           <textarea id="inviteReceiverAddress" placeholder="Puedes escribir una dirección o punto de referencia adicional"></textarea>
         </div>
 
+        <!-- =====================================================
+             CAMBIO BHUZ - GUARDAR INVITADO
+             - Permite guardar esta ubicación como invitado frecuente.
+             - El apodo es libre: abuela, mi pana, trabajo de Ana, etc.
+        ====================================================== -->
+        <div class="checkout-form-group invite-save-guest-box">
+          <label class="invite-save-guest-check">
+            <input id="saveInviteGuestCheck" type="checkbox">
+            <span>Guardar esta ubicación para futuras invitaciones</span>
+          </label>
+
+          <input id="saveInviteGuestAlias" type="text" placeholder="Apodo libre. Ejemplo: Abuela, Laura, mi pana" style="display:none;">
+          <small class="checkout-helper-text">
+            La próxima vez, quien envió la comida podrá buscar este invitado y volver a invitar más rápido.
+          </small>
+        </div>
+
         <div class="invite-gps-box" id="inviteGpsStatus">
           Ubicación GPS pendiente.
         </div>
@@ -68,4 +85,6 @@
   <script src="js/invite.js"></script>
 </body>
 </html>
+
+
 
