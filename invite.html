@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BHUZ - Confirmar ubicación</title>
+  <link rel="icon" type="image/jpeg" href="assets/image/logo-bhuz.jpeg">
+  <link rel="apple-touch-icon" href="assets/image/logo-bhuz.jpeg">
+  <link rel="stylesheet" href="css/restaurant.css">
+</head>
+<body class="invite-page">
+
+  <!-- =====================================================
+       BHUZ - INVITAR COMIDA
+       Página pública para receptor.
+       - No requiere cuenta.
+       - Solo captura GPS + referencia.
+       - Conecta con POST /invite/:token/location.
+  ====================================================== -->
+  <header class="top-user-bar">
+    <div class="top-user-left">
+      <a href="index.html" class="brand-logo" aria-label="BHUZ inicio">
+        <img src="assets/image/logo-bhuz.jpeg" alt="BHUZ">
+      </a>
+    </div>
+  </header>
+
+  <main class="invite-public-wrap">
+    <section class="invite-public-card">
+      <span class="mini-label">Invitación BHUZ</span>
+      <h1 id="inviteTitle">Te invitaron comida</h1>
+      <p id="inviteDescription">
+        Cargando invitación...
+      </p>
+
+      <div class="invite-order-summary" id="inviteOrderSummary"></div>
+
+      <form id="inviteLocationForm" style="display:none;">
+        <div class="checkout-form-group">
+          <label for="inviteReceiverReference">Referencia de entrega</label>
+          <textarea id="inviteReceiverReference" placeholder="Ejemplo: casa azul, portón negro, al lado de la farmacia"></textarea>
+        </div>
+
+        <div class="checkout-form-group">
+          <label for="inviteReceiverAddress">Dirección escrita opcional</label>
+          <textarea id="inviteReceiverAddress" placeholder="Puedes escribir una dirección o punto de referencia adicional"></textarea>
+        </div>
+
+        <div class="invite-gps-box" id="inviteGpsStatus">
+          Ubicación GPS pendiente.
+        </div>
+
+        <button type="button" class="modal-btn" id="captureInviteGpsBtn">
+          📍 Compartir mi ubicación GPS
+        </button>
+
+        <button type="submit" class="modal-btn" id="confirmInviteLocationBtn">
+          Confirmar ubicación
+        </button>
+      </form>
+
+      <div class="invite-success-box" id="inviteSuccessBox" style="display:none;">
+        ✅ Ubicación confirmada. BHUZ ya recibió tu ubicación para la entrega.
+      </div>
+    </section>
+  </main>
+
+  <script src="js/invite.js"></script>
+</body>
+</html>

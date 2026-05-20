@@ -1099,3 +1099,192 @@ img{ display:block; max-width:100%; }
 
 
 
+
+
+/* ======================================================
+   CAMBIO BHUZ - INVITAR COMIDA
+   - Estilos del selector "Es para mí / Invitar comida".
+   - No toca carrito, menú, popup ni backend.
+====================================================== */
+
+.invite-food-block{
+  border:1px solid rgba(0,210,106,.20);
+  background:linear-gradient(180deg, rgba(0,210,106,.07), rgba(255,255,255,.035));
+  border-radius:18px;
+  padding:14px;
+}
+
+.invite-mode-toggle{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin-top:8px;
+}
+
+.invite-mode-btn{
+  border:1px solid rgba(0,0,0,.10);
+  background:#f3f4f6;
+  color:#111827;
+  border-radius:15px;
+  padding:12px 10px;
+  font-weight:900;
+  font-size:14px;
+  transition:transform .18s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+
+.invite-mode-btn:hover{
+  transform:translateY(-1px);
+  border-color:rgba(0,210,106,.35);
+}
+
+.invite-mode-btn.active{
+  background:linear-gradient(135deg, #00d26a, #18f08a);
+  color:#041008;
+  border-color:rgba(0,210,106,.65);
+  box-shadow:0 14px 30px rgba(0,210,106,.22);
+}
+
+.invite-recipient-box,
+.invite-link-box{
+  border:1px solid rgba(0,210,106,.18);
+  background:#ffffff;
+  border-radius:18px;
+  padding:14px;
+  box-shadow:0 14px 35px rgba(0,0,0,.08);
+}
+
+.invite-recipient-box label,
+.invite-link-box label{
+  margin-top:10px;
+}
+
+.invite-recipient-box label:first-child,
+.invite-link-box label:first-child{
+  margin-top:0;
+}
+
+.invite-link-actions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin-top:10px;
+}
+
+.invite-whatsapp-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+
+#inviteGeneratedLink{
+  font-size:13px;
+  font-weight:800;
+  color:#111827;
+  background:#f9fafb;
+}
+
+@media (max-width:640px){
+  .invite-mode-toggle,
+  .invite-link-actions{
+    grid-template-columns:1fr;
+  }
+}
+
+
+/* ======================================================
+   BHUZ - PÁGINA PÚBLICA INVITE.HTML
+====================================================== */
+
+.invite-page{
+  min-height:100vh;
+}
+
+.invite-public-wrap{
+  width:min(100%, 760px);
+  margin:0 auto;
+  padding:34px 20px 110px;
+}
+
+.invite-public-card{
+  border:1px solid rgba(0,210,106,.18);
+  border-radius:28px;
+  background:#ffffff;
+  color:#111827;
+  padding:24px;
+  box-shadow:0 28px 80px rgba(0,0,0,.35);
+}
+
+.invite-public-card h1{
+  margin:4px 0 10px;
+  font-size:clamp(30px,7vw,48px);
+  line-height:.96;
+  letter-spacing:-.05em;
+  color:#06110b;
+}
+
+.invite-public-card p{
+  margin:0 0 18px;
+  color:#4b5563;
+  font-weight:800;
+  line-height:1.45;
+}
+
+.invite-order-summary{
+  display:grid;
+  gap:8px;
+  margin:18px 0;
+  padding:14px;
+  border-radius:18px;
+  background:#f9fafb;
+  border:1px solid rgba(0,0,0,.08);
+  color:#111827;
+  font-weight:800;
+}
+
+.invite-gps-box,
+.invite-success-box{
+  margin:12px 0;
+  padding:14px;
+  border-radius:16px;
+  background:#fff7ed;
+  border:1px solid rgba(245,158,11,.28);
+  color:#92400e;
+  font-weight:900;
+}
+
+.invite-gps-box.ok,
+.invite-success-box{
+  background:#ecfdf5;
+  border-color:rgba(0,210,106,.28);
+  color:#065f46;
+}
+
+.invite-public-card .checkout-form-group label{
+  color:#111827;
+}
+
+.invite-public-card textarea,
+.invite-public-card input{
+  width:100%;
+  border:1px solid rgba(0,0,0,.10);
+  background:#f9fafb;
+  color:#111827;
+  border-radius:14px;
+  padding:12px;
+  font-weight:800;
+  outline:none;
+}
+
+.invite-public-card textarea:focus,
+.invite-public-card input:focus{
+  border-color:rgba(0,210,106,.45);
+  box-shadow:0 0 0 4px rgba(0,210,106,.10);
+}
+
+
+
+
+
+
+

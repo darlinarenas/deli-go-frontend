@@ -162,6 +162,62 @@
           <input id="checkoutEmail" type="email" placeholder="Tu correo" readonly>
         </div>
 
+        <!-- =====================================================
+             CAMBIO BHUZ - INVITAR COMIDA
+             - Agrega un flujo paralelo sin romper el pedido normal.
+             - Si el cliente elige invitar, el receptor comparte GPS desde un link público.
+             - El receptor NO necesita cuenta.
+        ====================================================== -->
+        <div class="checkout-form-group invite-food-block">
+          <label>Tipo de entrega</label>
+
+          <div class="invite-mode-toggle" role="group" aria-label="Tipo de entrega">
+            <button type="button" class="invite-mode-btn active" id="orderForMeBtn">
+              Es para mí
+            </button>
+            <button type="button" class="invite-mode-btn" id="inviteFoodBtn">
+              Invitar comida
+            </button>
+          </div>
+
+          <small class="checkout-helper-text">
+            Si invitas comida, BHUZ generará un link para que la otra persona comparta su ubicación exacta.
+          </small>
+        </div>
+
+        <div class="checkout-form-group invite-recipient-box" id="inviteRecipientBox" style="display:none;">
+          <label for="inviteRecipientName">Nombre de quien recibirá</label>
+          <input id="inviteRecipientName" type="text" placeholder="Ejemplo: Mamá, José, Ana">
+
+          <label for="inviteRecipientPhone">Teléfono del receptor (opcional)</label>
+          <input id="inviteRecipientPhone" type="text" placeholder="Teléfono o WhatsApp">
+
+          <label for="inviteMessage">Mensaje para el receptor (opcional)</label>
+          <textarea id="inviteMessage" placeholder="Ejemplo: Te envié comida con cariño. Comparte tu ubicación para recibirla."></textarea>
+
+          <small class="checkout-helper-text">
+            La ubicación final del pedido quedará pendiente hasta que el receptor abra el link y comparta su GPS.
+          </small>
+        </div>
+
+        <div class="checkout-form-group invite-link-box" id="inviteLinkBox" style="display:none;">
+          <label for="inviteGeneratedLink">Link para compartir</label>
+          <input id="inviteGeneratedLink" type="text" readonly>
+
+          <div class="invite-link-actions">
+            <button type="button" class="helper-btn" id="copyInviteLinkBtn">
+              Copiar link
+            </button>
+            <a class="helper-btn invite-whatsapp-btn" id="shareInviteWhatsappBtn" href="#" target="_blank" rel="noopener">
+              Compartir por WhatsApp
+            </a>
+          </div>
+
+          <small class="checkout-helper-text">
+            Comparte este link con la persona invitada para que confirme su ubicación.
+          </small>
+        </div>
+
         <div class="checkout-summary">
           <h3>Resumen del pedido</h3>
           <div id="checkoutOrderSummary"></div>
@@ -241,6 +297,14 @@
 <script src="js/restaurant-page.js"></script>
 </body>
 </html>
+
+
+
+
+
+
+
+
 
 
 
