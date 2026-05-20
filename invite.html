@@ -46,23 +46,6 @@
           <textarea id="inviteReceiverAddress" placeholder="Puedes escribir una dirección o punto de referencia adicional"></textarea>
         </div>
 
-        <!-- =====================================================
-             CAMBIO BHUZ - GUARDAR INVITADO
-             - Permite guardar esta ubicación como invitado frecuente.
-             - El apodo es libre: abuela, mi pana, trabajo de Ana, etc.
-        ====================================================== -->
-        <div class="checkout-form-group invite-save-guest-box">
-          <label class="invite-save-guest-check">
-            <input id="saveInviteGuestCheck" type="checkbox">
-            <span>Guardar esta ubicación para futuras invitaciones</span>
-          </label>
-
-          <input id="saveInviteGuestAlias" type="text" placeholder="Apodo libre. Ejemplo: Abuela, Laura, mi pana" style="display:none;">
-          <small class="checkout-helper-text">
-            La próxima vez, quien envió la comida podrá buscar este invitado y volver a invitar más rápido.
-          </small>
-        </div>
-
         <div class="invite-gps-box" id="inviteGpsStatus">
           Ubicación GPS pendiente.
         </div>
@@ -77,23 +60,7 @@
       </form>
 
       <div class="invite-success-box" id="inviteSuccessBox" style="display:none;">
-        <p>✅ Ubicación confirmada. BHUZ ya recibió tu ubicación para la entrega.</p>
-
-        <!-- =====================================================
-             CAMBIO BHUZ - GUARDAR DESPUÉS DE CONFIRMAR
-             - Si el receptor no marcó guardar antes de confirmar,
-               igual permite guardar después usando la ubicación ya confirmada.
-        ====================================================== -->
-        <div class="checkout-form-group" id="postConfirmSaveGuestBox">
-          <label for="postConfirmGuestAlias">Guardar para futuras invitaciones</label>
-          <input id="postConfirmGuestAlias" type="text" placeholder="Apodo libre. Ejemplo: Abuela, Laura, mi pana">
-          <button type="button" class="modal-btn" id="saveConfirmedGuestBtn">
-            Guardar este invitado y dirección
-          </button>
-          <small class="checkout-helper-text" id="saveConfirmedGuestMessage">
-            Así quien envió la comida podrá buscar este invitado y volver a invitar más rápido.
-          </small>
-        </div>
+        ✅ Ubicación confirmada. BHUZ ya recibió tu ubicación para la entrega.
       </div>
     </section>
   </main>
@@ -101,6 +68,14 @@
   <script src="js/invite.js"></script>
 </body>
 </html>
+
+
+
+
+
+
+
+
 
 
 

@@ -193,16 +193,22 @@
                - No rompe el flujo normal: solo ayuda a llenar datos.
           ====================================================== -->
           <div class="saved-guests-box" id="savedGuestsBox">
-            <label for="savedGuestSearchInput">Mis invitados guardados</label>
-            <div class="saved-guest-search-row">
-              <input id="savedGuestSearchInput" type="text" placeholder="Buscar por apodo, nombre o teléfono">
-              <button type="button" class="helper-btn" id="refreshSavedGuestsBtn">
-                Buscar
-              </button>
-            </div>
+            <button type="button" class="helper-btn saved-guests-toggle-btn" id="toggleSavedGuestsBtn">
+              Ver invitados guardados
+            </button>
 
-            <div class="saved-guests-list" id="savedGuestsList">
-              <small class="checkout-helper-text">Busca un invitado guardado o escribe uno nuevo abajo.</small>
+            <div class="saved-guests-panel" id="savedGuestsPanel" style="display:none;">
+              <label for="savedGuestSearchInput">Buscar invitado guardado</label>
+              <div class="saved-guest-search-row">
+                <input id="savedGuestSearchInput" type="text" placeholder="Buscar por apodo, nombre o teléfono">
+                <button type="button" class="helper-btn" id="refreshSavedGuestsBtn">
+                  Buscar
+                </button>
+              </div>
+
+              <div class="saved-guests-list" id="savedGuestsList">
+                <small class="checkout-helper-text">Busca un invitado guardado o escribe uno nuevo abajo.</small>
+              </div>
             </div>
           </div>
 
@@ -214,6 +220,11 @@
 
           <label for="inviteMessage">Mensaje para el receptor (opcional)</label>
           <textarea id="inviteMessage" placeholder="Ejemplo: Te envié comida con cariño. Comparte tu ubicación para recibirla."></textarea>
+
+          <label class="invite-save-guest-check inviter-save-guest-check">
+            <input id="autoSaveInviteGuestCheck" type="checkbox" checked>
+            <span>Guardar este invitado cuando confirme su ubicación</span>
+          </label>
 
           <small class="checkout-helper-text">
             La ubicación final del pedido quedará pendiente hasta que el receptor abra el link y comparta su GPS.
@@ -317,6 +328,38 @@
 <script src="js/restaurant-page.js"></script>
 </body>
 </html>  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
