@@ -665,12 +665,35 @@
     }
 
     /* =========================================================
-       CAMBIO BHUZ - BOTÓN EDITAR PERFIL VISIBLE Y MODO SEGURO
+       CAMBIO BHUZ - BOTÓN EDITAR PERFIL INTEGRADO
        - El formulario inicia bloqueado por defecto.
-       - Solo "Editar perfil" queda visible al cargar.
+       - Botón limpio, corto y alineado al estilo premium BHUZ.
        - Guardar y Cancelar aparecen únicamente en modo edición.
     ========================================================== */
-    #editProfileBtn,
+    .profile-edit-note {
+      margin: 2px 0 0;
+      color: #66736d;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .profile-edit-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding-inline: 18px;
+      color: #00140c;
+      background: linear-gradient(135deg, var(--bhuz-green), #7cff9e);
+      border: 1px solid rgba(16, 233, 129, 0.48);
+      box-shadow: 0 0 22px rgba(16, 233, 129, 0.22);
+    }
+
+    .profile-edit-btn:hover {
+      box-shadow: 0 0 28px rgba(16, 233, 129, 0.34);
+    }
+
     #saveProfileBtn,
     #cancelProfileEditBtn {
       align-items: center;
@@ -687,7 +710,8 @@
       display: none;
     }
 
-    #profileForm.is-editing #editProfileBtn {
+    #profileForm.is-editing #editProfileBtn,
+    #profileForm.is-editing .profile-edit-note {
       display: none;
     }
 
@@ -813,14 +837,13 @@
             <input id="profileConfirmPassword" name="profileConfirmPassword" type="password" placeholder="Repite la nueva contraseña" autocomplete="new-password" disabled>
           </div>
 
-          <p class="readonly-note">
-            Por seguridad, tus datos quedan bloqueados hasta que presiones <strong>Editar perfil</strong>. Puedes editar nombre, teléfono, contraseña y tus direcciones guardadas. El correo queda bloqueado porque identifica tu cuenta y tus pedidos.
+          <p class="readonly-note profile-edit-note">
+            Para cambiar tus datos, presiona <strong>Editar perfil</strong>.
           </p>
 
           <div class="profile-form-toggle-row">
-            <!-- CAMBIO BHUZ: el perfil inicia bloqueado; este botón habilita edición de datos personales. -->
-            <button class="profile-btn secondary" id="editProfileBtn" type="button">✏️ Editar perfil</button>
-            <button class="profile-btn primary" id="saveProfileBtn" type="submit" style="display:none;">Guardar cambios del perfil</button>
+            <button class="profile-btn profile-edit-btn" id="editProfileBtn" type="button">Editar perfil</button>
+            <button class="profile-btn primary" id="saveProfileBtn" type="submit" style="display:none;">Guardar cambios</button>
             <button class="profile-btn secondary" id="cancelProfileEditBtn" type="button" style="display:none;">Cancelar</button>
           </div>
 
@@ -918,6 +941,46 @@
 </body>
 
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

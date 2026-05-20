@@ -365,7 +365,7 @@
     if (saveProfileBtn) {
       saveProfileBtn.style.display = hasUser && isProfileEditEnabled ? "inline-flex" : "none";
       saveProfileBtn.disabled = !hasUser || !isProfileEditEnabled || isSavingProfile;
-      saveProfileBtn.textContent = "Guardar cambios del perfil";
+      saveProfileBtn.textContent = "Guardar cambios";
     }
 
     if (cancelProfileEditBtn) {
@@ -381,13 +381,13 @@
     }
 
     const confirmed = window.confirm(
-      "¿Quieres habilitar la edición de tu perfil?\n\nPodrás cambiar tu nombre, teléfono y contraseña. El correo seguirá bloqueado por seguridad. Las direcciones se editan abajo en Mis direcciones."
+      "¿Quieres editar tu perfil?\n\nLos cambios guardados quedarán activos en tu cuenta."
     );
 
     if (!confirmed) return;
 
     setProfileEditMode(true);
-    setProfileMessage("Edición activada. Modifica solo los datos necesarios y presiona Guardar cambios.", "info");
+    setProfileMessage("Edición activada. Guarda solo cuando estés seguro.", "info");
     profileNameInput?.focus();
   }
 
@@ -949,7 +949,7 @@
     }
 
     isSavingProfile = true;
-    setButtonLoading(saveProfileBtn, true, "Guardando perfil...", "Guardar cambios del perfil");
+    setButtonLoading(saveProfileBtn, true, "Guardando perfil...", "Guardar cambios");
     setProfileMessage("Guardando cambios en backend/PostgreSQL...", "info");
 
     try {
@@ -983,7 +983,7 @@
       setProfileMessage(error.message || "No se pudo completar la solicitud.", "error");
     } finally {
       isSavingProfile = false;
-      setButtonLoading(saveProfileBtn, false, "Guardando perfil...", "Guardar cambios del perfil");
+      setButtonLoading(saveProfileBtn, false, "Guardando perfil...", "Guardar cambios");
       setProfileEditMode(isProfileEditEnabled);
     }
   }
@@ -1101,6 +1101,70 @@
     init();
   }
 })();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
