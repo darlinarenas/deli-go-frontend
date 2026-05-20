@@ -662,6 +662,50 @@
       border: 1px solid rgba(255, 76, 76, 0.24);
     }
 
+
+    /* =========================================================
+       CAMBIO BHUZ - EDICIÓN DE PERFIL + CONTRASEÑA
+       - Permite abrir/cerrar edición de datos personales.
+       - El correo sigue bloqueado porque es llave de usuario/pedidos.
+       - La contraseña solo se actualiza con contraseña actual.
+    ========================================================== */
+    .profile-account-readonly.is-editing-profile input:not(#profileEmail):not(:disabled) {
+      color: var(--bhuz-text);
+      background: #ffffff;
+      cursor: text;
+      opacity: 1;
+      -webkit-text-fill-color: var(--bhuz-text);
+    }
+
+    .profile-actions-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .profile-password-section {
+      display: none;
+      gap: 12px;
+      border: 1px solid rgba(16, 233, 129, 0.18);
+      border-radius: 22px;
+      padding: 14px;
+      background: rgba(16, 233, 129, 0.06);
+    }
+
+    .profile-password-section.is-visible {
+      display: grid;
+    }
+
+    .password-help-note {
+      margin: 0;
+      color: var(--bhuz-muted);
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 750;
+    }
+
+
   </style>
 </head>
 
@@ -763,9 +807,43 @@
             <input id="profileEmail" name="profileEmail" type="email" placeholder="correo@ejemplo.com" autocomplete="email" disabled>
           </div>
 
+          <!-- =====================================================
+               CAMBIO BHUZ - CONTRASEÑA
+               - La contraseña se actualiza solo si el usuario llena
+                 estos campos.
+               - Se exige contraseña actual desde el backend.
+               - El correo no se edita porque conecta pedidos/direcciones.
+          ====================================================== -->
+          <div class="profile-password-section" id="profilePasswordSection" style="display:none;">
+            <p class="password-help-note">
+              Para cambiar tu contraseña, escribe tu contraseña actual y luego la nueva. Si no quieres cambiarla, deja estos campos vacíos.
+            </p>
+
+            <div class="form-row">
+              <label for="currentPassword">Contraseña actual</label>
+              <input id="currentPassword" name="currentPassword" type="password" placeholder="Tu contraseña actual" autocomplete="current-password" disabled>
+            </div>
+
+            <div class="form-row">
+              <label for="newPassword">Nueva contraseña</label>
+              <input id="newPassword" name="newPassword" type="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password" disabled>
+            </div>
+
+            <div class="form-row">
+              <label for="confirmPassword">Confirmar nueva contraseña</label>
+              <input id="confirmPassword" name="confirmPassword" type="password" placeholder="Repite la nueva contraseña" autocomplete="new-password" disabled>
+            </div>
+          </div>
+
           <p class="readonly-note">
-            Estos datos se muestran solo como información. Por seguridad, no se editan desde esta pantalla por ahora.
+            Puedes actualizar tu nombre, teléfono y contraseña desde aquí. El correo queda bloqueado porque es la llave que conecta tus pedidos y direcciones.
           </p>
+
+          <div class="profile-actions-row">
+            <button class="profile-btn primary" id="editProfileBtn" type="button">Editar perfil</button>
+            <button class="profile-btn primary" id="saveProfileBtn" type="submit" style="display:none;">Guardar cambios</button>
+            <button class="profile-btn secondary" id="cancelProfileEditBtn" type="button" style="display:none;">Cancelar</button>
+          </div>
 
           <div class="message-box" id="profileMessage"></div>
         </form>
@@ -861,6 +939,11 @@
 </body>
 
 </html>
+
+
+
+
+
 
 
 
