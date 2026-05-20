@@ -27,7 +27,9 @@
   const profileCurrentPasswordInput = document.getElementById("profileCurrentPassword");
   const profileNewPasswordInput = document.getElementById("profileNewPassword");
   const profileConfirmPasswordInput = document.getElementById("profileConfirmPassword");
+  const editProfileBtn = document.getElementById("editProfileBtn");
   const saveProfileBtn = document.getElementById("saveProfileBtn");
+  const cancelProfileEditBtn = document.getElementById("cancelProfileEditBtn");
   const profileMessage = document.getElementById("profileMessage");
 
   const addressesList = document.getElementById("addressesList");
@@ -58,6 +60,7 @@
   let capturedGpsLocation = null;
   let isSavingAddress = false;
   let isSavingProfile = false;
+  let isProfileEditEnabled = false;
   let isLoadingAddresses = false;
   let editingAddressId = null;
 
@@ -322,6 +325,78 @@
     }
   }
 
+  function setProfileEditMode(enabled, options) {
+    const hasUser = Boolean(currentUser || options?.user);
+    isProfileEditEnabled = Boolean(enabled && hasUser);
+
+    if (profileForm) {
+      profileForm.classList.toggle("is-editing", isProfileEditEnabled);
+    }
+
+    if (profileNameInput) {
+      profileNameInput.disabled = !isProfileEditEnabled;
+    }
+
+    if (profilePhoneInput) {
+      profilePhoneInput.disabled = !isProfileEditEnabled;
+    }
+
+    if (profileEmailInput) {
+      profileEmailInput.disabled = true;
+    }
+
+    if (profileCurrentPasswordInput) {
+      profileCurrentPasswordInput.disabled = !isProfileEditEnabled;
+    }
+
+    if (profileNewPasswordInput) {
+      profileNewPasswordInput.disabled = !isProfileEditEnabled;
+    }
+
+    if (profileConfirmPasswordInput) {
+      profileConfirmPasswordInput.disabled = !isProfileEditEnabled;
+    }
+
+    if (editProfileBtn) {
+      editProfileBtn.style.display = hasUser && !isProfileEditEnabled ? "inline-flex" : "none";
+      editProfileBtn.disabled = !hasUser || isSavingProfile;
+    }
+
+    if (saveProfileBtn) {
+      saveProfileBtn.style.display = hasUser && isProfileEditEnabled ? "inline-flex" : "none";
+      saveProfileBtn.disabled = !hasUser || !isProfileEditEnabled || isSavingProfile;
+      saveProfileBtn.textContent = "Guardar cambios del perfil";
+    }
+
+    if (cancelProfileEditBtn) {
+      cancelProfileEditBtn.style.display = hasUser && isProfileEditEnabled ? "inline-flex" : "none";
+      cancelProfileEditBtn.disabled = isSavingProfile;
+    }
+  }
+
+  function enableProfileEditing() {
+    if (!currentUser) {
+      setProfileMessage("Debes iniciar sesión para editar tu perfil.", "error");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      "¿Quieres habilitar la edición de tu perfil?\n\nPodrás cambiar tu nombre, teléfono y contraseña. El correo seguirá bloqueado por seguridad."
+    );
+
+    if (!confirmed) return;
+
+    setProfileEditMode(true);
+    setProfileMessage("Edición activada. Modifica solo los datos necesarios y presiona Guardar cambios.", "info");
+    profileNameInput?.focus();
+  }
+
+  function cancelProfileEditing() {
+    fillProfileForm(currentUser);
+    setProfileEditMode(false);
+    setProfileMessage("Edición cancelada. No se guardaron cambios.", "info");
+  }
+
   function fillProfileForm(user) {
     const displayName = getUserDisplayName(user);
     const phone = getUserPhone(user);
@@ -333,39 +408,29 @@
 
     if (profileNameInput) {
       profileNameInput.value = displayName === "Usuario" ? "" : displayName;
-      profileNameInput.disabled = !user;
     }
 
     if (profilePhoneInput) {
       profilePhoneInput.value = phone;
-      profilePhoneInput.disabled = !user;
     }
 
     if (profileEmailInput) {
       profileEmailInput.value = email;
-      profileEmailInput.disabled = true;
     }
 
     if (profileCurrentPasswordInput) {
       profileCurrentPasswordInput.value = "";
-      profileCurrentPasswordInput.disabled = !user;
     }
 
     if (profileNewPasswordInput) {
       profileNewPasswordInput.value = "";
-      profileNewPasswordInput.disabled = !user;
     }
 
     if (profileConfirmPasswordInput) {
       profileConfirmPasswordInput.value = "";
-      profileConfirmPasswordInput.disabled = !user;
     }
 
-    if (saveProfileBtn) {
-      saveProfileBtn.style.display = user ? "inline-flex" : "none";
-      saveProfileBtn.disabled = !user;
-      saveProfileBtn.textContent = "Guardar cambios del perfil";
-    }
+    setProfileEditMode(false, { user });
   }
 
   function renderLoggedOutState() {
@@ -816,6 +881,11 @@
     if (event) event.preventDefault();
     if (isSavingProfile) return;
 
+    if (!isProfileEditEnabled) {
+      setProfileMessage("Presiona Editar perfil antes de cambiar tus datos.", "info");
+      return;
+    }
+
     const email = getUserEmail(currentUser);
 
     if (!email) {
@@ -914,12 +984,21 @@
     } finally {
       isSavingProfile = false;
       setButtonLoading(saveProfileBtn, false, "Guardando perfil...", "Guardar cambios del perfil");
+      setProfileEditMode(isProfileEditEnabled);
     }
   }
 
   function bindEvents() {
     if (profileForm) {
       profileForm.addEventListener("submit", handleProfileSubmit);
+    }
+
+    if (editProfileBtn) {
+      editProfileBtn.addEventListener("click", enableProfileEditing);
+    }
+
+    if (cancelProfileEditBtn) {
+      cancelProfileEditBtn.addEventListener("click", cancelProfileEditing);
     }
 
     if (openAddressFormBtn) {
@@ -1013,6 +1092,14 @@
     init();
   }
 })();
+
+
+
+
+
+
+
+
 
 
 

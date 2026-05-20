@@ -781,10 +781,14 @@
           </div>
 
           <p class="readonly-note">
-            Puedes editar nombre, teléfono, contraseña y tus direcciones guardadas. El correo queda bloqueado porque identifica tu cuenta y tus pedidos.
+            Por seguridad, tus datos quedan bloqueados hasta que presiones <strong>Editar perfil</strong>. Puedes editar nombre, teléfono, contraseña y tus direcciones guardadas. El correo queda bloqueado porque identifica tu cuenta y tus pedidos.
           </p>
 
-          <button class="profile-btn primary" id="saveProfileBtn" type="submit">Guardar cambios del perfil</button>
+          <div class="profile-form-toggle-row">
+            <button class="profile-btn secondary" id="editProfileBtn" type="button">Editar perfil</button>
+            <button class="profile-btn primary" id="saveProfileBtn" type="submit">Guardar cambios del perfil</button>
+            <button class="profile-btn secondary" id="cancelProfileEditBtn" type="button">Cancelar</button>
+          </div>
 
           <div class="message-box" id="profileMessage"></div>
         </form>
@@ -880,6 +884,11 @@
 </body>
 
 </html>
+
+
+
+
+
 
 
 
