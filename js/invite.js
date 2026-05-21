@@ -55,6 +55,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let firstLoadDone = false;
   let inviteSoundUnlocked = false;
   let pollingTimer = null;
+  let inviteSoundButton = null;
 
   const STATUS_SOUND_PATHS = {
     aceptado: "assets/sounds/bhuz-pedido-aceptado.mp3",
@@ -163,21 +164,61 @@ document.addEventListener("DOMContentLoaded", () => {
     button.disabled = false;
   }
 
-  function unlockInviteSounds() {
-    if (inviteSoundUnlocked) return;
+  function hideInviteSoundButton() {
+    if (inviteSoundButton) {
+      inviteSoundButton.style.display = "none";
+    }
+  }
 
-    inviteSoundUnlocked = true;
+  function ensureInviteSoundButton() {
+    if (inviteSoundUnlocked || inviteSoundButton || !inviteOrderSummary) return;
+
+    inviteSoundButton = document.createElement("button");
+    inviteSoundButton.type = "button";
+    inviteSoundButton.textContent = "🔊 Activar sonidos del pedido";
+    inviteSoundButton.style.marginTop = "12px";
+    inviteSoundButton.style.width = "100%";
+    inviteSoundButton.style.border = "0";
+    inviteSoundButton.style.borderRadius = "14px";
+    inviteSoundButton.style.padding = "12px 14px";
+    inviteSoundButton.style.fontWeight = "800";
+    inviteSoundButton.style.cursor = "pointer";
+    inviteSoundButton.style.background = "#00e676";
+    inviteSoundButton.style.color = "#06110b";
+
+    inviteSoundButton.addEventListener("click", () => {
+      unlockInviteSounds(true);
+    });
+
+    inviteOrderSummary.insertAdjacentElement("afterend", inviteSoundButton);
+  }
+
+  function unlockInviteSounds(showFeedback = false) {
+    if (inviteSoundUnlocked) {
+      hideInviteSoundButton();
+      return;
+    }
 
     const firstSound = new Audio("assets/sounds/bhuz-pedido-aceptado.mp3");
-    firstSound.volume = 0;
+    firstSound.volume = 0.01;
     firstSound.play()
       .then(() => {
         firstSound.pause();
         firstSound.currentTime = 0;
+        inviteSoundUnlocked = true;
+        hideInviteSoundButton();
+
+        if (showFeedback) {
+          setGpsStatus("🔊 Sonidos activados. Te avisaremos cuando cambie el estado del pedido.", true);
+        }
       })
       .catch(() => {
-        // Algunos móviles solo permiten audio después de tocar un botón.
-        // No se muestra error porque no debe afectar el flujo del invitado.
+        inviteSoundUnlocked = false;
+        ensureInviteSoundButton();
+
+        if (showFeedback) {
+          setGpsStatus("Toca nuevamente ‘Activar sonidos’ para permitir las alertas del pedido.", false);
+        }
       });
   }
 
@@ -191,8 +232,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const sound = new Audio(soundPath);
       sound.volume = 0.95;
       sound.play().catch(() => {
-        // El navegador puede bloquear sonido si el invitado no tocó la pantalla.
+        inviteSoundUnlocked = false;
+        ensureInviteSoundButton();
       });
+
+      if (navigator.vibrate) {
+        navigator.vibrate([120, 60, 120]);
+      }
     } catch (error) {
       console.warn("No se pudo reproducir sonido de estado BHUZ:", error);
     }
@@ -253,6 +299,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     setGpsStatus("✅ Ubicación ya confirmada. Te avisaremos aquí cuando cambie el estado del pedido.", true);
+    ensureInviteSoundButton();
   }
 
   function renderInvite(invite, order) {
@@ -331,7 +378,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     pollingTimer = window.setInterval(() => {
       loadInvite({ silent: true });
-    }, 10000);
+    }, 6000);
   }
 
   function isSecureGeolocationContext() {
@@ -542,4 +589,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   loadInvite().then(startInviteStatusPolling);
 });
+
+
 
