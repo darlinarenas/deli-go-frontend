@@ -966,6 +966,499 @@ PERFIL + MIS DIRECCIONES + CHECKOUT NO EDITABLE + INVITAR COMIDA.
 FIN ACTUALIZACIÓN SESIÓN ACTUAL
 ============================================================
 
+
+
+============================================================
+ACTUALIZACIÓN FINAL — MÓDULO INVITAR COMIDA / INVITADOS FRECUENTES
+============================================================
+
+Fecha:
+- Cierre de sesión donde se dejó funcionando el módulo “Invitar comida” en BHUZ.
+
+============================================================
+RESUMEN REAL DE LO LOGRADO HOY
+============================================================
+
+1. MÓDULO “INVITAR COMIDA” FUNCIONANDO
+
+Estado:
+✔ El usuario puede armar carrito.
+✔ En checkout puede elegir:
+  - Es para mí
+  - Invitar comida
+✔ Si elige “Invitar comida”, puede escribir:
+  - nombre o apodo del receptor
+  - teléfono opcional
+  - mensaje opcional
+✔ Al confirmar el pedido actual, BHUZ genera un link único.
+✔ El usuario puede copiar el link o enviarlo por WhatsApp.
+✔ El receptor abre el link sin cuenta.
+✔ El receptor comparte GPS obligatorio.
+✔ El receptor escribe referencia de entrega.
+✔ BHUZ actualiza PostgreSQL correctamente.
+✔ El pedido queda con la ubicación final del receptor.
+
+============================================================
+2. LINK PÚBLICO DEL INVITADO
+============================================================
+
+Archivos trabajados:
+- invite.html
+- js/invite.js
+- css/restaurant.css
+
+Estado final:
+✔ El link del invitado quedó limpio.
+✔ El invitado NO ve opciones internas del usuario.
+✔ El invitado NO ve “guardar dirección”.
+✔ El invitado solo ve:
+  - mensaje de invitación
+  - resumen básico
+  - referencia
+  - dirección escrita opcional
+  - botón para compartir GPS
+  - botón confirmar ubicación
+
+Decisión importante:
+- El invitado NO debe gestionar ni guardar contactos/direcciones.
+- El invitado solo confirma dónde recibirá el pedido.
+
+============================================================
+3. GPS DEL INVITADO
+============================================================
+
+Estado:
+✔ GPS del invitado funcionando.
+✔ Muestra coordenadas al cargar GPS.
+✔ Muestra mensajes claros si el navegador bloquea ubicación.
+✔ Funciona correctamente desde HTTPS/Vercel.
+✔ Al confirmar ubicación, backend recibe:
+  - address
+  - reference
+  - latitude
+  - longitude
+  - location
+
+Regla:
+- GPS solo funciona bien desde HTTPS.
+- No probar GPS desde file://.
+- En móvil, si falla, revisar permisos del navegador.
+
+============================================================
+4. POSTGRESQL — TABLAS USADAS
+============================================================
+
+Tablas activas en este módulo:
+
+1. orders
+Uso:
+- Pedido principal.
+- Se actualiza con ubicación final del receptor.
+
+Campos relevantes:
+- delivery_address
+- delivery_reference
+- latitude
+- longitude
+- updated_at
+
+2. delivery_invites
+Uso:
+- Guarda la invitación del pedido.
+
+Campos relevantes:
+- id
+- order_id
+- invite_token
+- sender_name
+- sender_email
+- recipient_name
+- recipient_phone
+- invite_message
+- invite_status
+- share_url
+- recipient_address
+- recipient_reference
+- recipient_latitude
+- recipient_longitude
+- confirmed_at
+- expires_at
+- created_at
+- updated_at
+
+3. delivery_saved_guests
+Uso:
+- Guarda invitados frecuentes del usuario que invita.
+
+Campos relevantes:
+- id
+- owner_email
+- alias
+- recipient_name
+- recipient_phone
+- address
+- reference
+- latitude
+- longitude
+- source_invite_id
+- last_invite_id
+- usage_count
+- created_at
+- updated_at
+
+Estado:
+✔ delivery_saved_guests existe.
+✔ Ya guarda correctamente.
+✔ Ya muestra invitados guardados.
+✔ Ya permite buscarlos.
+✔ Ya permite eliminar invitados guardados.
+✔ Ya permite “Invitar de nuevo”.
+
+============================================================
+5. INVITADOS GUARDADOS
+============================================================
+
+Objetivo:
+Guardar personas/direcciones frecuentes para futuras invitaciones.
+
+Decisión UX:
+- NO usar lista fija tipo mamá, hermano, trabajo, novia.
+- El usuario escribe libremente el apodo:
+  - abuela
+  - mi pana
+  - Laura
+  - vecino
+  - quien quiera
+
+Estado:
+✔ Se agregó búsqueda de invitados guardados.
+✔ Se agregó botón para abrir/cerrar invitados guardados.
+✔ La lista ya NO queda abierta generando scroll gigante.
+✔ El usuario puede buscar por:
+  - apodo
+  - nombre
+  - teléfono
+  - referencia
+✔ Puede invitar de nuevo.
+✔ Puede eliminar invitado guardado.
+
+Decisión importante:
+- “Mis invitados guardados” debe estar colapsado por defecto.
+- No mostrar lista larga automáticamente.
+- Evitar scroll gigante en checkout.
+- UX limpia para que el usuario no se confunda.
+
+============================================================
+6. BACKEND IMPLEMENTADO
+============================================================
+
+Archivo trabajado:
+- deligo-backend/server.js
+
+Endpoints relevantes:
+✔ POST /orders/:orderId/invite
+- crea invitación para un pedido existente.
+- genera token.
+- genera share_url.
+
+✔ GET /invite/:token
+- carga invitación pública para receptor.
+
+✔ POST /invite/:token/location
+- recibe GPS + referencia del receptor.
+- actualiza delivery_invites.
+- actualiza orders.
+- confirma ubicación.
+
+✔ GET /users/:email/saved-guests
+- lista invitados frecuentes del usuario.
+
+✔ DELETE /users/:email/saved-guests/:guestId
+- elimina invitado guardado.
+
+Tabla creada/verificada:
+✔ delivery_saved_guests
+
+============================================================
+7. FRONTEND CHECKOUT
+============================================================
+
+Archivos trabajados:
+- restaurant.html
+- js/restaurant-page.js
+- css/restaurant.css
+
+Estado:
+✔ Se agregó sección “Invitar comida”.
+✔ Se agregó búsqueda de invitados guardados.
+✔ Se agregó botón para mostrar/ocultar invitados guardados.
+✔ Se agregó “Invitar de nuevo”.
+✔ Se agregó eliminar invitado.
+✔ Se mantiene pedido normal “Es para mí”.
+✔ Se mantiene checkout normal.
+✔ Se mantiene carrito.
+✔ Se mantiene diseño premium BHUZ.
+
+Regla:
+- No volver a mostrar todos los invitados de una vez.
+- La lista debe estar oculta hasta que el usuario la abra.
+
+============================================================
+8. FLUJO ACTUAL FUNCIONANDO
+============================================================
+
+Flujo actual implementado:
+
+1. Usuario arma carrito.
+2. Usuario elige “Invitar comida”.
+3. Usuario confirma pedido.
+4. Pedido real se crea en orders.
+5. BHUZ genera link de invitación.
+6. Usuario comparte link.
+7. Invitado abre link.
+8. Invitado comparte GPS + referencia.
+9. BHUZ actualiza el pedido real.
+10. Se guarda invitado frecuente si aplica.
+11. Restaurante recibe pedido con ubicación final actualizada.
+
+Estado:
+✔ Funciona.
+✔ Ya fue probado.
+✔ Ya guarda en PostgreSQL.
+✔ Ya actualiza orders.
+✔ Ya guarda delivery_saved_guests.
+✔ Ya muestra invitados guardados.
+✔ Ya permite búsqueda limpia.
+
+============================================================
+9. PROBLEMA DETECTADO DEL FLUJO ACTUAL
+============================================================
+
+Aunque funciona, el flujo actual NO es el ideal definitivo.
+
+Problema:
+- El pedido real se crea antes de que el invitado acepte ubicación.
+- Si el invitado nunca abre el link o nunca comparte GPS, queda un pedido real incompleto.
+- Más adelante, con pagos reales, esto puede ser un problema.
+
+Riesgo:
+- Pedidos muertos.
+- Restaurante podría ver pedidos que todavía no tienen ubicación final.
+- Usuario podría confirmar antes de tener certeza de entrega.
+- No es el flujo más profesional para pagos.
+
+============================================================
+10. FLUJO IDEAL FUTURO — PENDIENTE PARA MAÑANA
+============================================================
+
+Este es el próximo objetivo prioritario del módulo.
+
+Flujo ideal futuro:
+
+1. Usuario arma carrito.
+2. Elige “Invitar comida”.
+3. Se genera invitación temporal.
+4. Comparte link.
+5. El invitado acepta y comparte GPS.
+6. BHUZ confirma:
+   “Ubicación recibida correctamente.”
+7. AHORA sí:
+   el usuario ve:
+   “La persona ya confirmó ubicación.”
+8. Usuario toca:
+   ✅ Confirmar pedido
+9. Se crea el pedido real.
+
+Este flujo es MUCHO más sólido.
+
+Ventajas:
+✔ No llenas BD con pedidos muertos.
+✔ El restaurante solo recibe pedidos válidos.
+✔ El usuario tiene confirmación real antes de pagar.
+✔ Más adelante encaja perfecto con pagos.
+✔ UX más profesional.
+✔ El pedido nace completo.
+✔ Se evita que el restaurante prepare algo sin ubicación confirmada.
+
+============================================================
+11. ARQUITECTURA FUTURA RECOMENDADA
+============================================================
+
+Para mañana, NO rehacer todo desde cero.
+
+Objetivo:
+Convertir el flujo actual en flujo previo al pedido.
+
+Idea técnica:
+- Crear una invitación temporal ANTES de crear orders.
+- Guardar carrito/resumen temporal en una tabla nueva o adaptar delivery_invites.
+
+Opción recomendada:
+Crear tabla nueva:
+
+pending_food_invites
+
+Campos sugeridos:
+- id
+- invite_token
+- sender_email
+- sender_name
+- recipient_name
+- recipient_phone
+- invite_message
+- restaurant_email
+- restaurant_name
+- cart_payload JSONB
+- total
+- invite_status
+- recipient_address
+- recipient_reference
+- recipient_latitude
+- recipient_longitude
+- confirmed_at
+- expires_at
+- created_at
+- updated_at
+
+Flujo técnico:
+1. POST /pending-invites
+   - crea invitación temporal con carrito.
+2. GET /pending-invites/:token
+   - muestra invitación al receptor.
+3. POST /pending-invites/:token/location
+   - guarda GPS del receptor.
+4. GET /pending-invites/status/:id
+   - checkout verifica si el receptor ya confirmó.
+5. POST /pending-invites/:id/create-order
+   - crea orders real solo después de ubicación confirmada.
+
+Importante:
+- delivery_invites actual puede mantenerse para compatibilidad.
+- No borrar tablas actuales.
+- No romper flujo que ya funciona.
+- Migrar gradualmente.
+
+============================================================
+12. LO QUE NO SE DEBE HACER MAÑANA
+============================================================
+
+NO:
+- reescribir checkout completo.
+- romper pedido normal.
+- eliminar delivery_invites.
+- eliminar delivery_saved_guests.
+- tocar panel restaurante si no hace falta.
+- tocar admin si no hace falta.
+- crear pedidos antes de ubicación confirmada en el nuevo flujo.
+- mostrar al invitado opciones internas del usuario.
+- volver a abrir lista larga de invitados automáticamente.
+
+SÍ:
+- trabajar sobre archivos reales completos.
+- conservar lo que ya funciona.
+- agregar flujo temporal previo al pedido.
+- probar primero pedido normal.
+- probar después invitar comida.
+- validar con SQL.
+
+============================================================
+13. SQL ÚTIL PARA VERIFICAR
+============================================================
+
+Ver últimos pedidos:
+SELECT id, customer_email, restaurant_email, delivery_address, delivery_reference, latitude, longitude, status, created_at, updated_at
+FROM orders
+ORDER BY created_at DESC
+LIMIT 10;
+
+Ver últimas invitaciones:
+SELECT *
+FROM delivery_invites
+ORDER BY created_at DESC
+LIMIT 10;
+
+Ver invitados guardados:
+SELECT *
+FROM delivery_saved_guests
+ORDER BY updated_at DESC
+LIMIT 20;
+
+Ver invitaciones confirmadas:
+SELECT invite_token, order_id, invite_status, recipient_reference, recipient_latitude, recipient_longitude, confirmed_at
+FROM delivery_invites
+ORDER BY updated_at DESC
+LIMIT 10;
+
+============================================================
+14. ARCHIVOS QUE PROBABLEMENTE SE NECESITAN MAÑANA
+============================================================
+
+Frontend:
+- restaurant.html
+- js/restaurant-page.js
+- invite.html
+- js/invite.js
+- css/restaurant.css
+
+Backend:
+- deligo-backend/server.js
+
+Posible:
+- js/orders.js
+- routes/pedidos.routes.js
+
+Solo pedir más archivos si realmente hacen falta.
+
+============================================================
+15. ESTADO FINAL DE HOY
+============================================================
+
+✔ Módulo Invitar comida funciona.
+✔ GPS del receptor funciona.
+✔ PostgreSQL actualiza pedido.
+✔ delivery_invites funciona.
+✔ delivery_saved_guests funciona.
+✔ Invitados guardados se muestran.
+✔ Búsqueda de invitados funciona.
+✔ Eliminar invitado funciona.
+✔ Invitar de nuevo funciona.
+✔ Link del invitado quedó limpio.
+✔ Lista de invitados quedó colapsable.
+✔ No se rompió pedido normal.
+✔ No se rompió carrito.
+✔ No se rompió backend principal.
+
+============================================================
+16. PRIORIDAD EXACTA PARA MAÑANA
+============================================================
+
+Convertir “Invitar comida” al flujo ideal:
+
+Usuario arma carrito.
+Elige “Invitar comida”.
+Se genera invitación temporal.
+Comparte link.
+El invitado acepta y comparte GPS.
+BHUZ confirma:
+“Ubicación recibida correctamente.”
+AHORA sí:
+el usuario ve:
+“La persona ya confirmó ubicación.”
+Usuario toca:
+✅ Confirmar pedido
+Se crea el pedido real.
+
+Motivo:
+- Es el flujo correcto para escalar BHUZ.
+- Es el flujo correcto para pagos.
+- Es el flujo correcto para evitar pedidos muertos.
+- Es el flujo correcto para que el restaurante solo reciba pedidos válidos.
+
+============================================================
+FIN ACTUALIZACIÓN FINAL — INVITAR COMIDA / INVITADOS FRECUENTES
+============================================================
+
+
 ============================================================
 FIN MASTER FINAL
 =============================================================
