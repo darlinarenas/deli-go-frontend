@@ -15,6 +15,13 @@
    - Mejora la captura GPS para pruebas reales en móvil/HTTPS.
    - Muestra coordenadas cargadas para confirmar visualmente que sí tomó GPS.
    - Da mensajes claros si el navegador bloqueó permisos o si no está en HTTPS.
+
+   CAMBIO BHUZ - INVITADO SEGUIMIENTO + SONIDOS
+   - Si el invitado ya confirmó ubicación, NO vuelve a pedir GPS al refrescar.
+   - Si el pedido ya fue creado, muestra el estado real del pedido.
+   - Revisa cambios de estado automáticamente.
+   - Reproduce sonidos BHUZ cuando cambia el estado del pedido.
+   - Mantiene compatibilidad con invitaciones pendientes y delivery_invites.
 ====================================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -41,8 +48,37 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveConfirmedGuestMessage = document.getElementById("saveConfirmedGuestMessage");
 
   let currentInvite = null;
+  let currentOrder = null;
   let capturedLocation = null;
   let isSubmittingLocation = false;
+  let lastKnownStatus = "";
+  let firstLoadDone = false;
+  let inviteSoundUnlocked = false;
+  let pollingTimer = null;
+
+  const STATUS_SOUND_PATHS = {
+    aceptado: "assets/sounds/bhuz-pedido-aceptado.mp3",
+    confirmado: "assets/sounds/bhuz-pedido-aceptado.mp3",
+    preparando: "assets/sounds/bhuz-pedido-preparando.mp3",
+    listo: "assets/sounds/bhuz-pedido-preparando.mp3",
+    en_camino: "assets/sounds/bhuz-pedido-en-camino.mp3",
+    entregado: "assets/sounds/bhuz-pedido-en-camino.mp3"
+  };
+
+  const STATUS_LABELS = {
+    pending_location: "Esperando ubicación",
+    pendiente: "Pendiente",
+    ubicacion_confirmada: "Ubicación confirmada",
+    location_confirmed: "Ubicación confirmada",
+    pedido_creado: "Pedido creado",
+    confirmado: "Confirmado",
+    aceptado: "Aceptado",
+    preparando: "Preparando",
+    listo: "Listo para enviar",
+    en_camino: "En camino",
+    entregado: "Entregado",
+    cancelado: "Cancelado"
+  };
 
   function escapeHtml(text) {
     return String(text || "")
@@ -62,6 +98,46 @@ document.addEventListener("DOMContentLoaded", () => {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount);
+  }
+
+  function normalizeStatus(status) {
+    return String(status || "")
+      .trim()
+      .toLowerCase()
+      .replaceAll("-", "_")
+      .replaceAll(" ", "_");
+  }
+
+  function getStatusLabel(status) {
+    const normalized = normalizeStatus(status);
+    return STATUS_LABELS[normalized] || status || "pendiente";
+  }
+
+  function isLocationAlreadyConfirmed(invite, order) {
+    const inviteStatus = normalizeStatus(invite?.status || invite?.statusEs || "");
+    const orderStatus = normalizeStatus(order?.status || "");
+
+    return Boolean(
+      invite?.confirmedAt ||
+      invite?.recipientLatitude ||
+      invite?.recipientLongitude ||
+      inviteStatus === "location_confirmed" ||
+      inviteStatus === "ubicacion_confirmada" ||
+      inviteStatus === "pedido_creado" ||
+      orderStatus === "ubicacion_confirmada" ||
+      orderStatus === "pedido_creado"
+    );
+  }
+
+  function getEffectiveStatus(invite, order) {
+    const orderStatus = normalizeStatus(order?.status || "");
+    const inviteStatus = normalizeStatus(invite?.statusEs || invite?.status || "");
+
+    if (orderStatus && orderStatus !== "ubicacion_confirmada") {
+      return orderStatus;
+    }
+
+    return orderStatus || inviteStatus || "pendiente";
   }
 
   function setGpsStatus(message, ok = false) {
@@ -85,6 +161,177 @@ document.addEventListener("DOMContentLoaded", () => {
 
     button.textContent = button.dataset.originalText || button.textContent;
     button.disabled = false;
+  }
+
+  function unlockInviteSounds() {
+    if (inviteSoundUnlocked) return;
+
+    inviteSoundUnlocked = true;
+
+    const firstSound = new Audio("assets/sounds/bhuz-pedido-aceptado.mp3");
+    firstSound.volume = 0;
+    firstSound.play()
+      .then(() => {
+        firstSound.pause();
+        firstSound.currentTime = 0;
+      })
+      .catch(() => {
+        // Algunos móviles solo permiten audio después de tocar un botón.
+        // No se muestra error porque no debe afectar el flujo del invitado.
+      });
+  }
+
+  function playStatusSound(status) {
+    const normalizedStatus = normalizeStatus(status);
+    const soundPath = STATUS_SOUND_PATHS[normalizedStatus];
+
+    if (!soundPath) return;
+
+    try {
+      const sound = new Audio(soundPath);
+      sound.volume = 0.95;
+      sound.play().catch(() => {
+        // El navegador puede bloquear sonido si el invitado no tocó la pantalla.
+      });
+    } catch (error) {
+      console.warn("No se pudo reproducir sonido de estado BHUZ:", error);
+    }
+  }
+
+  function maybePlayStatusSound(nextStatus) {
+    const normalizedStatus = normalizeStatus(nextStatus);
+
+    if (!normalizedStatus) return;
+
+    if (!firstLoadDone) {
+      lastKnownStatus = normalizedStatus;
+      firstLoadDone = true;
+      return;
+    }
+
+    if (normalizedStatus === lastKnownStatus) return;
+
+    lastKnownStatus = normalizedStatus;
+    playStatusSound(normalizedStatus);
+  }
+
+  function renderConfirmedLocationState(invite, order) {
+    if (inviteLocationForm) inviteLocationForm.style.display = "none";
+    if (inviteSuccessBox) inviteSuccessBox.style.display = "block";
+
+    const effectiveStatus = getEffectiveStatus(invite, order);
+    const orderId = order?.id || invite?.orderId || "";
+
+    if (inviteTitle) {
+      inviteTitle.textContent = "Ubicación recibida correctamente";
+    }
+
+    if (inviteDescription) {
+      if (orderId) {
+        inviteDescription.textContent = "Tu pedido BHUZ ya fue creado. Aquí podrás ver cómo va avanzando.";
+      } else {
+        inviteDescription.textContent = "La persona que te invitó ya puede confirmar el pedido. Mantén este link abierto para ver el avance.";
+      }
+    }
+
+    if (inviteOrderSummary) {
+      inviteOrderSummary.innerHTML = `
+        <div><strong>Restaurante:</strong> ${escapeHtml(order?.restaurantName || invite?.restaurantName || "Restaurante BHUZ")}</div>
+        <div><strong>Total:</strong> ${formatPrice(order?.total || invite?.total || 0)}</div>
+        <div><strong>Estado:</strong> ${escapeHtml(getStatusLabel(effectiveStatus))}</div>
+        ${orderId ? `<div><strong>Pedido:</strong> #${escapeHtml(String(orderId))}</div>` : ""}
+        <div><strong>GPS:</strong> ✅ Ubicación confirmada</div>
+      `;
+    }
+
+    if (postConfirmGuestAlias && invite?.recipientName && !postConfirmGuestAlias.value.trim()) {
+      postConfirmGuestAlias.value = invite.recipientName;
+    }
+
+    if (postConfirmSaveGuestBox && invite?.senderEmail) {
+      postConfirmSaveGuestBox.style.display = "block";
+    }
+
+    setGpsStatus("✅ Ubicación ya confirmada. Te avisaremos aquí cuando cambie el estado del pedido.", true);
+  }
+
+  function renderInvite(invite, order) {
+    const recipientName = invite?.recipientName || "";
+    const senderName = invite?.senderName || "Alguien";
+    const restaurantName = order?.restaurantName || invite?.restaurantName || "un restaurante BHUZ";
+    const effectiveStatus = getEffectiveStatus(invite, order);
+
+    if (isLocationAlreadyConfirmed(invite, order)) {
+      renderConfirmedLocationState(invite, order);
+      maybePlayStatusSound(effectiveStatus);
+      return;
+    }
+
+    if (inviteTitle) {
+      inviteTitle.textContent = recipientName
+        ? `${recipientName}, te enviaron un BHUZ`
+        : "Te enviaron un BHUZ";
+    }
+
+    if (inviteDescription) {
+      inviteDescription.textContent = `${senderName} te envió un pedido con BHUZ. Comparte tu ubicación GPS para recibirlo.`;
+    }
+
+    if (inviteOrderSummary) {
+      inviteOrderSummary.innerHTML = `
+        <div><strong>Restaurante:</strong> ${escapeHtml(restaurantName)}</div>
+        <div><strong>Total:</strong> ${formatPrice(order?.total || invite?.total || 0)}</div>
+        <div><strong>Estado:</strong> ${escapeHtml(getStatusLabel(effectiveStatus))}</div>
+      `;
+    }
+
+    if (inviteLocationForm) {
+      inviteLocationForm.style.display = "block";
+    }
+
+    if (inviteSuccessBox) {
+      inviteSuccessBox.style.display = "none";
+    }
+
+    maybePlayStatusSound(effectiveStatus);
+  }
+
+  async function loadInvite(options = {}) {
+    const silent = Boolean(options.silent);
+
+    if (!token) {
+      if (inviteDescription) {
+        inviteDescription.textContent = "El link de invitación no es válido.";
+      }
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/invite/${encodeURIComponent(token)}?t=${Date.now()}`);
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        throw new Error(data.message || "No se pudo cargar la invitación");
+      }
+
+      currentInvite = data.invite;
+      currentOrder = data.order || null;
+      renderInvite(data.invite, data.order);
+    } catch (error) {
+      console.error("Error cargando invitación:", error);
+
+      if (!silent && inviteDescription) {
+        inviteDescription.textContent = "No se pudo cargar la invitación. Verifica que el link sea correcto.";
+      }
+    }
+  }
+
+  function startInviteStatusPolling() {
+    if (pollingTimer) return;
+
+    pollingTimer = window.setInterval(() => {
+      loadInvite({ silent: true });
+    }, 10000);
   }
 
   function isSecureGeolocationContext() {
@@ -116,74 +363,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function renderInvite(invite, order) {
-    const recipientName = invite?.recipientName || "";
-    const senderName = invite?.senderName || "Alguien";
-    const restaurantName = order?.restaurantName || "un restaurante BHUZ";
-
-    if (inviteTitle) {
-      inviteTitle.textContent = recipientName
-        ? `${recipientName}, te invitaron comida`
-        : "Te invitaron comida";
-    }
-
-    if (inviteDescription) {
-      inviteDescription.textContent = `${senderName} te envió un pedido con BHUZ. Comparte tu ubicación GPS para recibirlo.`;
-    }
-
-    if (inviteOrderSummary) {
-      inviteOrderSummary.innerHTML = `
-        <div><strong>Restaurante:</strong> ${escapeHtml(restaurantName)}</div>
-        <div><strong>Total:</strong> ${formatPrice(order?.total || 0)}</div>
-        <div><strong>Estado:</strong> ${escapeHtml(order?.status || "pendiente")}</div>
-      `;
-    }
-
-    if (invite?.status === "location_confirmed") {
-      if (inviteLocationForm) inviteLocationForm.style.display = "none";
-      if (inviteSuccessBox) inviteSuccessBox.style.display = "block";
-
-      if (postConfirmGuestAlias && invite?.recipientName && !postConfirmGuestAlias.value.trim()) {
-        postConfirmGuestAlias.value = invite.recipientName;
-      }
-
-      setGpsStatus("Ubicación ya confirmada.", true);
-      return;
-    }
-
-    if (inviteLocationForm) {
-      inviteLocationForm.style.display = "block";
-    }
-  }
-
-  async function loadInvite() {
-    if (!token) {
-      if (inviteDescription) {
-        inviteDescription.textContent = "El link de invitación no es válido.";
-      }
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_URL}/invite/${encodeURIComponent(token)}`);
-      const data = await response.json();
-
-      if (!response.ok || !data.ok) {
-        throw new Error(data.message || "No se pudo cargar la invitación");
-      }
-
-      currentInvite = data.invite;
-      renderInvite(data.invite, data.order);
-    } catch (error) {
-      console.error("Error cargando invitación:", error);
-
-      if (inviteDescription) {
-        inviteDescription.textContent = "No se pudo cargar la invitación. Verifica que el link sea correcto.";
-      }
-    }
-  }
-
   async function captureGps() {
+    unlockInviteSounds();
     capturedLocation = null;
 
     if (!isSecureGeolocationContext()) {
@@ -236,6 +417,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function submitLocation(event) {
     event.preventDefault();
+    unlockInviteSounds();
 
     if (isSubmittingLocation) return;
 
@@ -279,13 +461,10 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       currentInvite = data.invite || currentInvite;
+      currentOrder = data.order || currentOrder;
 
-      if (inviteLocationForm) inviteLocationForm.style.display = "none";
-      if (inviteSuccessBox) inviteSuccessBox.style.display = "block";
-
-      if (postConfirmGuestAlias && currentInvite?.recipientName && !postConfirmGuestAlias.value.trim()) {
-        postConfirmGuestAlias.value = currentInvite.recipientName;
-      }
+      renderInvite(currentInvite, currentOrder);
+      startInviteStatusPolling();
 
       if (data.savedGuest && saveConfirmedGuestMessage) {
         saveConfirmedGuestMessage.textContent = "✅ Invitado guardado correctamente para futuras invitaciones.";
@@ -301,7 +480,6 @@ document.addEventListener("DOMContentLoaded", () => {
       isSubmittingLocation = false;
     }
   }
-
 
   async function saveConfirmedGuest() {
     const alias = String(postConfirmGuestAlias?.value || "").trim();
@@ -355,16 +533,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  document.addEventListener("pointerdown", unlockInviteSounds, { once: true });
+  document.addEventListener("keydown", unlockInviteSounds, { once: true });
+
   captureInviteGpsBtn?.addEventListener("click", captureGps);
   inviteLocationForm?.addEventListener("submit", submitLocation);
   saveConfirmedGuestBtn?.addEventListener("click", saveConfirmedGuest);
 
-  loadInvite();
+  loadInvite().then(startInviteStatusPolling);
 });
-
-
-
-
-
-
 
