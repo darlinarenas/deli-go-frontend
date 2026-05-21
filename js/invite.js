@@ -21,6 +21,7 @@
    - Si el pedido ya fue creado, muestra el estado real del pedido.
    - Revisa cambios de estado automáticamente.
    - Reproduce sonidos BHUZ cuando cambia el estado del pedido.
+   - El botón de sonido se crea una sola vez y no se duplica durante el seguimiento.
    - Mantiene compatibilidad con invitaciones pendientes y delivery_invites.
 ====================================================== */
 
@@ -55,6 +56,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let firstLoadDone = false;
   let inviteSoundUnlocked = false;
   let pollingTimer = null;
+  let soundActivationChecked = false;
+  let statusAudioCache = {};
   let inviteSoundButton = null;
 
   const STATUS_SOUND_PATHS = {
@@ -164,16 +167,79 @@ document.addEventListener("DOMContentLoaded", () => {
     button.disabled = false;
   }
 
+  function getSoundStorageKey() {
+    return `bhuz_invite_sound_enabled_${token || "sin_token"}`;
+  }
+
+  function wasInviteSoundEnabledBefore() {
+    try {
+      return window.localStorage.getItem(getSoundStorageKey()) === "true";
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function rememberInviteSoundEnabled() {
+    try {
+      window.localStorage.setItem(getSoundStorageKey(), "true");
+    } catch (error) {
+      // Si localStorage no está disponible, igual mantenemos activo en memoria.
+    }
+  }
+
+  function getOrCreateStatusAudio(soundPath) {
+    if (!soundPath) return null;
+
+    if (!statusAudioCache[soundPath]) {
+      const audio = new Audio(soundPath);
+      audio.preload = "auto";
+      audio.volume = 0.95;
+      statusAudioCache[soundPath] = audio;
+    }
+
+    return statusAudioCache[soundPath];
+  }
+
   function hideInviteSoundButton() {
+    const existingButton = document.getElementById("bhuzInviteSoundButton");
+
+    if (existingButton) {
+      existingButton.style.display = "none";
+    }
+
     if (inviteSoundButton) {
       inviteSoundButton.style.display = "none";
     }
   }
 
   function ensureInviteSoundButton() {
-    if (inviteSoundUnlocked || inviteSoundButton || !inviteOrderSummary) return;
+    if (!inviteOrderSummary) return;
+
+    if (!soundActivationChecked) {
+      soundActivationChecked = true;
+
+      if (wasInviteSoundEnabledBefore()) {
+        inviteSoundUnlocked = true;
+        hideInviteSoundButton();
+        return;
+      }
+    }
+
+    if (inviteSoundUnlocked) {
+      hideInviteSoundButton();
+      return;
+    }
+
+    const existingButton = document.getElementById("bhuzInviteSoundButton");
+
+    if (existingButton) {
+      inviteSoundButton = existingButton;
+      inviteSoundButton.style.display = "block";
+      return;
+    }
 
     inviteSoundButton = document.createElement("button");
+    inviteSoundButton.id = "bhuzInviteSoundButton";
     inviteSoundButton.type = "button";
     inviteSoundButton.textContent = "🔊 Activar sonidos del pedido";
     inviteSoundButton.style.marginTop = "12px";
@@ -193,33 +259,40 @@ document.addEventListener("DOMContentLoaded", () => {
     inviteOrderSummary.insertAdjacentElement("afterend", inviteSoundButton);
   }
 
+  async function warmUpStatusSounds() {
+    const uniqueSoundPaths = [...new Set(Object.values(STATUS_SOUND_PATHS).filter(Boolean))];
+
+    for (const soundPath of uniqueSoundPaths) {
+      const audio = getOrCreateStatusAudio(soundPath);
+      if (!audio) continue;
+
+      try {
+        audio.volume = 0.01;
+        await audio.play();
+        audio.pause();
+        audio.currentTime = 0;
+        audio.volume = 0.95;
+      } catch (error) {
+        audio.volume = 0.95;
+      }
+    }
+  }
+
   function unlockInviteSounds(showFeedback = false) {
     if (inviteSoundUnlocked) {
       hideInviteSoundButton();
       return;
     }
 
-    const firstSound = new Audio("assets/sounds/bhuz-pedido-aceptado.mp3");
-    firstSound.volume = 0.01;
-    firstSound.play()
-      .then(() => {
-        firstSound.pause();
-        firstSound.currentTime = 0;
-        inviteSoundUnlocked = true;
-        hideInviteSoundButton();
+    inviteSoundUnlocked = true;
+    rememberInviteSoundEnabled();
+    hideInviteSoundButton();
 
-        if (showFeedback) {
-          setGpsStatus("🔊 Sonidos activados. Te avisaremos cuando cambie el estado del pedido.", true);
-        }
-      })
-      .catch(() => {
-        inviteSoundUnlocked = false;
-        ensureInviteSoundButton();
-
-        if (showFeedback) {
-          setGpsStatus("Toca nuevamente ‘Activar sonidos’ para permitir las alertas del pedido.", false);
-        }
-      });
+    warmUpStatusSounds().finally(() => {
+      if (showFeedback) {
+        setGpsStatus("🔊 Sonidos activados. Te avisaremos cuando cambie el estado del pedido.", true);
+      }
+    });
   }
 
   function playStatusSound(status) {
@@ -228,12 +301,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!soundPath) return;
 
+    if (!inviteSoundUnlocked && !wasInviteSoundEnabledBefore()) {
+      ensureInviteSoundButton();
+      return;
+    }
+
+    inviteSoundUnlocked = true;
+    hideInviteSoundButton();
+
     try {
-      const sound = new Audio(soundPath);
+      const sound = getOrCreateStatusAudio(soundPath);
+      if (!sound) return;
+
+      sound.currentTime = 0;
       sound.volume = 0.95;
       sound.play().catch(() => {
-        inviteSoundUnlocked = false;
-        ensureInviteSoundButton();
+        // No volvemos a crear botones infinitos. Algunos navegadores pueden bloquear
+        // audio si la página fue recargada manualmente, pero el botón no debe duplicarse.
+        console.warn("El navegador bloqueó el sonido BHUZ hasta una nueva interacción del usuario.");
       });
 
       if (navigator.vibrate) {
@@ -580,15 +665,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  document.addEventListener("pointerdown", unlockInviteSounds, { once: true });
-  document.addEventListener("keydown", unlockInviteSounds, { once: true });
-
   captureInviteGpsBtn?.addEventListener("click", captureGps);
   inviteLocationForm?.addEventListener("submit", submitLocation);
   saveConfirmedGuestBtn?.addEventListener("click", saveConfirmedGuest);
 
+  if (wasInviteSoundEnabledBefore()) {
+    inviteSoundUnlocked = true;
+    hideInviteSoundButton();
+  }
+
   loadInvite().then(startInviteStatusPolling);
 });
+
 
 
 
