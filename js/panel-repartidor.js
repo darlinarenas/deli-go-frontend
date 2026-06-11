@@ -3,110 +3,77 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadCurrentSession();
   }
 
-  const DEMO_ORDERS = [
+  const STORAGE_KEY = "bhuzDriverAssistantPanelDemo";
+
+  const DEMO_ORDER = {
+    id: "BHZ-1042",
+    restaurant: "Burger Punto",
+    restaurantAddress: "Av. Jacinto Lara, Punto Fijo",
+    restaurantDistance: "1.8 km",
+    customer: "María González",
+    customerPhone: "+584121112233",
+    customerAddress: "Santa Irene, calle 4, casa azul",
+    customerDistance: "3.4 km",
+    items: "2 Hamburguesas clásicas, 1 papas grandes",
+    payment: "Pago móvil",
+    total: 18.5,
+    deliveryFee: 2.5,
+    commission: 2.0,
+    etaPickup: "8 min",
+    etaDelivery: "15 min"
+  };
+
+  const STEPS = [
     {
-      id: "BHZ-1042",
-      restaurant: "Burger Punto",
-      restaurantAddress: "Av. Jacinto Lara, Punto Fijo",
-      customer: "María González",
-      customerPhone: "+584121112233",
-      customerAddress: "Santa Irene, calle 4, casa azul",
-      items: "2 Hamburguesas clásicas, 1 papas grandes",
-      payment: "Pago móvil",
-      total: 18.5,
-      deliveryFee: 2.5,
-      commission: 2.0,
-      distance: "2.4 km",
-      eta: "18 min",
-      status: "disponible"
+      key: "waiting",
+      label: "Esperando pedido"
     },
     {
-      id: "BHZ-1043",
-      restaurant: "Arepas La 70",
-      restaurantAddress: "Centro, cerca de Plaza Bolívar",
-      customer: "Carlos Prieto",
-      customerPhone: "+584141234567",
-      customerAddress: "Puerta Maraven, edificio Sol, piso 2",
-      items: "3 Arepas mixtas, 2 jugos naturales",
-      payment: "Efectivo USD",
-      total: 14.0,
-      deliveryFee: 2.0,
-      commission: 1.8,
-      distance: "1.7 km",
-      eta: "13 min",
-      status: "disponible"
+      key: "new_order",
+      label: "Pedido recibido"
     },
     {
-      id: "BHZ-1044",
-      restaurant: "Pizza Norte",
-      restaurantAddress: "Calle Comercio, local 12",
-      customer: "Andrea Soto",
-      customerPhone: "+584241112244",
-      customerAddress: "Las Margaritas, manzana 8",
-      items: "1 Pizza familiar, 1 refresco 1.5L",
-      payment: "Zelle confirmado",
-      total: 22.0,
-      deliveryFee: 3.0,
-      commission: 2.4,
-      distance: "3.1 km",
-      eta: "22 min",
-      status: "disponible"
+      key: "to_restaurant",
+      label: "En camino al local"
+    },
+    {
+      key: "at_restaurant",
+      label: "Llegué al local"
+    },
+    {
+      key: "to_customer",
+      label: "En camino al cliente"
+    },
+    {
+      key: "delivered",
+      label: "Pedido entregado"
     }
   ];
 
-  const STATUS_STEPS = [
-    { key: "aceptado", label: "Pedido aceptado" },
-    { key: "voy_restaurante", label: "Voy al restaurante" },
-    { key: "retirado", label: "Pedido retirado" },
-    { key: "en_camino", label: "En camino al cliente" },
-    { key: "entregado", label: "Entregado" }
-  ];
-
-  const STORAGE_KEY = "bhuzDriverPanelDemo";
-
   const els = {
-    driverStatusPill: document.getElementById("driverStatusPill"),
+    driverStatusText: document.getElementById("driverStatusText"),
     toggleDriverStatusBtn: document.getElementById("toggleDriverStatusBtn"),
-    driverName: document.getElementById("driverName"),
-    driverZone: document.getElementById("driverZone"),
-    menuButtons: document.querySelectorAll(".menu-btn"),
-    sections: document.querySelectorAll(".content-section"),
-    goAvailableBtn: document.getElementById("goAvailableBtn"),
-    refreshOrdersBtn: document.getElementById("refreshOrdersBtn"),
-    availableCount: document.getElementById("availableCount"),
-    activeCount: document.getElementById("activeCount"),
-    deliveredTodayCount: document.getElementById("deliveredTodayCount"),
-    todayEarnings: document.getElementById("todayEarnings"),
-    recommendedOrder: document.getElementById("recommendedOrder"),
-    availableOrdersList: document.getElementById("availableOrdersList"),
-    activeOrderBox: document.getElementById("activeOrderBox"),
-    historyList: document.getElementById("historyList"),
+    mainFlowBox: document.getElementById("mainFlowBox"),
+    sidePanel: document.getElementById("sidePanel"),
+    sidePanelTitle: document.getElementById("sidePanelTitle"),
+    sidePanelBody: document.getElementById("sidePanelBody"),
     toast: document.getElementById("toast")
   };
 
   let state = loadState();
 
-  const user = typeof getCurrentUser === "function" ? getCurrentUser() : null;
-  if (user && user.name) {
-    els.driverName.textContent = user.name;
-  }
-
-  if (user && user.zone) {
-    els.driverZone.textContent = `Zona: ${user.zone}`;
-  }
-
   function loadState() {
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-      if (saved && Array.isArray(saved.orders)) return saved;
+      if (saved && saved.flow) return saved;
     } catch (error) {
       console.warn("No se pudo cargar demo repartidor", error);
     }
 
     return {
       online: true,
-      orders: DEMO_ORDERS,
-      activeOrder: null,
+      flow: "new_order",
+      activeOrder: DEMO_ORDER,
       history: []
     };
   }
@@ -126,227 +93,334 @@ document.addEventListener("DOMContentLoaded", async () => {
     showToast.timer = setTimeout(() => els.toast.classList.remove("show"), 2600);
   }
 
-  function setSection(sectionName) {
-    els.menuButtons.forEach((btn) => {
-      btn.classList.toggle("active", btn.dataset.section === sectionName);
-    });
-
-    els.sections.forEach((section) => {
-      section.classList.toggle("active", section.id === `section-${sectionName}`);
-    });
-  }
-
   function render() {
-    renderDriverStatus();
-    renderStats();
-    renderRecommendedOrder();
-    renderAvailableOrders();
-    renderActiveOrder();
-    renderHistory();
+    renderHeader();
+    renderMainFlow();
   }
 
-  function renderDriverStatus() {
-    els.driverStatusPill.textContent = state.online ? "Disponible" : "Pausado";
-    els.driverStatusPill.classList.toggle("online", state.online);
-    els.driverStatusPill.classList.toggle("offline", !state.online);
+  function renderHeader() {
+    els.driverStatusText.textContent = state.online ? "Disponible" : "Pausado";
     els.toggleDriverStatusBtn.textContent = state.online ? "Pausar" : "Activarme";
   }
 
-  function renderStats() {
-    const available = state.orders.filter((order) => order.status === "disponible").length;
-    const active = state.activeOrder ? 1 : 0;
-    const earnings = state.history.reduce((sum, order) => sum + Number(order.commission || 0), 0);
-
-    els.availableCount.textContent = available;
-    els.activeCount.textContent = active;
-    els.deliveredTodayCount.textContent = state.history.length;
-    els.todayEarnings.textContent = money(earnings);
-  }
-
-  function renderRecommendedOrder() {
-    const order = state.orders.find((item) => item.status === "disponible");
-    els.recommendedOrder.innerHTML = order ? orderCard(order, true) : emptyState("No hay pedidos disponibles por ahora.");
-  }
-
-  function renderAvailableOrders() {
-    const availableOrders = state.orders.filter((order) => order.status === "disponible");
-    els.availableOrdersList.innerHTML = availableOrders.length
-      ? availableOrders.map((order) => orderCard(order, true)).join("")
-      : emptyState("No hay pedidos disponibles. Prueba actualizar la demo.");
-  }
-
-  function renderActiveOrder() {
-    if (!state.activeOrder) {
-      els.activeOrderBox.innerHTML = emptyState("Todavía no tienes un pedido activo. Acepta uno desde pedidos disponibles.");
+  function renderMainFlow() {
+    if (!state.online) {
+      els.mainFlowBox.innerHTML = renderPaused();
       return;
     }
 
-    const order = state.activeOrder;
-    const currentIndex = STATUS_STEPS.findIndex((step) => step.key === order.driverStatus);
-    const nextStep = STATUS_STEPS[currentIndex + 1];
+    if (!state.activeOrder && state.flow !== "delivered") {
+      els.mainFlowBox.innerHTML = renderWaiting();
+      return;
+    }
 
-    els.activeOrderBox.innerHTML = `
-      <div class="active-order-main">
-        ${orderCard(order, false)}
-        <div class="order-card">
-          <div class="order-head">
-            <div>
-              <h3>Avance de entrega</h3>
-              <p>Actualiza cada paso cuando realmente ocurra.</p>
-            </div>
-            <span class="status-chip">${getStatusLabel(order.driverStatus)}</span>
-          </div>
-          <div class="status-steps">
-            ${STATUS_STEPS.map((step, index) => `
-              <div class="step-row ${index <= currentIndex ? "done" : ""}">
-                <span class="step-dot"></span>
-                <span>${step.label}</span>
-              </div>
-            `).join("")}
-          </div>
-          <div class="status-actions">
-            ${nextStep ? `<button class="btn btn-primary" data-next-status="${nextStep.key}" type="button">Marcar: ${nextStep.label}</button>` : ""}
-            <button class="btn btn-warning" data-open-maps="${order.customerAddress}" type="button">Abrir Maps</button>
-            <a class="btn btn-light" href="https://wa.me/${cleanPhone(order.customerPhone)}" target="_blank" rel="noopener">WhatsApp cliente</a>
-            <button class="btn btn-danger" data-cancel-active="true" type="button">Liberar pedido</button>
-          </div>
+    const screens = {
+      waiting: renderWaiting,
+      new_order: renderNewOrder,
+      to_restaurant: renderToRestaurant,
+      at_restaurant: renderAtRestaurant,
+      to_customer: renderToCustomer,
+      delivered: renderDelivered
+    };
+
+    els.mainFlowBox.innerHTML = (screens[state.flow] || renderWaiting)();
+  }
+
+  function renderPaused() {
+    return `
+      <div class="flow-screen">
+        <div class="flow-top">
+          <div class="flow-icon">⏸️</div>
+          <h1>Estás pausado</h1>
+          <p>Actívate cuando estés listo para recibir despachos.</p>
+        </div>
+
+        <div class="primary-actions">
+          <button class="btn btn-primary" data-toggle-online="true" type="button">Activarme</button>
         </div>
       </div>
     `;
   }
 
-  function renderHistory() {
-    els.historyList.innerHTML = state.history.length
-      ? state.history.map((order) => `
-        <article class="history-item">
-          <div>
-            <strong>${order.id} · ${order.restaurant}</strong>
-            <p>${order.customer} · ${order.customerAddress}</p>
-          </div>
-          <strong>${money(order.commission)}</strong>
-        </article>
-      `).join("")
-      : emptyState("Aún no tienes entregas completadas en esta demo.");
-  }
-
-  function orderCard(order, canAccept) {
-    const disabled = !state.online || Boolean(state.activeOrder);
+  function renderWaiting() {
     return `
-      <article class="order-card">
-        <div class="order-head">
-          <div>
-            <h3>${order.id} · ${order.restaurant}</h3>
-            <p>${order.items}</p>
-          </div>
-          <span class="status-chip">${order.distance} · ${order.eta}</span>
+      <div class="flow-screen">
+        <div class="flow-top">
+          <div class="waiting-pulse">🛵</div>
+          <h1>Esperando pedido</h1>
+          <p>Cuando entre un despacho, BHUZ te mostrará solo uno a la vez.</p>
         </div>
-        <div class="order-grid">
-          <div class="order-detail"><strong>Restaurante</strong>${order.restaurantAddress}</div>
-          <div class="order-detail"><strong>Cliente</strong>${order.customer}<br>${order.customerAddress}</div>
-          <div class="order-detail"><strong>Pago</strong>${order.payment}<br>Total: ${money(order.total)}</div>
+
+        <div class="primary-actions">
+          <button class="btn btn-light" data-demo-new-order="true" type="button">Simular nuevo pedido</button>
         </div>
-        <div class="order-grid">
-          <div class="order-detail"><strong>Delivery</strong>${money(order.deliveryFee)}</div>
-          <div class="order-detail"><strong>Ganancia repartidor</strong>${money(order.commission)}</div>
-          <div class="order-detail"><strong>Estado</strong>${getStatusLabel(order.driverStatus || order.status)}</div>
-        </div>
-        ${canAccept ? `
-          <div class="order-actions">
-            <button class="btn btn-primary" data-accept-order="${order.id}" ${disabled ? "disabled" : ""} type="button">
-              ${state.activeOrder ? "Ya tienes un pedido" : state.online ? "Aceptar pedido" : "Pausado"}
-            </button>
-            <button class="btn btn-light" data-open-maps="${order.restaurantAddress}" type="button">Ver restaurante</button>
-          </div>
-        ` : ""}
-      </article>
+      </div>
     `;
   }
 
-  function emptyState(message) {
-    return `<div class="empty-state">${message}</div>`;
+  function renderNewOrder() {
+    const order = state.activeOrder;
+
+    return `
+      <div class="flow-screen">
+        <div class="flow-top">
+          <div class="flow-icon">🔔</div>
+          <h1>Nuevo despacho</h1>
+          <p>Revisa lo importante y decide si lo aceptas.</p>
+        </div>
+
+        <div class="big-info-card">
+          <div class="restaurant-name">${order.restaurant}</div>
+          <p>Retiro a ${order.restaurantDistance} de ti.</p>
+
+          <div class="route-summary">
+            <div class="route-item">
+              <span>Retiro</span>
+              <strong>${order.restaurantDistance} · ${order.etaPickup}</strong>
+            </div>
+            <div class="route-item">
+              <span>Entrega</span>
+              <strong>${order.customerDistance} · ${order.etaDelivery}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="earnings-highlight">
+          <span>Ganarás por este despacho</span>
+          <strong>${money(order.commission)}</strong>
+        </div>
+
+        <div class="primary-actions">
+          <button class="btn btn-primary" data-accept-order="true" type="button">Aceptar despacho</button>
+          <button class="btn btn-light" data-open-maps="${order.restaurantAddress}" type="button">Ver restaurante en mapa</button>
+        </div>
+
+        <div class="secondary-actions">
+          <button class="btn btn-light" data-panel="order" type="button">Ver detalles</button>
+          <button class="btn btn-danger" data-reject-order="true" type="button">Rechazar</button>
+        </div>
+      </div>
+    `;
   }
 
-  function getStatusLabel(status) {
-    const labels = {
-      disponible: "Disponible",
-      aceptado: "Aceptado por repartidor",
-      voy_restaurante: "Voy al restaurante",
-      retirado: "Pedido retirado",
-      en_camino: "En camino al cliente",
-      entregado: "Entregado"
-    };
-    return labels[status] || "Sin estado";
+  function renderToRestaurant() {
+    const order = state.activeOrder;
+
+    return `
+      <div class="flow-screen">
+        <div class="flow-top">
+          <div class="flow-icon">🏪</div>
+          <h1>Ve al local</h1>
+          <p>El pedido quedó aceptado y estás en camino hacia el restaurante.</p>
+        </div>
+
+        ${renderProgress("to_restaurant")}
+
+        <div class="big-info-card">
+          <div class="restaurant-name">${order.restaurant}</div>
+          <p>${order.restaurantAddress}</p>
+
+          <div class="route-summary">
+            <div class="route-item">
+              <span>Distancia al local</span>
+              <strong>${order.restaurantDistance}</strong>
+            </div>
+            <div class="route-item">
+              <span>Tiempo estimado</span>
+              <strong>${order.etaPickup}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="primary-actions">
+          <button class="btn btn-dark" data-open-maps="${order.restaurantAddress}" type="button">Abrir GPS al local</button>
+          <button class="btn btn-primary" data-next-flow="at_restaurant" type="button">Ya llegué al local</button>
+        </div>
+
+        <div class="secondary-actions">
+          <button class="btn btn-light" data-panel="order" type="button">Ver detalles</button>
+          <button class="btn btn-light" data-panel="support" type="button">Ayuda</button>
+        </div>
+      </div>
+    `;
   }
 
-  function cleanPhone(phone) {
-    return String(phone || "").replace(/[^0-9]/g, "");
+  function renderAtRestaurant() {
+    const order = state.activeOrder;
+
+    return `
+      <div class="flow-screen">
+        <div class="flow-top">
+          <div class="flow-icon">📦</div>
+          <h1>Retira el pedido</h1>
+          <p>Confirma solo cuando el restaurante te entregue el pedido.</p>
+        </div>
+
+        ${renderProgress("at_restaurant")}
+
+        <div class="big-info-card">
+          <div class="restaurant-name">Pedido ${order.id}</div>
+          <p>Local: ${order.restaurant}</p>
+        </div>
+
+        <div class="primary-actions">
+          <button class="btn btn-primary" data-next-flow="to_customer" type="button">Pedido retirado</button>
+        </div>
+
+        <div class="secondary-actions">
+          <button class="btn btn-light" data-panel="order" type="button">Ver productos</button>
+          <button class="btn btn-light" data-panel="support" type="button">Ayuda</button>
+        </div>
+      </div>
+    `;
   }
 
-  function acceptOrder(orderId) {
-    if (!state.online) {
-      showToast("Actívate para aceptar pedidos.");
-      return;
-    }
+  function renderToCustomer() {
+    const order = state.activeOrder;
 
-    if (state.activeOrder) {
-      showToast("Ya tienes un pedido activo.");
-      return;
-    }
+    return `
+      <div class="flow-screen">
+        <div class="flow-top">
+          <div class="flow-icon">🚚</div>
+          <h1>Entrega al cliente</h1>
+          <p>Dirígete a la dirección del cliente y marca entregado al finalizar.</p>
+        </div>
 
-    const order = state.orders.find((item) => item.id === orderId);
-    if (!order) return;
+        ${renderProgress("to_customer")}
 
-    state.activeOrder = {
-      ...order,
-      status: "activo",
-      driverStatus: "aceptado",
-      acceptedAt: new Date().toISOString()
-    };
+        <div class="big-info-card">
+          <div class="restaurant-name">Cliente a ${order.customerDistance}</div>
+          <p>${order.customerAddress}</p>
 
-    state.orders = state.orders.filter((item) => item.id !== orderId);
+          <div class="route-summary">
+            <div class="route-item">
+              <span>Tiempo estimado</span>
+              <strong>${order.etaDelivery}</strong>
+            </div>
+            <div class="route-item">
+              <span>Ganancia</span>
+              <strong>${money(order.commission)}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="primary-actions">
+          <button class="btn btn-dark" data-open-maps="${order.customerAddress}" type="button">Abrir GPS al cliente</button>
+          <button class="btn btn-primary" data-next-flow="delivered" type="button">Pedido entregado</button>
+        </div>
+
+        <div class="secondary-actions">
+          <button class="btn btn-light" data-panel="client" type="button">Ver cliente</button>
+          <button class="btn btn-light" data-panel="payment" type="button">Ver pago</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderDelivered() {
+    const lastOrder = state.history[0];
+
+    return `
+      <div class="flow-screen">
+        <div class="flow-top">
+          <div class="flow-icon">✅</div>
+          <h1>Entrega completada</h1>
+          <p>Buen trabajo. Quedaste disponible para el próximo despacho.</p>
+        </div>
+
+        <div class="earnings-highlight">
+          <span>Ganaste</span>
+          <strong>${money(lastOrder ? lastOrder.commission : 0)}</strong>
+        </div>
+
+        <div class="primary-actions">
+          <button class="btn btn-primary" data-finish-delivery="true" type="button">Esperar próximo pedido</button>
+        </div>
+
+        <div class="secondary-actions">
+          <button class="btn btn-light" data-panel="earnings" type="button">Ganancias</button>
+          <button class="btn btn-light" data-panel="history" type="button">Historial</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderProgress(currentFlow) {
+    const progress = [
+      { key: "to_restaurant", label: "Aceptado · camino al local" },
+      { key: "at_restaurant", label: "Llegué al local" },
+      { key: "to_customer", label: "Pedido retirado · camino al cliente" },
+      { key: "delivered", label: "Entregado" }
+    ];
+
+    const currentIndex = progress.findIndex((item) => item.key === currentFlow);
+
+    return `
+      <div class="progress-box">
+        ${progress.map((item, index) => `
+          <div class="progress-step ${index <= currentIndex ? "done" : ""}">
+            <span class="progress-dot"></span>
+            <span>${item.label}</span>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  function acceptOrder() {
+    state.flow = "to_restaurant";
     saveState();
     render();
-    setSection("activo");
-    showToast("Pedido aceptado correctamente.");
+    showToast("Pedido aceptado. Estado: en camino al local.");
   }
 
-  function updateActiveStatus(nextStatus) {
-    if (!state.activeOrder) return;
+  function rejectOrder() {
+    state.activeOrder = null;
+    state.flow = "waiting";
+    saveState();
+    render();
+    showToast("Pedido rechazado. Se enviará a otro repartidor.");
+  }
 
-    state.activeOrder.driverStatus = nextStatus;
-
-    if (nextStatus === "entregado") {
+  function nextFlow(flow) {
+    if (flow === "delivered") {
       state.history.unshift({
         ...state.activeOrder,
         deliveredAt: new Date().toISOString()
       });
       state.activeOrder = null;
-      showToast("Entrega completada. Ganancia registrada.");
-      setSection("historial");
-    } else {
-      showToast(`Estado actualizado: ${getStatusLabel(nextStatus)}.`);
+      state.flow = "delivered";
+      saveState();
+      render();
+      showToast("Pedido entregado. Ganancia registrada.");
+      return;
     }
 
+    state.flow = flow;
+    saveState();
+    render();
+
+    const labels = {
+      at_restaurant: "Llegaste al local.",
+      to_customer: "Pedido retirado. Estado: en camino al cliente."
+    };
+
+    showToast(labels[flow] || "Estado actualizado.");
+  }
+
+  function finishDelivery() {
+    state.flow = "waiting";
+    state.activeOrder = null;
     saveState();
     render();
   }
 
-  function cancelActiveOrder() {
-    if (!state.activeOrder) return;
-
-    const restored = {
-      ...state.activeOrder,
-      status: "disponible",
-      driverStatus: undefined
-    };
-
-    delete restored.acceptedAt;
-    state.orders.unshift(restored);
-    state.activeOrder = null;
+  function simulateNewOrder() {
+    state.activeOrder = { ...DEMO_ORDER, id: `BHZ-${Math.floor(1000 + Math.random() * 8999)}` };
+    state.flow = "new_order";
     saveState();
     render();
-    setSection("disponibles");
-    showToast("Pedido liberado y devuelto a disponibles.");
+    showToast("Nuevo despacho recibido.");
   }
 
   function openMaps(address) {
@@ -354,21 +428,162 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.open(url, "_blank", "noopener");
   }
 
+  function openPanel(panelName) {
+    const order = state.activeOrder || state.history[0] || DEMO_ORDER;
+    const earnings = state.history.reduce((sum, item) => sum + Number(item.commission || 0), 0);
+
+    const panels = {
+      order: {
+        title: "Detalles del pedido",
+        body: `
+          <div class="info-list">
+            <div class="info-item"><span>Pedido</span><strong>${order.id}</strong></div>
+            <div class="info-item"><span>Restaurante</span><p>${order.restaurant}<br>${order.restaurantAddress}</p></div>
+            <div class="info-item"><span>Productos</span><p>${order.items}</p></div>
+            <div class="info-item"><span>Entrega</span><p>${order.customerAddress}</p></div>
+            <div class="info-item"><span>Ganancia</span><strong>${money(order.commission)}</strong></div>
+          </div>
+        `
+      },
+      client: {
+        title: "Datos del cliente",
+        body: `
+          <div class="info-list">
+            <div class="info-item"><span>Cliente</span><strong>${order.customer}</strong></div>
+            <div class="info-item"><span>Dirección</span><p>${order.customerAddress}</p></div>
+            <div class="info-item"><span>Teléfono</span><p>${order.customerPhone}</p></div>
+            <a class="btn btn-primary" href="https://wa.me/${cleanPhone(order.customerPhone)}" target="_blank" rel="noopener">WhatsApp cliente</a>
+          </div>
+        `
+      },
+      payment: {
+        title: "Pago del pedido",
+        body: `
+          <div class="info-list">
+            <div class="info-item"><span>Método</span><strong>${order.payment}</strong></div>
+            <div class="info-item"><span>Total pedido</span><strong>${money(order.total)}</strong></div>
+            <div class="info-item"><span>Delivery</span><strong>${money(order.deliveryFee)}</strong></div>
+            <div class="info-item"><span>Ganancia repartidor</span><strong>${money(order.commission)}</strong></div>
+          </div>
+        `
+      },
+      earnings: {
+        title: "Mis ganancias",
+        body: `
+          <div class="info-list">
+            <div class="info-item"><span>Ganancia acumulada demo</span><strong>${money(earnings)}</strong></div>
+            <div class="info-item"><span>Entregas completadas</span><strong>${state.history.length}</strong></div>
+            <div class="info-item"><span>Estado</span><p>Esta vista todavía es demo frontend. Luego se conectará al backend.</p></div>
+          </div>
+        `
+      },
+      history: {
+        title: "Historial",
+        body: state.history.length
+          ? `<div class="info-list">${state.history.map((item) => `
+              <div class="info-item">
+                <span>${item.id}</span>
+                <strong>${item.restaurant}</strong>
+                <p>${item.customerAddress}</p>
+                <p>Ganancia: ${money(item.commission)}</p>
+              </div>
+            `).join("")}</div>`
+          : `<div class="info-list"><div class="info-item"><span>Historial</span><p>Aún no tienes entregas completadas en esta demo.</p></div></div>`
+      },
+      profile: {
+        title: "Perfil repartidor",
+        body: `
+          <div class="info-list">
+            <div class="info-item"><span>Nombre</span><strong>Repartidor BHUZ</strong></div>
+            <div class="info-item"><span>Zona</span><p>Punto Fijo</p></div>
+            <div class="info-item"><span>Vehículo</span><p>Moto</p></div>
+            <div class="info-item"><span>Estado</span><p>${state.online ? "Disponible" : "Pausado"}</p></div>
+          </div>
+        `
+      },
+      support: {
+        title: "Ayuda",
+        body: `
+          <div class="info-list">
+            <div class="info-item"><span>Problema con el local</span><p>Más adelante aquí irá contacto con soporte BHUZ.</p></div>
+            <div class="info-item"><span>Problema con el cliente</span><p>El repartidor podrá reportar incidencia sin llenar la pantalla principal.</p></div>
+          </div>
+        `
+      }
+    };
+
+    const panel = panels[panelName] || panels.order;
+    els.sidePanelTitle.textContent = panel.title;
+    els.sidePanelBody.innerHTML = panel.body;
+    els.sidePanel.classList.add("open");
+    els.sidePanel.setAttribute("aria-hidden", "false");
+  }
+
+  function closePanel() {
+    els.sidePanel.classList.remove("open");
+    els.sidePanel.setAttribute("aria-hidden", "true");
+  }
+
+  function cleanPhone(phone) {
+    return String(phone || "").replace(/[^0-9]/g, "");
+  }
+
   document.body.addEventListener("click", (event) => {
-    const menuButton = event.target.closest(".menu-btn");
-    if (menuButton) setSection(menuButton.dataset.section);
+    const toggleOnline = event.target.closest("[data-toggle-online]");
+    if (toggleOnline) {
+      state.online = true;
+      saveState();
+      render();
+      showToast("Repartidor disponible.");
+      return;
+    }
 
     const acceptButton = event.target.closest("[data-accept-order]");
-    if (acceptButton) acceptOrder(acceptButton.dataset.acceptOrder);
+    if (acceptButton) {
+      acceptOrder();
+      return;
+    }
 
-    const nextStatusButton = event.target.closest("[data-next-status]");
-    if (nextStatusButton) updateActiveStatus(nextStatusButton.dataset.nextStatus);
+    const rejectButton = event.target.closest("[data-reject-order]");
+    if (rejectButton) {
+      rejectOrder();
+      return;
+    }
 
-    const cancelButton = event.target.closest("[data-cancel-active]");
-    if (cancelButton) cancelActiveOrder();
+    const nextButton = event.target.closest("[data-next-flow]");
+    if (nextButton) {
+      nextFlow(nextButton.dataset.nextFlow);
+      return;
+    }
+
+    const finishButton = event.target.closest("[data-finish-delivery]");
+    if (finishButton) {
+      finishDelivery();
+      return;
+    }
+
+    const demoButton = event.target.closest("[data-demo-new-order]");
+    if (demoButton) {
+      simulateNewOrder();
+      return;
+    }
 
     const mapsButton = event.target.closest("[data-open-maps]");
-    if (mapsButton) openMaps(mapsButton.dataset.openMaps);
+    if (mapsButton) {
+      openMaps(mapsButton.dataset.openMaps);
+      return;
+    }
+
+    const panelButton = event.target.closest("[data-panel]");
+    if (panelButton) {
+      openPanel(panelButton.dataset.panel);
+      return;
+    }
+
+    const closeButton = event.target.closest("[data-close-panel]");
+    if (closeButton) {
+      closePanel();
+    }
   });
 
   els.toggleDriverStatusBtn.addEventListener("click", () => {
@@ -378,18 +593,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     showToast(state.online ? "Repartidor disponible." : "Repartidor pausado.");
   });
 
-  els.goAvailableBtn.addEventListener("click", () => setSection("disponibles"));
-
-  els.refreshOrdersBtn.addEventListener("click", () => {
-    state.orders = DEMO_ORDERS.filter((demoOrder) => {
-      const isActive = state.activeOrder && state.activeOrder.id === demoOrder.id;
-      const isDelivered = state.history.some((historyOrder) => historyOrder.id === demoOrder.id);
-      return !isActive && !isDelivered;
-    });
-    saveState();
-    render();
-    showToast("Pedidos demo actualizados.");
-  });
-
   render();
 });
+
