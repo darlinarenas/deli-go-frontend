@@ -33,7 +33,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     sideMenu: document.getElementById("sideMenu"),
     themeToggleBtn: document.getElementById("themeToggleBtn"),
     toast: document.getElementById("toast"),
-    menuDriverName: document.getElementById("menuDriverName")
+    menuDriverName: document.getElementById("menuDriverName"),
+    menuAvailabilityBtn: document.getElementById("menuAvailabilityBtn")
   };
 
   const state = loadState();
@@ -59,6 +60,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     return {
       darkMode: false,
+      online: true,
       currentStatus: "available",
       order: { ...DEMO_ORDER },
       history: [],
@@ -86,6 +88,54 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderDeliveries();
     renderEarnings();
     renderProfile();
+    renderMenuAvailability();
+  }
+
+
+  function renderQuickSummary() {
+    return `
+      <div class="quick-summary" aria-label="Resumen del día">
+        <div class="quick-summary-item"><span>Entregas</span><strong>${state.today.deliveries}</strong></div>
+        <div class="quick-summary-item"><span>Ganancias</span><strong>${money(state.today.earnings)}</strong></div>
+        <div class="quick-summary-item"><span>Online</span><strong>${state.today.onlineTime}</strong></div>
+      </div>
+    `;
+  }
+
+  function renderAvailabilityCard() {
+    return `
+      <div class="availability-card">
+        <div>
+          <strong>${state.online ? "Disponible para recibir pedidos" : "No disponible"}</strong>
+          <p>${state.online ? "Conectado y esperando despachos." : "Pausado para comer, descansar o resolver algo."}</p>
+        </div>
+        <button class="switch-btn ${state.online ? "on" : ""}" data-toggle-availability="true" type="button" aria-label="Cambiar disponibilidad"></button>
+      </div>
+    `;
+  }
+
+  function renderMenuAvailability() {
+    if (!els.menuAvailabilityBtn) return;
+    els.menuAvailabilityBtn.innerHTML = state.online
+      ? "🟢 Disponible <span>Conectado para recibir pedidos</span>"
+      : "🔴 No disponible <span>Pausado temporalmente</span>";
+  }
+
+  function toggleAvailability() {
+    if (!["available", "new_order"].includes(state.currentStatus)) {
+      showToast("Termina el pedido activo antes de cambiar disponibilidad.");
+      return;
+    }
+
+    state.online = !state.online;
+
+    if (!state.online && state.currentStatus === "new_order") {
+      state.currentStatus = "available";
+    }
+
+    saveState();
+    renderAll();
+    showToast(state.online ? "Estás disponible para recibir pedidos." : "Modo descanso activado. No recibirás pedidos.");
   }
 
   function renderHome() {
@@ -93,13 +143,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     if (status === "available") {
       els.homeView.innerHTML = `
-        ${statusPill("available", "Disponible")}
+        ${statusPill(state.online ? "available" : "offline", state.online ? "Disponible" : "No disponible")}
+        ${renderQuickSummary()}
+        ${renderAvailabilityCard()}
         <article class="main-card center-card">
           <div class="radar">🛵</div>
-          <h1>Esperando nuevo pedido</h1>
-          <p>Te avisaremos cuando haya un despacho disponible para ti.</p>
+          <h1>${state.online ? "Esperando nuevo pedido" : "Estás en modo descanso"}</h1>
+          <p>${state.online ? "Te avisaremos cuando haya un despacho disponible para ti." : "Activa tu disponibilidad cuando quieras volver a recibir pedidos."}</p>
           <div class="action-stack">
-            <button class="btn btn-green" data-demo-new-order="true" type="button">Simular nuevo pedido</button>
+            <button class="btn btn-green" data-demo-new-order="true" ${state.online ? "" : "disabled"} type="button">Simular nuevo pedido</button>
           </div>
         </article>
       `;
@@ -349,6 +401,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function renderEarnings() {
     els.earningsView.innerHTML = `
+      ${renderAvailabilityCard()}
       <div class="summary-card">
         <h1>Ganancias</h1>
         <p class="small-text">Resumen del día del repartidor.</p>
@@ -369,6 +422,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function renderProfile() {
     els.profileView.innerHTML = `
+      ${renderAvailabilityCard()}
       <div class="info-card profile-header">
         <div class="avatar">R</div>
         <h1>${state.driver.name}</h1>
@@ -475,7 +529,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     const nav = event.target.closest(".nav-btn");
     if (nav) setView(nav.dataset.view);
 
-    if (event.target.closest("[data-demo-new-order]")) setStatus("new_order");
+    if (event.target.closest("[data-demo-new-order]")) {
+      if (!state.online) {
+        showToast("Actívate para recibir pedidos.");
+      } else {
+        setStatus("new_order");
+      }
+    }
 
     if (event.target.closest("[data-accept-order]")) {
       setStatus("to_local");
@@ -496,6 +556,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (event.target.closest("[data-back-customer]")) setStatus("to_customer");
     if (event.target.closest("[data-confirm-code]")) confirmDeliveryCode();
     if (event.target.closest("[data-ready-next]")) resetForNextOrder();
+
+    if (event.target.closest("[data-toggle-availability]")) toggleAvailability();
 
     if (event.target.closest("[data-close-menu]")) closeMenu();
 
@@ -541,6 +603,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     els.sideMenu.setAttribute("aria-hidden", "true");
   }
 });
+
 
 
 
