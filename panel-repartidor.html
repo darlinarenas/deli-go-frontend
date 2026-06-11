@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BHUZ - Panel Repartidor</title>
+  <link rel="stylesheet" href="css/panel-repartidor.css" />
+</head>
+<body>
+  <header class="driver-topbar">
+    <div class="driver-brand">
+      <img src="assets/image/bhuz.png" alt="BHUZ" />
+      <div>
+        <strong>Panel Repartidor</strong>
+        <span>Entregas en vivo</span>
+      </div>
+    </div>
+
+    <div class="driver-status-box">
+      <span id="driverStatusPill" class="driver-status online">Disponible</span>
+      <button id="toggleDriverStatusBtn" class="btn btn-light" type="button">Pausar</button>
+      <a class="btn btn-ghost" href="index.html">Salir</a>
+    </div>
+  </header>
+
+  <main class="driver-layout">
+    <aside class="driver-sidebar">
+      <div class="driver-profile-card">
+        <div class="avatar">R</div>
+        <h2 id="driverName">Repartidor BHUZ</h2>
+        <p id="driverZone">Zona: Punto Fijo</p>
+      </div>
+
+      <nav class="driver-menu" aria-label="Menú repartidor">
+        <button class="menu-btn active" data-section="resumen" type="button">Resumen</button>
+        <button class="menu-btn" data-section="disponibles" type="button">Pedidos disponibles</button>
+        <button class="menu-btn" data-section="activo" type="button">Pedido activo</button>
+        <button class="menu-btn" data-section="historial" type="button">Historial</button>
+      </nav>
+    </aside>
+
+    <section class="driver-content">
+      <section id="section-resumen" class="content-section active">
+        <div class="hero-card">
+          <div>
+            <p class="eyebrow">BHUZ Repartidor</p>
+            <h1>Controla tus entregas sin enredos</h1>
+            <p>Pedidos disponibles, ruta, contacto del cliente y estados de entrega en una sola pantalla.</p>
+          </div>
+          <button id="goAvailableBtn" class="btn btn-primary" type="button">Ver pedidos</button>
+        </div>
+
+        <div class="stats-grid">
+          <article class="stat-card">
+            <span>Disponibles</span>
+            <strong id="availableCount">0</strong>
+          </article>
+          <article class="stat-card">
+            <span>Activos</span>
+            <strong id="activeCount">0</strong>
+          </article>
+          <article class="stat-card">
+            <span>Entregados hoy</span>
+            <strong id="deliveredTodayCount">0</strong>
+          </article>
+          <article class="stat-card">
+            <span>Ganancia estimada</span>
+            <strong id="todayEarnings">$0</strong>
+          </article>
+        </div>
+
+        <div class="panel-card">
+          <div class="panel-title-row">
+            <h2>Próximo pedido recomendado</h2>
+            <span class="badge">Demo segura</span>
+          </div>
+          <div id="recommendedOrder" class="orders-list"></div>
+        </div>
+      </section>
+
+      <section id="section-disponibles" class="content-section">
+        <div class="panel-card">
+          <div class="panel-title-row">
+            <div>
+              <h2>Pedidos disponibles</h2>
+              <p>Acepta solo un pedido a la vez para evitar confusiones.</p>
+            </div>
+            <button id="refreshOrdersBtn" class="btn btn-light" type="button">Actualizar demo</button>
+          </div>
+          <div id="availableOrdersList" class="orders-list"></div>
+        </div>
+      </section>
+
+      <section id="section-activo" class="content-section">
+        <div class="panel-card">
+          <div class="panel-title-row">
+            <div>
+              <h2>Pedido activo</h2>
+              <p>Cambia el estado de la entrega paso a paso.</p>
+            </div>
+          </div>
+          <div id="activeOrderBox"></div>
+        </div>
+      </section>
+
+      <section id="section-historial" class="content-section">
+        <div class="panel-card">
+          <div class="panel-title-row">
+            <div>
+              <h2>Historial de entregas</h2>
+              <p>Resumen de pedidos completados por el repartidor.</p>
+            </div>
+          </div>
+          <div id="historyList" class="history-list"></div>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/auth.js"></script>
+  <script src="js/panel-repartidor.js"></script>
+</body>
+</html>

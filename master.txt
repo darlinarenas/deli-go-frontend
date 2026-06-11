@@ -1459,6 +1459,366 @@ FIN ACTUALIZACIÓN FINAL — INVITAR COMIDA / INVITADOS FRECUENTES
 ============================================================
 
 
+
+
+
+
+============================================================
+ACTUALIZACIÓN FINAL DE SESIÓN — INVITACIONES PENDIENTES + SEGUIMIENTO DEL INVITADO
+============================================================
+
+Fecha:
+- Sesión donde se convirtió “Invitar comida” al flujo profesional correcto y se mejoró la experiencia del invitado con seguimiento y sonidos.
+
+============================================================
+1. CAMBIO PRINCIPAL — FLUJO PROFESIONAL DE INVITAR COMIDA
+============================================================
+
+Estado anterior:
+- El usuario armaba carrito.
+- Elegía “Invitar comida”.
+- Se creaba el pedido real inmediatamente.
+- Después el invitado confirmaba GPS.
+- Riesgo: si el invitado nunca confirmaba ubicación, podía quedar un pedido real incompleto o muerto.
+
+Estado nuevo:
+✔ El usuario arma carrito.
+✔ Elige “Invitar comida”.
+✔ BHUZ crea una invitación temporal.
+✔ NO se crea pedido real todavía.
+✔ El usuario comparte el link.
+✔ El invitado abre el link.
+✔ El invitado confirma GPS obligatorio + referencia.
+✔ BHUZ actualiza la invitación pendiente.
+✔ El checkout del usuario detecta:
+  “Ubicación recibida correctamente.”
+✔ Ahora aparece la opción para confirmar pedido.
+✔ Solo después de confirmar, BHUZ crea el pedido real.
+
+Resultado:
+✔ Ya no nacen pedidos muertos.
+✔ El restaurante solo recibe pedidos válidos.
+✔ El pedido nace con ubicación final confirmada.
+✔ El flujo queda mejor preparado para pagos reales.
+✔ El flujo queda mucho más profesional.
+
+============================================================
+2. TABLA NUEVA CREADA
+============================================================
+
+Tabla creada en Supabase/PostgreSQL:
+- invitaciones_pendientes
+
+Uso:
+- Guardar invitaciones temporales antes de crear el pedido real.
+
+Datos principales:
+- invite_token
+- sender_email
+- sender_name
+- recipient_name
+- recipient_phone
+- invite_message
+- restaurant_email
+- restaurant_name
+- cart_payload
+- subtotal
+- total
+- invite_status
+- recipient_address
+- recipient_reference
+- recipient_latitude
+- recipient_longitude
+- order_id
+- confirmed_at
+- expires_at
+- created_at
+- updated_at
+
+Estados importantes:
+- pendiente
+- ubicacion_confirmada
+- pedido_creado
+- expirada
+
+Regla:
+- Esta tabla NO reemplaza orders.
+- Esta tabla existe antes del pedido real.
+- orders solo debe nacer después de GPS confirmado.
+
+============================================================
+3. BACKEND ACTUALIZADO
+============================================================
+
+Archivo trabajado:
+- deligo-backend/server.js
+
+Cambios principales:
+✔ Se agregaron endpoints para invitaciones pendientes.
+✔ Se mantuvo pedido normal funcionando igual.
+✔ Se mantuvo delivery_invites para compatibilidad/historial.
+✔ Se corrigió el endpoint público del invitado para devolver también el estado real del pedido cuando ya existe.
+✔ Se conectó el flujo:
+  invitación pendiente → GPS confirmado → creación del pedido real → seguimiento del pedido.
+
+Endpoints relevantes nuevos/corregidos:
+- POST /invitaciones-pendientes
+- GET /invite/:token
+- POST /invite/:token/location
+- POST /invitaciones-pendientes/:id/create-order
+- endpoints de estado/seguimiento asociados al token
+
+Regla:
+- No tocar panel restaurante si no hace falta.
+- No tocar admin.
+- No tocar pedido normal.
+
+============================================================
+4. FRONTEND CHECKOUT ACTUALIZADO
+============================================================
+
+Archivo trabajado:
+- js/restaurant-page.js
+
+Cambio principal:
+✔ Cuando el usuario elige “Invitar comida”, ya no se crea order inmediatamente.
+✔ Ahora se crea invitación pendiente.
+✔ El usuario puede compartir el link.
+✔ El checkout espera la confirmación del GPS del invitado.
+✔ Cuando el invitado confirma ubicación, el usuario ve que ya puede confirmar el pedido.
+✔ Al confirmar, se crea el pedido real.
+
+Resultado:
+✔ Pedido normal no se rompió.
+✔ Carrito no se rompió.
+✔ Checkout no se rompió.
+✔ Invitar comida ahora tiene flujo correcto.
+
+============================================================
+5. LINK DEL INVITADO CORREGIDO
+============================================================
+
+Archivo trabajado:
+- js/invite.js
+
+Problema detectado:
+- Después de que el invitado confirmaba ubicación, si refrescaba la página, el sistema volvía a mostrar el formulario para compartir GPS.
+- Eso era incorrecto.
+
+Corrección:
+✔ Si el invitado ya confirmó ubicación, invite.html ya NO vuelve a pedir GPS.
+✔ Muestra estado de ubicación confirmada.
+✔ Si el pedido ya fue creado, muestra seguimiento del pedido.
+✔ El invitado puede dejar el link abierto y ver el avance.
+
+============================================================
+6. SEGUIMIENTO DEL PEDIDO PARA EL INVITADO
+============================================================
+
+Archivo trabajado:
+- js/invite.js
+- deligo-backend/server.js
+
+Estado:
+✔ invite.html ahora muestra el estado real del pedido.
+✔ Ya actualiza automáticamente el estado.
+✔ El invitado puede ver:
+  - aceptado
+  - preparando
+  - listo
+  - en camino
+  - entregado
+
+Problema corregido:
+- Al principio mostraba estados pero no se actualizaban porque el endpoint seguía devolviendo el estado de la invitación y no el estado real de orders.
+- Se corrigió para que el invitado reciba el estado real del pedido cuando ya existe order_id.
+
+============================================================
+7. SONIDOS PARA EL INVITADO
+============================================================
+
+Archivo trabajado:
+- js/invite.js
+
+Objetivo:
+Hacer que el invitado viva una experiencia premium y se anime a crear su cuenta en BHUZ.
+
+Estado final:
+✔ El invitado escucha sonidos cuando cambia el estado del pedido.
+✔ Los sonidos funcionan con actualización automática.
+✔ El botón de activar sonido aparece una sola vez.
+✔ Ya no se duplica en cada actualización.
+✔ Ya no obliga a presionar el botón en cada cambio de estado.
+✔ Después de activarlo una vez, los siguientes cambios pueden sonar correctamente.
+✔ Esto convierte el link público en una experiencia tipo app real.
+
+Idea de valor:
+- El invitado no solo recibe comida.
+- El invitado vive la experiencia BHUZ:
+  - ubicación confirmada
+  - pedido aceptado
+  - preparando
+  - listo
+  - en camino
+  - entregado
+  - sonidos y seguimiento en vivo
+
+Esto puede ayudar a convertir invitados en nuevos usuarios.
+
+============================================================
+8. ARCHIVOS GENERADOS / ENTREGADOS EN ESTA SESIÓN
+============================================================
+
+SQL:
+- SQL_invitaciones_pendientes_BHUZ.txt
+
+Backend:
+- server_INVITACIONES_PENDIENTES_BHUZ.txt
+- server_SEGUIMIENTO_INVITADO_ESTADOS_BHUZ.txt
+
+Frontend:
+- restaurant-page_INVITACIONES_PENDIENTES_BHUZ.txt
+- invite_SEGUIMIENTO_SONIDOS_BHUZ.txt
+- invite_SEGUIMIENTO_SONIDOS_CORREGIDO_BHUZ.txt
+- invite_SONIDO_UNA_SOLA_VEZ_BHUZ.txt
+
+Archivos reales reemplazados:
+- deligo-backend/server.js
+- js/restaurant-page.js
+- js/invite.js
+
+============================================================
+9. ESTADO FINAL CONFIRMADO
+============================================================
+
+✔ Nada se rompió.
+✔ Pedido normal sigue funcionando.
+✔ Carrito sigue funcionando.
+✔ Checkout sigue funcionando.
+✔ Invitar comida funciona con invitación pendiente.
+✔ El pedido real ya no nace antes de que el invitado confirme ubicación.
+✔ El invitado confirma GPS obligatorio.
+✔ El usuario puede confirmar pedido después de ubicación recibida.
+✔ El pedido real nace completo.
+✔ El restaurante recibe pedido válido.
+✔ invite.html no vuelve a pedir GPS al refrescar.
+✔ invite.html muestra estados reales del pedido.
+✔ invite.html actualiza estados automáticamente.
+✔ invite.html reproduce sonidos por estado.
+✔ El botón de activar sonido aparece solo una vez.
+✔ La experiencia del invitado quedó como un plus importante para BHUZ.
+
+============================================================
+10. REGLAS REFORZADAS
+============================================================
+
+1. No volver a crear pedido real antes de GPS confirmado en flujo “Invitar comida”.
+2. Pedido normal y pedido invitado deben mantenerse separados en lógica.
+3. invitaciones_pendientes es la etapa previa.
+4. orders es solo para pedidos reales.
+5. delivery_invites y delivery_saved_guests se mantienen.
+6. invite.html debe servir como:
+   - pantalla de confirmar ubicación
+   - pantalla de seguimiento del pedido
+   - demo emocional de BHUZ para futuros usuarios
+7. El sonido del invitado debe activarse una sola vez.
+8. No duplicar botones por polling o re-render.
+9. No tocar panel restaurante si el problema está en invite.js.
+10. No tocar backend si el problema es solo de UI/sonido.
+
+============================================================
+11. PRÓXIMO PASO RECOMENDADO
+============================================================
+
+El siguiente paso lógico NO debería ser todavía el perfil del repartidor completo.
+
+Antes del repartidor conviene cerrar una base intermedia:
+
+A. MÓDULO PERFIL DE USUARIO + MIS DIRECCIONES
+- Crear o consolidar perfil del usuario.
+- Listar direcciones guardadas.
+- Agregar nuevas direcciones.
+- Editar dirección con botón explícito.
+- Marcar dirección principal.
+- Eliminar dirección si no es la única.
+- Mantener máximo 5 direcciones.
+- Evitar edición libre desde checkout.
+
+Motivo:
+El checkout, los pedidos normales y las invitaciones dependen de direcciones sólidas.
+
+B. CHECKOUT SOLO SELECCIÓN / NO EDICIÓN LIBRE
+- El checkout debe seleccionar dirección guardada.
+- No debe ser el lugar principal para editar datos permanentes.
+- Debe enviar al perfil si el usuario necesita cambiar datos.
+
+C. DESPUÉS DE ESO: PERFIL / MÓDULO REPARTIDOR
+Cuando direcciones y checkout estén sólidos, sí conviene crear repartidor.
+
+============================================================
+12. PERFIL DEL REPARTIDOR — PRÓXIMO GRAN BLOQUE
+============================================================
+
+Sí debe hacerse pronto, pero no como primer paso si todavía falta cerrar perfil/direcciones del usuario.
+
+Objetivo del módulo repartidor:
+- Crear rol repartidor.
+- Crear perfil de repartidor.
+- Ver pedidos disponibles/en camino.
+- Aceptar entrega.
+- Ver dirección + referencia + GPS.
+- Cambiar estados de entrega.
+- Ver ganancias.
+- Ver historial.
+- Futuro: liquidaciones semanales.
+
+Tablas probables:
+- drivers / repartidores
+- driver_profiles / perfiles_repartidores
+- delivery_assignments / asignaciones_delivery
+- driver_earnings / ganancias_repartidor
+
+Estados futuros:
+- pedido listo para asignar
+- repartidor asignado
+- recogido
+- en camino
+- entregado
+
+Regla:
+- El restaurante NO debe ver comisión del repartidor.
+- La comisión del repartidor se maneja en módulo repartidor/admin.
+- Base recordada: 10% para repartidor como referencia futura.
+
+============================================================
+13. ORDEN RECOMENDADO DESDE AQUÍ
+============================================================
+
+Orden más seguro:
+
+1. Perfil de usuario + Mis direcciones.
+2. Checkout solo selección de dirección.
+3. Prueba completa:
+   - pedido normal
+   - invitar comida
+   - invitado confirma
+   - pedido nace
+   - restaurante procesa
+   - invitado escucha seguimiento
+4. Crear módulo repartidor.
+5. Conectar pedido listo/en camino con repartidor.
+6. Crear ganancias de repartidor.
+7. Luego pagos/liquidaciones.
+
+Motivo:
+El repartidor depende de que la ubicación y la dirección estén impecables.
+Si el repartidor se hace antes, puede heredar errores de direcciones o checkout.
+
+============================================================
+FIN ACTUALIZACIÓN — INVITACIONES PENDIENTES + SEGUIMIENTO INVITADO
+============================================================
+
+
 ============================================================
 FIN MASTER FINAL
 =============================================================
