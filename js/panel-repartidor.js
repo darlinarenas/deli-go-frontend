@@ -3,56 +3,32 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadCurrentSession();
   }
 
-  const STORAGE_KEY = "bhuzDriverAssistantPanelDemo";
+  const STORAGE_KEY = "bhuzDriverAssistantPanelDemoV3";
 
   const DEMO_ORDER = {
     id: "BHZ-1042",
     restaurant: "Burger Punto",
+    restaurantBrief: "Local de hamburguesas · Retiro por mostrador",
     restaurantAddress: "Av. Jacinto Lara, Punto Fijo",
     restaurantDistance: "1.8 km",
     customer: "María González",
     customerPhone: "+584121112233",
     customerAddress: "Santa Irene, calle 4, casa azul",
     customerDistance: "3.4 km",
+    orderBrief: "2 hamburguesas clásicas + papas grandes",
     items: "2 Hamburguesas clásicas, 1 papas grandes",
-    payment: "Pago móvil",
-    total: 18.5,
+    payment: "Pago móvil confirmado",
     deliveryFee: 2.5,
     commission: 2.0,
     etaPickup: "8 min",
-    etaDelivery: "15 min"
+    etaDelivery: "15 min",
+    deliveryCode: "4829"
   };
-
-  const STEPS = [
-    {
-      key: "waiting",
-      label: "Esperando pedido"
-    },
-    {
-      key: "new_order",
-      label: "Pedido recibido"
-    },
-    {
-      key: "to_restaurant",
-      label: "En camino al local"
-    },
-    {
-      key: "at_restaurant",
-      label: "Llegué al local"
-    },
-    {
-      key: "to_customer",
-      label: "En camino al cliente"
-    },
-    {
-      key: "delivered",
-      label: "Pedido entregado"
-    }
-  ];
 
   const els = {
     driverStatusText: document.getElementById("driverStatusText"),
     toggleDriverStatusBtn: document.getElementById("toggleDriverStatusBtn"),
+    themeToggleBtn: document.getElementById("themeToggleBtn"),
     mainFlowBox: document.getElementById("mainFlowBox"),
     sidePanel: document.getElementById("sidePanel"),
     sidePanelTitle: document.getElementById("sidePanelTitle"),
@@ -72,6 +48,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     return {
       online: true,
+      theme: "light",
       flow: "new_order",
       activeOrder: DEMO_ORDER,
       history: []
@@ -93,7 +70,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     showToast.timer = setTimeout(() => els.toast.classList.remove("show"), 2600);
   }
 
+  function applyTheme() {
+    document.body.classList.toggle("dark-mode", state.theme === "dark");
+    els.themeToggleBtn.textContent = state.theme === "dark" ? "☀️" : "🌙";
+    els.themeToggleBtn.setAttribute(
+      "aria-label",
+      state.theme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"
+    );
+  }
+
   function render() {
+    applyTheme();
     renderHeader();
     renderMainFlow();
   }
@@ -120,6 +107,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       to_restaurant: renderToRestaurant,
       at_restaurant: renderAtRestaurant,
       to_customer: renderToCustomer,
+      confirm_delivery: renderConfirmDelivery,
       delivered: renderDelivered
     };
 
@@ -134,7 +122,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           <h1>Estás pausado</h1>
           <p>Actívate cuando estés listo para recibir despachos.</p>
         </div>
-
         <div class="primary-actions">
           <button class="btn btn-primary" data-toggle-online="true" type="button">Activarme</button>
         </div>
@@ -150,7 +137,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           <h1>Esperando pedido</h1>
           <p>Cuando entre un despacho, BHUZ te mostrará solo uno a la vez.</p>
         </div>
-
         <div class="primary-actions">
           <button class="btn btn-light" data-demo-new-order="true" type="button">Simular nuevo pedido</button>
         </div>
@@ -171,7 +157,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         <div class="big-info-card">
           <div class="restaurant-name">${order.restaurant}</div>
-          <p>Retiro a ${order.restaurantDistance} de ti.</p>
+          <p>${order.restaurantBrief}</p>
+          <p class="small-line">Retiro a ${order.restaurantDistance} de ti.</p>
+
+          <div class="brief-box">
+            <span>Pedido</span>
+            <strong>${order.orderBrief}</strong>
+          </div>
 
           <div class="route-summary">
             <div class="route-item">
@@ -218,7 +210,13 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         <div class="big-info-card">
           <div class="restaurant-name">${order.restaurant}</div>
-          <p>${order.restaurantAddress}</p>
+          <p>${order.restaurantBrief}</p>
+          <p class="small-line">${order.restaurantAddress}</p>
+
+          <div class="brief-box">
+            <span>Pedido</span>
+            <strong>${order.orderBrief}</strong>
+          </div>
 
           <div class="route-summary">
             <div class="route-item">
@@ -261,6 +259,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="big-info-card">
           <div class="restaurant-name">Pedido ${order.id}</div>
           <p>Local: ${order.restaurant}</p>
+          <div class="brief-box">
+            <span>Descripción corta</span>
+            <strong>${order.orderBrief}</strong>
+          </div>
+          <p class="security-note">Revisa que la bolsa esté completa antes de salir.</p>
         </div>
 
         <div class="primary-actions">
@@ -283,7 +286,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="flow-top">
           <div class="flow-icon">🚚</div>
           <h1>Entrega al cliente</h1>
-          <p>Dirígete a la dirección del cliente y marca entregado al finalizar.</p>
+          <p>Dirígete a la dirección del cliente. Para cerrar, necesitarás el código del cliente.</p>
         </div>
 
         ${renderProgress("to_customer")}
@@ -291,6 +294,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="big-info-card">
           <div class="restaurant-name">Cliente a ${order.customerDistance}</div>
           <p>${order.customerAddress}</p>
+
+          <div class="brief-box">
+            <span>Cliente</span>
+            <strong>${order.customer}</strong>
+          </div>
 
           <div class="route-summary">
             <div class="route-item">
@@ -306,12 +314,46 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         <div class="primary-actions">
           <button class="btn btn-dark" data-open-maps="${order.customerAddress}" type="button">Abrir GPS al cliente</button>
-          <button class="btn btn-primary" data-next-flow="delivered" type="button">Pedido entregado</button>
+          <button class="btn btn-primary" data-next-flow="confirm_delivery" type="button">Llegué al cliente</button>
         </div>
 
         <div class="secondary-actions">
           <button class="btn btn-light" data-panel="client" type="button">Ver cliente</button>
-          <button class="btn btn-light" data-panel="payment" type="button">Ver pago</button>
+          <button class="btn btn-light" data-panel="support" type="button">Ayuda</button>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderConfirmDelivery() {
+    const order = state.activeOrder;
+
+    return `
+      <div class="flow-screen">
+        <div class="flow-top">
+          <div class="flow-icon">🔐</div>
+          <h1>Código de entrega</h1>
+          <p>Pide al cliente su código y escríbelo para confirmar que el pedido fue recibido.</p>
+        </div>
+
+        ${renderProgress("confirm_delivery")}
+
+        <div class="big-info-card">
+          <div class="restaurant-name">Entrega a ${order.customer}</div>
+          <p>${order.customerAddress}</p>
+          <div class="code-demo-note">Demo: el código de este pedido es <strong>${order.deliveryCode}</strong>.</div>
+          <label class="code-label" for="deliveryCodeInput">Código del cliente</label>
+          <input id="deliveryCodeInput" class="delivery-code-input" type="tel" inputmode="numeric" maxlength="6" placeholder="Ej: 4829" autocomplete="one-time-code" />
+          <p id="deliveryCodeError" class="code-error" aria-live="polite"></p>
+        </div>
+
+        <div class="primary-actions">
+          <button class="btn btn-primary" data-confirm-delivery="true" type="button">Confirmar entrega</button>
+        </div>
+
+        <div class="secondary-actions">
+          <button class="btn btn-light" data-next-flow="to_customer" type="button">Volver</button>
+          <button class="btn btn-light" data-panel="support" type="button">Ayuda</button>
         </div>
       </div>
     `;
@@ -325,7 +367,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         <div class="flow-top">
           <div class="flow-icon">✅</div>
           <h1>Entrega completada</h1>
-          <p>Buen trabajo. Quedaste disponible para el próximo despacho.</p>
+          <p>Código validado correctamente. Quedaste disponible para el próximo despacho.</p>
         </div>
 
         <div class="earnings-highlight">
@@ -350,6 +392,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       { key: "to_restaurant", label: "Aceptado · camino al local" },
       { key: "at_restaurant", label: "Llegué al local" },
       { key: "to_customer", label: "Pedido retirado · camino al cliente" },
+      { key: "confirm_delivery", label: "Validar código" },
       { key: "delivered", label: "Entregado" }
     ];
 
@@ -383,29 +426,49 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function nextFlow(flow) {
-    if (flow === "delivered") {
-      state.history.unshift({
-        ...state.activeOrder,
-        deliveredAt: new Date().toISOString()
-      });
-      state.activeOrder = null;
-      state.flow = "delivered";
-      saveState();
-      render();
-      showToast("Pedido entregado. Ganancia registrada.");
-      return;
-    }
-
     state.flow = flow;
     saveState();
     render();
 
     const labels = {
       at_restaurant: "Llegaste al local.",
-      to_customer: "Pedido retirado. Estado: en camino al cliente."
+      to_customer: "Pedido retirado. Estado: en camino al cliente.",
+      confirm_delivery: "Pide el código de entrega al cliente."
     };
 
     showToast(labels[flow] || "Estado actualizado.");
+  }
+
+  function confirmDeliveryCode() {
+    if (!state.activeOrder) return;
+
+    const input = document.getElementById("deliveryCodeInput");
+    const error = document.getElementById("deliveryCodeError");
+    const typedCode = String(input ? input.value : "").trim();
+    const expectedCode = String(state.activeOrder.deliveryCode || "").trim();
+
+    if (!typedCode) {
+      if (error) error.textContent = "Ingresa el código que te entregó el cliente.";
+      showToast("Falta ingresar el código.");
+      return;
+    }
+
+    if (typedCode !== expectedCode) {
+      if (error) error.textContent = "Código incorrecto. Revisa con el cliente e intenta otra vez.";
+      showToast("Código incorrecto.");
+      return;
+    }
+
+    state.history.unshift({
+      ...state.activeOrder,
+      deliveredAt: new Date().toISOString(),
+      deliveryCodeValidated: true
+    });
+    state.activeOrder = null;
+    state.flow = "delivered";
+    saveState();
+    render();
+    showToast("Código correcto. Pedido entregado.");
   }
 
   function finishDelivery() {
@@ -416,7 +479,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function simulateNewOrder() {
-    state.activeOrder = { ...DEMO_ORDER, id: `BHZ-${Math.floor(1000 + Math.random() * 8999)}` };
+    const code = String(Math.floor(1000 + Math.random() * 9000));
+    state.activeOrder = {
+      ...DEMO_ORDER,
+      id: `BHZ-${Math.floor(1000 + Math.random() * 8999)}`,
+      deliveryCode: code
+    };
     state.flow = "new_order";
     saveState();
     render();
@@ -438,7 +506,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         body: `
           <div class="info-list">
             <div class="info-item"><span>Pedido</span><strong>${order.id}</strong></div>
-            <div class="info-item"><span>Restaurante</span><p>${order.restaurant}<br>${order.restaurantAddress}</p></div>
+            <div class="info-item"><span>Local</span><strong>${order.restaurant}</strong><p>${order.restaurantBrief}<br>${order.restaurantAddress}</p></div>
+            <div class="info-item"><span>Descripción corta</span><p>${order.orderBrief}</p></div>
             <div class="info-item"><span>Productos</span><p>${order.items}</p></div>
             <div class="info-item"><span>Entrega</span><p>${order.customerAddress}</p></div>
             <div class="info-item"><span>Ganancia</span><strong>${money(order.commission)}</strong></div>
@@ -451,8 +520,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           <div class="info-list">
             <div class="info-item"><span>Cliente</span><strong>${order.customer}</strong></div>
             <div class="info-item"><span>Dirección</span><p>${order.customerAddress}</p></div>
-            <div class="info-item"><span>Teléfono</span><p>${order.customerPhone}</p></div>
-            <a class="btn btn-primary" href="https://wa.me/${cleanPhone(order.customerPhone)}" target="_blank" rel="noopener">WhatsApp cliente</a>
+            <div class="info-item"><span>Nota</span><p>El contacto directo por WhatsApp queda oculto por ahora. Más adelante soporte podrá activarlo si hace falta.</p></div>
           </div>
         `
       },
@@ -461,7 +529,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         body: `
           <div class="info-list">
             <div class="info-item"><span>Método</span><strong>${order.payment}</strong></div>
-            <div class="info-item"><span>Total pedido</span><strong>${money(order.total)}</strong></div>
             <div class="info-item"><span>Delivery</span><strong>${money(order.deliveryFee)}</strong></div>
             <div class="info-item"><span>Ganancia repartidor</span><strong>${money(order.commission)}</strong></div>
           </div>
@@ -485,6 +552,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <span>${item.id}</span>
                 <strong>${item.restaurant}</strong>
                 <p>${item.customerAddress}</p>
+                <p>Código validado: ${item.deliveryCodeValidated ? "Sí" : "No"}</p>
                 <p>Ganancia: ${money(item.commission)}</p>
               </div>
             `).join("")}</div>`
@@ -498,6 +566,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <div class="info-item"><span>Zona</span><p>Punto Fijo</p></div>
             <div class="info-item"><span>Vehículo</span><p>Moto</p></div>
             <div class="info-item"><span>Estado</span><p>${state.online ? "Disponible" : "Pausado"}</p></div>
+            <div class="info-item"><span>Tema</span><p>${state.theme === "dark" ? "Modo oscuro" : "Modo claro"}</p></div>
           </div>
         `
       },
@@ -507,6 +576,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           <div class="info-list">
             <div class="info-item"><span>Problema con el local</span><p>Más adelante aquí irá contacto con soporte BHUZ.</p></div>
             <div class="info-item"><span>Problema con el cliente</span><p>El repartidor podrá reportar incidencia sin llenar la pantalla principal.</p></div>
+            <div class="info-item"><span>Código de entrega</span><p>Si el cliente no tiene código, el repartidor deberá reportarlo a soporte. No debe cerrar el pedido sin validación.</p></div>
           </div>
         `
       }
@@ -522,10 +592,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   function closePanel() {
     els.sidePanel.classList.remove("open");
     els.sidePanel.setAttribute("aria-hidden", "true");
-  }
-
-  function cleanPhone(phone) {
-    return String(phone || "").replace(/[^0-9]/g, "");
   }
 
   document.body.addEventListener("click", (event) => {
@@ -553,6 +619,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     const nextButton = event.target.closest("[data-next-flow]");
     if (nextButton) {
       nextFlow(nextButton.dataset.nextFlow);
+      return;
+    }
+
+    const confirmButton = event.target.closest("[data-confirm-delivery]");
+    if (confirmButton) {
+      confirmDeliveryCode();
       return;
     }
 
@@ -593,6 +665,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     showToast(state.online ? "Repartidor disponible." : "Repartidor pausado.");
   });
 
+  els.themeToggleBtn.addEventListener("click", () => {
+    state.theme = state.theme === "dark" ? "light" : "dark";
+    saveState();
+    render();
+    showToast(state.theme === "dark" ? "Modo oscuro activado." : "Modo claro activado.");
+  });
+
   render();
 });
+
 
