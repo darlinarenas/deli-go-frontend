@@ -7,56 +7,63 @@
   <link rel="stylesheet" href="css/panel-repartidor.css" />
 </head>
 <body>
-  <main class="driver-app">
-    <header class="driver-header">
-      <div class="brand-box">
-        <img src="assets/image/bhuz.png" alt="BHUZ" />
+  <div class="app-shell">
+    <header class="topbar">
+      <button id="openMenuBtn" class="icon-btn" type="button" aria-label="Abrir menú">☰</button>
+      <img class="brand-logo" src="assets/image/bhuz.png" alt="BHUZ" />
+      <button id="themeToggleBtn" class="icon-btn" type="button" aria-label="Cambiar modo">☀</button>
+    </header>
+
+    <main class="driver-main">
+      <section id="homeView" class="view active"></section>
+      <section id="deliveriesView" class="view"></section>
+      <section id="earningsView" class="view"></section>
+      <section id="profileView" class="view"></section>
+    </main>
+
+    <nav class="bottom-nav" aria-label="Navegación repartidor">
+      <button class="nav-btn active" data-view="home" type="button">
+        <span>⌂</span>
+        Inicio
+      </button>
+      <button class="nav-btn" data-view="deliveries" type="button">
+        <span>▦</span>
+        Entregas
+      </button>
+      <button class="nav-btn" data-view="earnings" type="button">
+        <span>▣</span>
+        Ganancias
+      </button>
+      <button class="nav-btn" data-view="profile" type="button">
+        <span>○</span>
+        Perfil
+      </button>
+    </nav>
+  </div>
+
+  <aside id="sideMenu" class="side-menu" aria-hidden="true">
+    <div class="menu-overlay" data-close-menu="true"></div>
+    <div class="menu-panel">
+      <div class="menu-profile">
+        <div class="avatar">R</div>
         <div>
-          <strong>Repartidor</strong>
-          <span id="driverStatusText">Disponible</span>
+          <strong id="menuDriverName">Repartidor BHUZ</strong>
+          <span>Ver perfil</span>
         </div>
       </div>
 
-      <div class="header-actions">
-        <button id="themeToggleBtn" class="icon-toggle" type="button" aria-label="Cambiar tema">🌙</button>
-        <button id="toggleDriverStatusBtn" class="status-toggle" type="button">Pausar</button>
+      <div class="menu-list">
+        <button data-menu-view="deliveries" type="button">📦 Mis entregas <span>Historial de pedidos</span></button>
+        <button data-menu-view="earnings" type="button">💰 Ganancias <span>Resumen de ingresos</span></button>
+        <button data-menu-view="profile" type="button">👤 Perfil <span>Mi información</span></button>
+        <button type="button" disabled>📍 Zonas de trabajo <span>Próximamente</span></button>
+        <button type="button" disabled>🎧 Soporte <span>Próximamente</span></button>
+        <button type="button" disabled>⚙ Configuración <span>Próximamente</span></button>
       </div>
-    </header>
 
-    <section class="driver-main-card">
-      <div id="mainFlowBox"></div>
-    </section>
-
-    <section class="quick-actions">
-      <button class="quick-btn" data-panel="earnings" type="button">
-        <span>💰</span>
-        Ganancias
-      </button>
-      <button class="quick-btn" data-panel="history" type="button">
-        <span>📦</span>
-        Historial
-      </button>
-      <button class="quick-btn" data-panel="profile" type="button">
-        <span>👤</span>
-        Perfil
-      </button>
-      <a class="quick-btn" href="index.html">
-        <span>🚪</span>
-        Salir
-      </a>
-    </section>
-  </main>
-
-  <div id="sidePanel" class="side-panel" aria-hidden="true">
-    <div class="side-panel-backdrop" data-close-panel="true"></div>
-    <aside class="side-panel-content">
-      <div class="side-panel-header">
-        <h2 id="sidePanelTitle">Información</h2>
-        <button class="close-panel-btn" data-close-panel="true" type="button">×</button>
-      </div>
-      <div id="sidePanelBody"></div>
-    </aside>
-  </div>
+      <a class="logout-link" href="index.html">Cerrar sesión</a>
+    </div>
+  </aside>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
@@ -64,5 +71,6 @@
   <script src="js/panel-repartidor.js"></script>
 </body>
 </html>
+
 
 
