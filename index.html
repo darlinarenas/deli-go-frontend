@@ -579,16 +579,24 @@
        - Ya no usa el logo gigante como fondo.
        - Solo presenta ciudad, título y slogan.
   ========================================================== -->
-  <section class="hero">
+  <section class="hero bhuz-home-hero">
     <div class="hero-overlay"></div>
 
-    <div class="hero-content">
+    <div class="hero-content bhuz-home-hero-content">
       <p id="city" class="city-pill">Detectando ubicación...</p>
-      <h1>Pide comida fácil</h1>
-      <p class="hero-slogan">Pide fácil, come feliz</p>
-      <div class="hero-chips">
+      <span class="bhuz-home-eyebrow">Delivery urbano en tiempo real</span>
+      <h1>Comida y envíos rápidos en una sola app</h1>
+      <p class="hero-slogan">Pide comida, envía paquetes y sigue todo desde BHUZ.</p>
+
+      <div class="bhuz-home-actions">
+        <a class="bhuz-home-primary-btn" href="#restaurantList">🍔 Comprar comida</a>
+        <a class="bhuz-home-secondary-btn" href="enviar-paquete.html">📦 Enviar paquete</a>
+      </div>
+
+      <div class="hero-chips bhuz-home-chips">
         <a href="#restaurantList">🍔 Restaurantes</a>
         <a href="#topDishesSection">🔥 Populares</a>
+        <a href="mis-pedidos.html">🛍️ Mis pedidos</a>
       </div>
     </div>
   </section>
@@ -641,6 +649,42 @@
          - Se oculta cuando el sonido queda activado.
     ========================================================== -->
     <button class="bhuz-sound-unlock-btn bhuz-global-sound-btn" id="bhuzGlobalSoundBtn" type="button">🔊 Activar sonido en este teléfono</button>
+
+
+    <!-- =========================================================
+         BHUZ FASE 1 - ACCESOS PRINCIPALES
+         - No cambia restaurantes, carrito, checkout ni backend actual.
+         - Solo agrega la entrada visual para comida y paquetes.
+    ========================================================== -->
+    <section class="bhuz-services-home" aria-label="Servicios principales BHUZ">
+      <div class="bhuz-services-head">
+        <span class="mini-label">Elige qué necesitas</span>
+        <h2>¿Qué quieres hacer hoy?</h2>
+        <p>Compra comida o crea un envío de paquete desde una pantalla simple y directa.</p>
+      </div>
+
+      <div class="bhuz-service-grid">
+        <a class="bhuz-service-card bhuz-service-food" href="#restaurantList" aria-label="Comprar comida en BHUZ">
+          <div class="bhuz-service-icon">🍔</div>
+          <div class="bhuz-service-content">
+            <span>Comida</span>
+            <strong>Comprar comida</strong>
+            <p>Explora restaurantes, platos populares y confirma tu pedido.</p>
+          </div>
+          <em>Entrar</em>
+        </a>
+
+        <a class="bhuz-service-card bhuz-service-package" href="enviar-paquete.html" aria-label="Enviar paquete con BHUZ">
+          <div class="bhuz-service-icon">📦</div>
+          <div class="bhuz-service-content">
+            <span>Envíos</span>
+            <strong>Enviar paquete</strong>
+            <p>Envía documentos, llaves, billeteras o compras pequeñas.</p>
+          </div>
+          <em>Crear envío</em>
+        </a>
+      </div>
+    </section>
 
     <!-- =========================================================
          PRESUPUESTO
@@ -1040,6 +1084,7 @@
 
 </body>
 </html>
+
 
 
 
