@@ -171,6 +171,12 @@
         Calcular envío
       </button>
 
+      <div class="envios-calculo envios-calculo-formulario" id="envio-resumen-formulario" style="display:none;">
+        <h3>Resumen del envío</h3>
+        <p id="envio-resumen-distancia">Distancia: pendiente</p>
+        <p id="envio-resumen-cliente">Total del envío: pendiente</p>
+      </div>
+
       <div class="envio-accion-final" id="envio-accion-final" style="display:none;">
         <button class="btn-envio-principal btn-enviar-paquete" id="btn-enviar-paquete" type="button">
           Enviar paquete
@@ -203,9 +209,9 @@
       </div>
 
       <div class="envios-calculo">
-        <h3>Resumen del envío</h3>
-        <p id="envio-resumen-distancia">Distancia: pendiente</p>
-        <p id="envio-resumen-cliente">Total del envío: pendiente</p>
+        <h3>Proceso del envío</h3>
+        <p>El resumen del costo aparecerá debajo del botón Calcular envío.</p>
+        <p>Luego podrás continuar con Enviar paquete.</p>
       </div>
     </aside>
 
@@ -230,16 +236,33 @@
       📡 Confirmar mi ubicación
     </button>
 
-    <button class="btn-envio-secundario" id="btn-marcar-envio-en-camino" type="button">
-      🛵 Marcar como en camino
-    </button>
+    <div class="envio-receptor-seguimiento">
+      <h3>Seguimiento del paquete</h3>
 
-    <button class="btn-envio-secundario" id="btn-marcar-envio-recibido" type="button">
-      ✅ Marcar como recibido
-    </button>
+      <div class="envio-receptor-linea is-activa" id="estado-linea-esperando">
+        <span>1</span>
+        <strong>Esperando ubicación</strong>
+      </div>
+
+      <div class="envio-receptor-linea" id="estado-linea-en-camino">
+        <span>2</span>
+        <strong>En camino</strong>
+      </div>
+
+      <div class="envio-receptor-linea" id="estado-linea-recibido">
+        <span>3</span>
+        <strong>Recibido</strong>
+      </div>
+    </div>
+
+    <div class="envio-codigo-entrega" id="envio-codigo-entrega" style="display:none;">
+      <span>Código de entrega</span>
+      <strong id="envio-codigo-entrega-texto">------</strong>
+      <p>Entrega este código únicamente al repartidor cuando recibas el paquete.</p>
+    </div>
 
     <p class="envio-nota" id="envio-receptor-nota">
-      Estados disponibles para envíos: esperando ubicación, en camino y recibido.
+      El estado del envío se actualizará automáticamente desde BHUZ. El receptor no puede cambiarlo manualmente.
     </p>
   </div>
 </section>

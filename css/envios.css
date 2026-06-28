@@ -568,6 +568,123 @@
   text-align: center;
 }
 
+/* ==========================================================
+   BHUZ - RESUMEN CLIENTE Y SEGUIMIENTO RECEPTOR
+========================================================== */
+
+.envios-calculo-formulario {
+  border-color: rgba(16, 233, 129, 0.28);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(16, 233, 129, 0.18), transparent 36%),
+    rgba(0, 0, 0, 0.24);
+}
+
+.envios-calculo-formulario h3 {
+  color: #10e981;
+}
+
+.envios-calculo-formulario #envio-resumen-cliente {
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 950;
+}
+
+.envio-receptor-seguimiento {
+  display: grid;
+  gap: 10px;
+  padding: 15px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.20);
+}
+
+.envio-receptor-seguimiento h3 {
+  margin: 0 0 2px;
+  color: #ffffff;
+  font-size: 17px;
+}
+
+.envio-receptor-linea {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border-radius: 17px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.035);
+  opacity: 0.62;
+}
+
+.envio-receptor-linea span {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.10);
+  font-weight: 950;
+}
+
+.envio-receptor-linea strong {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 14px;
+}
+
+.envio-receptor-linea.is-activa,
+.envio-receptor-linea.is-completada {
+  opacity: 1;
+  border-color: rgba(16, 233, 129, 0.22);
+  background: rgba(16, 233, 129, 0.08);
+}
+
+.envio-receptor-linea.is-activa span,
+.envio-receptor-linea.is-completada span {
+  color: #031006;
+  background: linear-gradient(135deg, #10e981, #7cff9e);
+}
+
+.envio-receptor-linea.is-activa strong,
+.envio-receptor-linea.is-completada strong {
+  color: #ffffff;
+}
+
+.envio-codigo-entrega {
+  gap: 8px;
+  justify-items: center;
+  text-align: center;
+  padding: 18px;
+  border-radius: 24px;
+  border: 1px solid rgba(16, 233, 129, 0.30);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(16, 233, 129, 0.20), transparent 42%),
+    rgba(0, 0, 0, 0.26);
+}
+
+.envio-codigo-entrega span {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.envio-codigo-entrega strong {
+  color: #10e981;
+  font-size: clamp(34px, 9vw, 54px);
+  line-height: 1;
+  letter-spacing: 0.12em;
+  font-weight: 950;
+}
+
+.envio-codigo-entrega p {
+  max-width: 360px;
+  color: rgba(255, 255, 255, 0.70);
+  font-size: 13px;
+}
+
+
+
 
 
 

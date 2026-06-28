@@ -60,8 +60,6 @@ function inicializarModuloEnvios() {
   const btnCopiarLink = document.getElementById("btn-copiar-link-receptor");
   const btnCompartirWhatsapp = document.getElementById("btn-compartir-whatsapp-receptor");
   const btnConfirmarUbicacionReceptor = document.getElementById("btn-confirmar-ubicacion-receptor");
-  const btnMarcarEnCamino = document.getElementById("btn-marcar-envio-en-camino");
-  const btnMarcarRecibido = document.getElementById("btn-marcar-envio-recibido");
   const btnCalcular = document.getElementById("btn-calcular-envio");
   const btnEnviarPaquete = document.getElementById("btn-enviar-paquete");
   const inputFoto = document.getElementById("envio-foto");
@@ -90,13 +88,6 @@ function inicializarModuloEnvios() {
     btnConfirmarUbicacionReceptor.addEventListener("click", confirmarUbicacionReceptorTemporal);
   }
 
-  if (btnMarcarEnCamino) {
-    btnMarcarEnCamino.addEventListener("click", () => actualizarEstadoReceptorTemporal("en_camino"));
-  }
-
-  if (btnMarcarRecibido) {
-    btnMarcarRecibido.addEventListener("click", () => actualizarEstadoReceptorTemporal("recibido"));
-  }
 
   detectarFlujoReceptorEnvioTemporal();
 
@@ -295,6 +286,7 @@ function confirmarUbicacionReceptorTemporal() {
       }
 
       actualizarEstadoReceptorTemporal("ubicacion_confirmada");
+      generarCodigoEntregaTemporal();
 
       const estadoEntrega = document.getElementById("estado-ubicacion-entrega");
       actualizarEstado(
@@ -317,6 +309,29 @@ function confirmarUbicacionReceptorTemporal() {
       maximumAge: 0
     }
   );
+}
+
+function generarCodigoEntregaTemporal() {
+  const cajaCodigo = document.getElementById("envio-codigo-entrega");
+  const textoCodigo = document.getElementById("envio-codigo-entrega-texto");
+
+  const codigo = generarCodigoCortoEntrega();
+
+  if (textoCodigo) textoCodigo.textContent = codigo;
+  if (cajaCodigo) cajaCodigo.style.display = "grid";
+
+  /*
+    FASE BACKEND:
+    Este código debe guardarse en PostgreSQL y validarse desde el panel del repartidor.
+    El receptor solo lo ve. No puede marcar el envío como entregado.
+  */
+
+  return codigo;
+}
+
+function generarCodigoCortoEntrega() {
+  const numero = Math.floor(100000 + Math.random() * 900000);
+  return String(numero);
 }
 
 function actualizarEstadoReceptorTemporal(estado) {
@@ -347,7 +362,35 @@ function actualizarEstadoReceptorTemporal(estado) {
   if (cajaTexto) {
     cajaTexto.textContent = mensaje;
   }
+
+  actualizarLineasSeguimientoReceptor(estado);
 }
+
+function actualizarLineasSeguimientoReceptor(estado) {
+  const esperando = document.getElementById("estado-linea-esperando");
+  const enCamino = document.getElementById("estado-linea-en-camino");
+  const recibido = document.getElementById("estado-linea-recibido");
+
+  [esperando, enCamino, recibido].forEach((item) => {
+    if (item) item.classList.remove("is-activa", "is-completada");
+  });
+
+  if (estado === "recibido") {
+    if (esperando) esperando.classList.add("is-completada");
+    if (enCamino) enCamino.classList.add("is-completada");
+    if (recibido) recibido.classList.add("is-activa");
+    return;
+  }
+
+  if (estado === "en_camino") {
+    if (esperando) esperando.classList.add("is-completada");
+    if (enCamino) enCamino.classList.add("is-activa");
+    return;
+  }
+
+  if (esperando) esperando.classList.add("is-activa");
+}
+
 
 /* ==========================================================
    FOTO DEL PAQUETE
@@ -401,10 +444,12 @@ function calcularEnvioTemporal() {
     clientePaga
   });
 
+  const resumenFormulario = document.getElementById("envio-resumen-formulario");
   const accionFinal = document.getElementById("envio-accion-final");
   const notaCalculo = document.getElementById("envio-nota-calculo");
   const notaFinal = document.getElementById("envio-nota-final");
 
+  if (resumenFormulario) resumenFormulario.style.display = "grid";
   if (accionFinal) accionFinal.style.display = "grid";
 
   if (notaCalculo) {
@@ -534,7 +579,7 @@ function prepararEnvioParaPagoTemporal() {
   console.log("BHUZ envío preparado para pago:", payloadEnvio);
 
   alert(
-    `Envío preparado.\n\nTotal a pagar: $${totalEnvio}\nDistancia: ${distanciaKm} km aprox.\n\nPróxima fase: conectar pasarela de pago y crear el envío real.`
+    `Envío preparado.\n\nTotal a pagar: $${totalEnvio}\nDistancia: ${distanciaKm} km aprox.\n\nPróxima fase: conectar pasarela de pago, crear el envío real y generar el código único de entrega.`
   );
 }
 
@@ -581,6 +626,8 @@ function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
 function gradosARadianes(grados) {
   return grados * (Math.PI / 180);
 }
+
+
 
 
 
