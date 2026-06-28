@@ -2581,6 +2581,143 @@ header {
 }
 
 
+/* =========================================================
+   BHUZ - CORRECCIÓN PUERTA DE ENTRADA ÚNICA
+   Problema corregido: en teléfonos la pantalla inicial podía quedar
+   con scroll y dar sensación de repetirse.
+   Esta regla solo se activa cuando el body tiene puerta-bhuz-activa.
+   No toca restaurantes, carrito, pedidos, backend ni PostgreSQL.
+========================================================= */
+
+body.puerta-bhuz-activa {
+  height: 100svh;
+  overflow: hidden;
+  padding-bottom: 0;
+}
+
+body.puerta-bhuz-activa .bottom-nav {
+  display: none !important;
+}
+
+body.puerta-bhuz-activa .bhuz-global-sound-btn {
+  display: none !important;
+}
+
+body.puerta-bhuz-activa .pantalla-inicio-bhuz {
+  min-height: calc(100svh - 72px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+body.puerta-bhuz-activa .pantalla-inicio-contenido {
+  width: 100%;
+  max-height: calc(100svh - 104px);
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  body.puerta-bhuz-activa .pantalla-inicio-bhuz {
+    min-height: calc(100svh - 66px);
+    padding: 12px 14px;
+  }
+
+  body.puerta-bhuz-activa .pantalla-inicio-contenido {
+    gap: 12px;
+    max-height: calc(100svh - 92px);
+  }
+
+  body.puerta-bhuz-activa .puerta-ciudad {
+    padding: 8px 11px;
+    font-size: 13px;
+  }
+
+  body.puerta-bhuz-activa .puerta-titulo {
+    gap: 5px;
+  }
+
+  body.puerta-bhuz-activa .puerta-titulo h1 {
+    font-size: clamp(31px, 9vw, 40px);
+  }
+
+  body.puerta-bhuz-activa .puerta-titulo p {
+    font-size: 14px;
+    line-height: 1.25;
+  }
+
+  body.puerta-bhuz-activa .puerta-opciones {
+    gap: 10px;
+  }
+
+  body.puerta-bhuz-activa .tarjeta-servicio {
+    min-height: 142px;
+    padding: 16px;
+    border-radius: 24px;
+    grid-template-columns: 1fr auto;
+  }
+
+  body.puerta-bhuz-activa .tarjeta-servicio-texto {
+    gap: 6px;
+  }
+
+  body.puerta-bhuz-activa .tarjeta-servicio-texto small {
+    font-size: 10px;
+    padding: 4px 8px;
+  }
+
+  body.puerta-bhuz-activa .tarjeta-servicio-texto strong {
+    font-size: clamp(28px, 8vw, 36px);
+  }
+
+  body.puerta-bhuz-activa .tarjeta-servicio-texto em {
+    font-size: 13px;
+    line-height: 1.22;
+  }
+
+  body.puerta-bhuz-activa .tarjeta-flecha {
+    width: 38px;
+    height: 38px;
+    font-size: 24px;
+    margin-top: 2px;
+  }
+
+  body.puerta-bhuz-activa .tarjeta-servicio-imagen {
+    font-size: clamp(54px, 17vw, 82px);
+  }
+
+  body.puerta-bhuz-activa .puerta-beneficios {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    padding: 8px;
+    border-radius: 20px;
+  }
+
+  body.puerta-bhuz-activa .puerta-beneficios div {
+    min-height: 48px;
+    gap: 4px;
+    font-size: 10px;
+  }
+
+  body.puerta-bhuz-activa .puerta-beneficios span {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 380px) {
+  body.puerta-bhuz-activa .puerta-beneficios {
+    display: none;
+  }
+
+  body.puerta-bhuz-activa .tarjeta-servicio {
+    min-height: 150px;
+  }
+}
+
+
+
 
 
 
