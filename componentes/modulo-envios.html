@@ -91,11 +91,25 @@
 
         <div class="envio-link-receptor" id="envio-link-receptor" style="display:none;">
           <label>Enlace para enviar al receptor</label>
+
           <div class="envio-link-box">
             <input id="envio-link-confirmacion" type="text" readonly>
             <button id="btn-copiar-link-receptor" type="button">Copiar</button>
           </div>
+
+          <button class="btn-envio-whatsapp" id="btn-compartir-whatsapp-receptor" type="button">
+            🟢 Compartir por WhatsApp
+          </button>
+
           <small>Envía este enlace por WhatsApp para que el receptor confirme su ubicación.</small>
+        </div>
+
+        <div class="envio-estado-receptor" id="envio-estado-receptor" style="display:none;">
+          <div class="envio-estado-receptor-icono">📍</div>
+          <div>
+            <strong>Estado del receptor</strong>
+            <p id="envio-estado-receptor-texto">Esperando ubicación del receptor.</p>
+          </div>
         </div>
 
         <input id="envio-entrega-lat" name="entregaLat" type="hidden">
@@ -157,8 +171,17 @@
         Calcular envío
       </button>
 
-      <p class="envio-nota" id="envio-nota-final">
-        El cálculo real se activará cuando tengamos ubicación de retiro y entrega confirmadas.
+      <div class="envio-accion-final" id="envio-accion-final" style="display:none;">
+        <button class="btn-envio-principal btn-enviar-paquete" id="btn-enviar-paquete" type="button">
+          Enviar paquete
+        </button>
+        <p class="envio-nota" id="envio-nota-final">
+          Este botón quedará conectado a la pasarela de pago cuando activemos el cobro real.
+        </p>
+      </div>
+
+      <p class="envio-nota" id="envio-nota-calculo">
+        Calcula el envío para ver el costo total antes de continuar.
       </p>
 
     </form>
@@ -180,14 +203,46 @@
       </div>
 
       <div class="envios-calculo">
-        <h3>Resumen del cálculo</h3>
+        <h3>Resumen del envío</h3>
         <p id="envio-resumen-distancia">Distancia: pendiente</p>
-        <p id="envio-resumen-cliente">Cliente paga: pendiente</p>
-        <p id="envio-resumen-repartidor">Repartidor recibe: pendiente</p>
-        <p id="envio-resumen-bhuz">Comisión BHUZ: pendiente</p>
+        <p id="envio-resumen-cliente">Total del envío: pendiente</p>
       </div>
     </aside>
 
   </section>
+
+<!-- VISTA TEMPORAL DEL RECEPTOR -->
+<section class="envio-receptor-panel" id="envio-receptor-panel" style="display:none;">
+  <div class="envio-receptor-card">
+    <span class="mini-label">BHUZ Envíos</span>
+    <h2>Confirma tu ubicación de entrega</h2>
+    <p>
+      La persona que envía el paquete necesita confirmar dónde debe entregarlo el repartidor.
+      Presiona el botón, acepta el permiso de ubicación y BHUZ guardará el punto de entrega.
+    </p>
+
+    <div class="envio-receptor-status">
+      <span id="envio-receptor-status-dot"></span>
+      <strong id="envio-receptor-status-text">Esperando ubicación</strong>
+    </div>
+
+    <button class="btn-envio-principal" id="btn-confirmar-ubicacion-receptor" type="button">
+      📡 Confirmar mi ubicación
+    </button>
+
+    <button class="btn-envio-secundario" id="btn-marcar-envio-en-camino" type="button">
+      🛵 Marcar como en camino
+    </button>
+
+    <button class="btn-envio-secundario" id="btn-marcar-envio-recibido" type="button">
+      ✅ Marcar como recibido
+    </button>
+
+    <p class="envio-nota" id="envio-receptor-nota">
+      Estados disponibles para envíos: esperando ubicación, en camino y recibido.
+    </p>
+  </div>
+</section>
+
 
 </div>

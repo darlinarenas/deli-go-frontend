@@ -401,3 +401,173 @@
     width: 100%;
   }
 }
+
+/* ==========================================================
+   BHUZ - ENVÍOS / WHATSAPP Y RECEPTOR TEMPORAL
+   - Solo afecta al módulo de envíos.
+========================================================== */
+
+.btn-envio-whatsapp {
+  width: fit-content;
+  border: 0;
+  border-radius: 17px;
+  padding: 14px 16px;
+  color: #031006;
+  background: linear-gradient(135deg, #25D366, #7cff9e);
+  font-weight: 950;
+  cursor: pointer;
+  box-shadow: 0 18px 35px rgba(37, 211, 102, 0.18);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+}
+
+.btn-envio-whatsapp:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 20px 42px rgba(37, 211, 102, 0.24);
+}
+
+.envio-estado-receptor {
+  grid-template-columns: 44px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(16, 233, 129, 0.20);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(16, 233, 129, 0.14), transparent 38%),
+    rgba(255, 255, 255, 0.04);
+}
+
+.envio-estado-receptor-icono {
+  width: 44px;
+  height: 44px;
+  border-radius: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(16, 233, 129, 0.12);
+  border: 1px solid rgba(16, 233, 129, 0.18);
+  font-size: 22px;
+}
+
+.envio-estado-receptor strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.envio-estado-receptor p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.envio-receptor-panel {
+  display: grid;
+  justify-items: center;
+  padding: 10px 0 0;
+}
+
+.envio-receptor-card {
+  width: min(560px, 100%);
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+  border-radius: 30px;
+  border: 1px solid rgba(16, 233, 129, 0.22);
+  background:
+    radial-gradient(circle at 10% 0%, rgba(16, 233, 129, 0.22), transparent 34%),
+    radial-gradient(circle at 90% 10%, rgba(124, 58, 237, 0.20), transparent 34%),
+    linear-gradient(180deg, rgba(14, 22, 30, 0.98), rgba(6, 10, 17, 0.98));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+}
+
+.envio-receptor-card h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(28px, 5vw, 42px);
+  line-height: 0.98;
+  letter-spacing: -0.05em;
+}
+
+.envio-receptor-card p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.70);
+  line-height: 1.48;
+  font-weight: 750;
+}
+
+.envio-receptor-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(16, 233, 129, 0.18);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+#envio-receptor-status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: #fbbf24;
+  box-shadow: 0 0 18px rgba(251, 191, 36, 0.45);
+}
+
+#envio-receptor-status-dot[data-estado="ubicacion_confirmada"],
+#envio-receptor-status-dot[data-estado="en_camino"],
+#envio-receptor-status-dot[data-estado="recibido"] {
+  background: #10e981;
+  box-shadow: 0 0 18px rgba(16, 233, 129, 0.55);
+}
+
+#envio-receptor-status-dot[data-estado="error"] {
+  background: #fb7185;
+  box-shadow: 0 0 18px rgba(251, 113, 133, 0.50);
+}
+
+#envio-receptor-status-text {
+  color: #ffffff;
+  font-weight: 950;
+}
+
+@media (max-width: 768px) {
+  .btn-envio-whatsapp {
+    width: 100%;
+  }
+
+  .envio-receptor-card {
+    padding: 20px;
+    border-radius: 26px;
+  }
+}
+
+/* ==========================================================
+   BHUZ - ACCIÓN FINAL DE ENVÍO
+========================================================== */
+
+.envio-accion-final {
+  gap: 10px;
+  padding: 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(16, 233, 129, 0.20);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(16, 233, 129, 0.16), transparent 36%),
+    rgba(255, 255, 255, 0.045);
+}
+
+.btn-enviar-paquete {
+  width: 100%;
+  font-size: 17px;
+  padding: 16px 18px;
+}
+
+#envio-nota-calculo {
+  text-align: center;
+}
+
+
+
+

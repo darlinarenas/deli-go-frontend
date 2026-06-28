@@ -58,7 +58,12 @@ function inicializarModuloEnvios() {
   const btnUbicacionRetiro = document.getElementById("btn-usar-ubicacion-retiro");
   const btnGenerarLink = document.getElementById("btn-generar-link-receptor");
   const btnCopiarLink = document.getElementById("btn-copiar-link-receptor");
+  const btnCompartirWhatsapp = document.getElementById("btn-compartir-whatsapp-receptor");
+  const btnConfirmarUbicacionReceptor = document.getElementById("btn-confirmar-ubicacion-receptor");
+  const btnMarcarEnCamino = document.getElementById("btn-marcar-envio-en-camino");
+  const btnMarcarRecibido = document.getElementById("btn-marcar-envio-recibido");
   const btnCalcular = document.getElementById("btn-calcular-envio");
+  const btnEnviarPaquete = document.getElementById("btn-enviar-paquete");
   const inputFoto = document.getElementById("envio-foto");
 
   if (formulario) {
@@ -77,8 +82,30 @@ function inicializarModuloEnvios() {
     btnCopiarLink.addEventListener("click", copiarEnlaceReceptor);
   }
 
+  if (btnCompartirWhatsapp) {
+    btnCompartirWhatsapp.addEventListener("click", compartirEnlaceReceptorPorWhatsapp);
+  }
+
+  if (btnConfirmarUbicacionReceptor) {
+    btnConfirmarUbicacionReceptor.addEventListener("click", confirmarUbicacionReceptorTemporal);
+  }
+
+  if (btnMarcarEnCamino) {
+    btnMarcarEnCamino.addEventListener("click", () => actualizarEstadoReceptorTemporal("en_camino"));
+  }
+
+  if (btnMarcarRecibido) {
+    btnMarcarRecibido.addEventListener("click", () => actualizarEstadoReceptorTemporal("recibido"));
+  }
+
+  detectarFlujoReceptorEnvioTemporal();
+
   if (btnCalcular) {
     btnCalcular.addEventListener("click", calcularEnvioTemporal);
+  }
+
+  if (btnEnviarPaquete) {
+    btnEnviarPaquete.addEventListener("click", prepararEnvioParaPagoTemporal);
   }
 
   if (inputFoto) {
@@ -156,7 +183,7 @@ function generarEnlaceReceptor() {
 
   const codigoTemporal = generarCodigoTemporal();
   const baseUrl = window.location.origin + window.location.pathname;
-  const enlace = `${baseUrl}?confirmar_entrega=${codigoTemporal}#envios`;
+  const enlace = `${baseUrl}?confirmar_envio=${codigoTemporal}#envios`;
 
   if (inputLink) inputLink.value = enlace;
   if (cajaLink) cajaLink.style.display = "grid";
@@ -185,6 +212,140 @@ async function copiarEnlaceReceptor() {
     inputLink.select();
     document.execCommand("copy");
     actualizarEstado(estado, "Enlace copiado.", "ok");
+  }
+}
+
+function compartirEnlaceReceptorPorWhatsapp() {
+  const inputLink = document.getElementById("envio-link-confirmacion");
+  const estado = document.getElementById("estado-ubicacion-entrega");
+
+  if (!inputLink || !inputLink.value) {
+    actualizarEstado(estado, "Primero genera el enlace del receptor.", "error");
+    return;
+  }
+
+  const mensaje = [
+    "Hola 👋",
+    "Te envío este enlace de BHUZ para confirmar la ubicación donde recibirás el paquete:",
+    "",
+    inputLink.value,
+    "",
+    "Ábrelo, acepta el permiso de ubicación y confirma el punto de entrega."
+  ].join("\n");
+
+  const urlWhatsapp = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
+  window.open(urlWhatsapp, "_blank", "noopener,noreferrer");
+
+  actualizarEstado(
+    estado,
+    "WhatsApp abierto. Envía el enlace al receptor para que confirme su ubicación.",
+    "ok"
+  );
+}
+
+function detectarFlujoReceptorEnvioTemporal() {
+  const parametros = new URLSearchParams(window.location.search);
+  const tokenEnvio = parametros.get("confirmar_envio") || parametros.get("confirmar_entrega");
+
+  if (!tokenEnvio) return;
+
+  const formulario = document.getElementById("formulario-envio-paquete");
+  const resumen = document.querySelector(".envios-resumen");
+  const hero = document.querySelector(".envios-hero");
+  const panelReceptor = document.getElementById("envio-receptor-panel");
+
+  if (formulario) formulario.style.display = "none";
+  if (resumen) resumen.style.display = "none";
+
+  if (hero) {
+    hero.querySelector("h1").textContent = "Confirmar entrega";
+    hero.querySelector("p").textContent =
+      "Confirma tu ubicación para que el repartidor sepa exactamente dónde entregar el paquete.";
+  }
+
+  if (panelReceptor) panelReceptor.style.display = "grid";
+
+  actualizarEstadoReceptorTemporal("esperando_ubicacion");
+}
+
+function confirmarUbicacionReceptorTemporal() {
+  const nota = document.getElementById("envio-receptor-nota");
+  const inputLat = document.getElementById("envio-entrega-lat");
+  const inputLng = document.getElementById("envio-entrega-lng");
+
+  if (!navigator.geolocation) {
+    if (nota) nota.textContent = "Tu navegador no permite obtener ubicación.";
+    actualizarEstadoReceptorTemporal("error");
+    return;
+  }
+
+  if (nota) nota.textContent = "Solicitando permiso de ubicación...";
+  actualizarEstadoReceptorTemporal("solicitando_ubicacion");
+
+  navigator.geolocation.getCurrentPosition(
+    (posicion) => {
+      const lat = posicion.coords.latitude;
+      const lng = posicion.coords.longitude;
+
+      if (inputLat) inputLat.value = lat;
+      if (inputLng) inputLng.value = lng;
+
+      if (nota) {
+        nota.textContent = `Ubicación confirmada correctamente. Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}.`;
+      }
+
+      actualizarEstadoReceptorTemporal("ubicacion_confirmada");
+
+      const estadoEntrega = document.getElementById("estado-ubicacion-entrega");
+      actualizarEstado(
+        estadoEntrega,
+        `Ubicación del receptor confirmada. Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`,
+        "ok"
+      );
+    },
+    (error) => {
+      console.warn("BHUZ ubicación receptor:", error);
+      if (nota) {
+        nota.textContent =
+          "No se pudo obtener la ubicación. Permite el acceso GPS desde el navegador e intenta nuevamente.";
+      }
+      actualizarEstadoReceptorTemporal("error");
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 12000,
+      maximumAge: 0
+    }
+  );
+}
+
+function actualizarEstadoReceptorTemporal(estado) {
+  const texto = document.getElementById("envio-receptor-status-text");
+  const dot = document.getElementById("envio-receptor-status-dot");
+  const cajaEstado = document.getElementById("envio-estado-receptor");
+  const cajaTexto = document.getElementById("envio-estado-receptor-texto");
+
+  const estados = {
+    esperando_ubicacion: "Esperando ubicación",
+    solicitando_ubicacion: "Solicitando ubicación",
+    ubicacion_confirmada: "Ubicación confirmada",
+    en_camino: "En camino",
+    recibido: "Recibido",
+    error: "Error de ubicación"
+  };
+
+  const mensaje = estados[estado] || estados.esperando_ubicacion;
+
+  if (texto) texto.textContent = mensaje;
+  if (dot) dot.dataset.estado = estado;
+
+  if (cajaEstado) {
+    cajaEstado.style.display = "grid";
+    cajaEstado.dataset.estado = estado;
+  }
+
+  if (cajaTexto) {
+    cajaTexto.textContent = mensaje;
   }
 }
 
@@ -237,14 +398,21 @@ function calcularEnvioTemporal() {
 
   actualizarResumenCalculo({
     distanciaKm,
-    clientePaga,
-    repartidorRecibe,
-    comisionBhuz
+    clientePaga
   });
 
+  const accionFinal = document.getElementById("envio-accion-final");
+  const notaCalculo = document.getElementById("envio-nota-calculo");
   const notaFinal = document.getElementById("envio-nota-final");
+
+  if (accionFinal) accionFinal.style.display = "grid";
+
+  if (notaCalculo) {
+    notaCalculo.textContent = "Costo calculado. Si estás de acuerdo, continúa con Enviar paquete.";
+  }
+
   if (notaFinal) {
-    notaFinal.textContent = "Cálculo temporal listo. En la fase backend se guardará la solicitud y se asignará repartidor.";
+    notaFinal.textContent = "Siguiente paso: conectar este botón con la pasarela de pago y luego crear el envío real.";
   }
 }
 
@@ -319,16 +487,55 @@ function calcularMontoCliente(distanciaKm) {
   return redondear(Math.max(minimo, base + distanciaKm * porKm));
 }
 
-function actualizarResumenCalculo({ distanciaKm, clientePaga, repartidorRecibe, comisionBhuz }) {
+function actualizarResumenCalculo({ distanciaKm, clientePaga }) {
   const distancia = document.getElementById("envio-resumen-distancia");
   const cliente = document.getElementById("envio-resumen-cliente");
-  const repartidor = document.getElementById("envio-resumen-repartidor");
-  const bhuz = document.getElementById("envio-resumen-bhuz");
 
   if (distancia) distancia.textContent = `Distancia: ${distanciaKm} km aprox.`;
-  if (cliente) cliente.textContent = `Cliente paga: $${clientePaga}`;
-  if (repartidor) repartidor.textContent = `Repartidor recibe: $${repartidorRecibe}`;
-  if (bhuz) bhuz.textContent = `Comisión BHUZ: $${comisionBhuz}`;
+  if (cliente) cliente.textContent = `Total del envío: $${clientePaga}`;
+}
+
+/* ==========================================================
+   PREPARAR ENVÍO PARA PAGO / CREACIÓN REAL
+========================================================== */
+
+function prepararEnvioParaPagoTemporal() {
+  const datos = obtenerDatosFormularioEnvio();
+  const errores = validarDatosEnvio(datos);
+
+  if (errores.length > 0) {
+    alert("Antes de enviar el paquete revisa estos puntos:\n\n" + errores.map((e) => `• ${e}`).join("\n"));
+    return;
+  }
+
+  const distanciaKm = calcularDistanciaTemporal(datos);
+  const totalEnvio = calcularMontoCliente(distanciaKm);
+
+  /*
+    PREPARADO PARA PASARELA DE PAGO:
+    Aquí conectaremos el cobro real antes de crear el envío definitivo.
+
+    Flujo futuro:
+    1. Crear intento de pago en backend.
+    2. Redirigir o abrir pasarela de pago.
+    3. Confirmar pago.
+    4. Crear envío real en PostgreSQL.
+    5. Cambiar estado a "Buscando repartidor".
+  */
+
+  const payloadEnvio = {
+    ...datos,
+    distanciaKm,
+    totalEnvio,
+    estado: "pendiente_pago",
+    tipoServicio: "envio_paquete"
+  };
+
+  console.log("BHUZ envío preparado para pago:", payloadEnvio);
+
+  alert(
+    `Envío preparado.\n\nTotal a pagar: $${totalEnvio}\nDistancia: ${distanciaKm} km aprox.\n\nPróxima fase: conectar pasarela de pago y crear el envío real.`
+  );
 }
 
 /* ==========================================================
@@ -374,5 +581,11 @@ function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
 function gradosARadianes(grados) {
   return grados * (Math.PI / 180);
 }
+
+
+
+
+
+
 
 
