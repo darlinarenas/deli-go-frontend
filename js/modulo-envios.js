@@ -148,7 +148,21 @@ function inicializarModuloEnvios() {
   detectarFlujoReceptorEnvioTemporal();
 
   if (btnEnviarPaquete) {
-    btnEnviarPaquete.addEventListener("click", prepararEnvioParaPagoTemporal);
+    btnEnviarPaquete.setAttribute("type", "button");
+  }
+
+  // Listener robusto por delegación:
+  // evita que el botón deje de responder si el HTML del módulo se recarga o cambia dinámicamente.
+  if (!document.body.dataset.bhuzEnvioFinalListener) {
+    document.body.dataset.bhuzEnvioFinalListener = "true";
+
+    document.body.addEventListener("click", (event) => {
+      const botonEnviar = event.target.closest("#btn-enviar-paquete");
+      if (!botonEnviar) return;
+
+      event.preventDefault();
+      prepararEnvioParaPagoTemporal();
+    });
   }
 
   if (inputFoto) {
@@ -921,6 +935,11 @@ function actualizarResumenCalculo({ distanciaKm, clientePaga }) {
 ========================================================== */
 
 async function prepararEnvioParaPagoTemporal() {
+  const botonEnviar = document.getElementById("btn-enviar-paquete");
+  const notaFinal = document.getElementById("envio-nota-final");
+
+  if (botonEnviar?.dataset.enviando === "true") return;
+
   const datos = obtenerDatosFormularioEnvio();
   const errores = validarDatosEnvio(datos);
 
@@ -956,6 +975,16 @@ async function prepararEnvioParaPagoTemporal() {
   */
 
   try {
+    if (botonEnviar) {
+      botonEnviar.dataset.enviando = "true";
+      botonEnviar.disabled = true;
+      botonEnviar.textContent = "Publicando envío...";
+    }
+
+    if (notaFinal) {
+      notaFinal.textContent = "Publicando el envío para que lo vea el repartidor...";
+    }
+
     const respuesta = await fetchConTimeout(construirUrlApi(`/api/services/${encodeURIComponent(BHUZ_SERVICES_STATE.serviceId)}/status`), {
       method: "POST",
       headers: {
@@ -974,12 +1003,25 @@ async function prepararEnvioParaPagoTemporal() {
       throw new Error(data.message || "No se pudo preparar el envío.");
     }
 
+    if (notaFinal) {
+      notaFinal.textContent = "Envío publicado correctamente. Ahora está disponible para repartidores.";
+    }
+
     alert(
       `Envío publicado en BHUZ.\n\nTotal: $${totalEnvio}\nDistancia: ${distanciaKm} km aprox.\n\nAhora el servicio está disponible para que un repartidor lo acepte.`
     );
   } catch (error) {
     console.error("BHUZ enviar paquete:", error);
+    if (notaFinal) {
+      notaFinal.textContent = error.message || "No se pudo publicar el envío.";
+    }
     alert(error.message || "No se pudo preparar el envío.");
+  } finally {
+    if (botonEnviar) {
+      botonEnviar.dataset.enviando = "false";
+      botonEnviar.disabled = false;
+      botonEnviar.textContent = "Enviar paquete";
+    }
   }
 }
 
@@ -1031,6 +1073,8 @@ function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
 function gradosARadianes(grados) {
   return grados * (Math.PI / 180);
 }
+
+
 
 
 
