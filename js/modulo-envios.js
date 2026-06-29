@@ -19,7 +19,10 @@ const BHUZ_SERVICES_STATE = {
   token: "",
   pollingId: null,
   calculoListo: false,
-  receptorConfirmado: false
+  receptorConfirmado: false,
+  distanceKm: 0,
+  totalAmount: 0,
+  ultimoServicio: null
 };
 
 function obtenerBackendBaseUrl() {
@@ -636,7 +639,8 @@ async function generarTokenReceptorBackend(serviceId) {
 
 async function consultarServicioBackend(serviceId) {
   const respuesta = await fetchConTimeout(construirUrlApi(`/api/services/${encodeURIComponent(serviceId)}`), {
-    credentials: "include"
+    credentials: "include",
+    cache: "no-store"
   });
 
   const data = await respuesta.json().catch(() => ({}));
@@ -673,13 +677,15 @@ function detenerPollingServicio() {
 function procesarServicioActualizado(service) {
   if (!service) return;
 
+  BHUZ_SERVICES_STATE.ultimoServicio = service;
+
   const estadoEntrega = document.getElementById("estado-ubicacion-entrega");
   const inputLat = document.getElementById("envio-entrega-lat");
   const inputLng = document.getElementById("envio-entrega-lng");
 
-  const lat = service.deliveryLatitude || "";
-  const lng = service.deliveryLongitude || "";
-  const receptorConfirmado = Boolean(lat && lng);
+  const lat = service.deliveryLatitude || service.delivery_latitude || "";
+  const lng = service.deliveryLongitude || service.delivery_longitude || "";
+  const receptorConfirmado = Boolean(Number(lat) && Number(lng));
 
   if (receptorConfirmado) {
     BHUZ_SERVICES_STATE.receptorConfirmado = true;
@@ -687,15 +693,31 @@ function procesarServicioActualizado(service) {
     if (inputLat) inputLat.value = lat;
     if (inputLng) inputLng.value = lng;
 
+    const datosActuales = obtenerDatosFormularioEnvio();
+    const distanciaBackend = normalizarNumeroServicio(service.distanceKm ?? service.distance_km);
+    const totalBackend = normalizarNumeroServicio(service.totalAmount ?? service.total_amount);
+
+    const distanciaFinal = distanciaBackend > 0
+      ? distanciaBackend
+      : calcularDistanciaTemporal(datosActuales);
+
+    const totalFinal = totalBackend > 0
+      ? totalBackend
+      : calcularMontoCliente(distanciaFinal);
+
+    BHUZ_SERVICES_STATE.distanceKm = distanciaFinal;
+    BHUZ_SERVICES_STATE.totalAmount = totalFinal;
+    BHUZ_SERVICES_STATE.calculoListo = distanciaFinal > 0 && totalFinal > 0;
+
     actualizarEstado(
       estadoEntrega,
-      "Receptor confirmó ubicación. Ya puedes enviar el paquete.",
+      `Receptor confirmó ubicación. Distancia calculada: ${distanciaFinal} km. Total: $${totalFinal}.`,
       "ok"
     );
 
     actualizarResumenCalculo({
-      distanciaKm: service.distanceKm || calcularDistanciaTemporal(obtenerDatosFormularioEnvio()),
-      clientePaga: service.totalAmount || calcularMontoCliente(service.distanceKm || 0)
+      distanciaKm: distanciaFinal,
+      clientePaga: totalFinal
     });
 
     const resumenFormulario = document.getElementById("envio-resumen-formulario");
@@ -710,13 +732,14 @@ function procesarServicioActualizado(service) {
     if (accionFinal) accionFinal.style.display = "grid";
 
     if (notaCalculo) {
-      notaCalculo.textContent = "Ubicación del receptor confirmada. Distancia real calculada. Revisa el total y continúa con Enviar paquete.";
+      notaCalculo.textContent = "Ubicación del receptor confirmada. Distancia real calculada desde PostgreSQL. Revisa el total y continúa con Enviar paquete.";
     }
 
     if (notaFinal) {
       notaFinal.textContent = "Listo para continuar con el cobro. La pasarela de pago se conectará aquí.";
     }
 
+    bloquearBotonEnviarHastaConfirmacion();
     detenerPollingServicio();
   } else {
     bloquearBotonEnviarHastaConfirmacion();
@@ -886,8 +909,11 @@ function actualizarResumenCalculo({ distanciaKm, clientePaga }) {
   const distancia = document.getElementById("envio-resumen-distancia");
   const cliente = document.getElementById("envio-resumen-cliente");
 
-  if (distancia) distancia.textContent = `Distancia: ${distanciaKm} km aprox.`;
-  if (cliente) cliente.textContent = `Total del envío: $${clientePaga}`;
+  const distanciaFinal = redondear(distanciaKm);
+  const clienteFinal = redondear(clientePaga);
+
+  if (distancia) distancia.textContent = `Distancia: ${distanciaFinal} km aprox.`;
+  if (cliente) cliente.textContent = `Total del envío: $${clienteFinal}`;
 }
 
 /* ==========================================================
@@ -913,8 +939,8 @@ async function prepararEnvioParaPagoTemporal() {
     return;
   }
 
-  const distanciaKm = calcularDistanciaTemporal(datos);
-  const totalEnvio = calcularMontoCliente(distanciaKm);
+  const distanciaKm = BHUZ_SERVICES_STATE.distanceKm || normalizarNumeroServicio(BHUZ_SERVICES_STATE.ultimoServicio?.distanceKm) || calcularDistanciaTemporal(datos);
+  const totalEnvio = BHUZ_SERVICES_STATE.totalAmount || normalizarNumeroServicio(BHUZ_SERVICES_STATE.ultimoServicio?.totalAmount) || calcularMontoCliente(distanciaKm);
 
   /*
     PREPARADO PARA PASARELA DE PAGO:
@@ -972,6 +998,11 @@ function limpiarTexto(valor) {
   return String(valor || "").trim();
 }
 
+function normalizarNumeroServicio(valor) {
+  const numero = Number(valor);
+  return Number.isFinite(numero) ? redondear(numero) : 0;
+}
+
 function generarCodigoTemporal() {
   return "BHUZ-" + Date.now().toString(36).toUpperCase();
 }
@@ -1000,6 +1031,7 @@ function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
 function gradosARadianes(grados) {
   return grados * (Math.PI / 180);
 }
+
 
 
 
