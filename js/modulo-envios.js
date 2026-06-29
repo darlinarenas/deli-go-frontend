@@ -546,7 +546,7 @@ async function crearServicioEnvioBackend({ datos, distanciaKm, totalEnvio }) {
     packageSize: datos.tamano,
     packagePhotoUrl: "",
 
-    distanceKm,
+    distanceKm: distanciaKm,
     totalAmount: totalEnvio,
     paymentStatus: "PENDING",
     paymentMethod: "",
@@ -1017,6 +1017,8 @@ function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
 function gradosARadianes(grados) {
   return grados * (Math.PI / 180);
 }
+
+
 
 
 
