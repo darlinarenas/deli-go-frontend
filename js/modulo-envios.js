@@ -198,11 +198,8 @@ async function generarEnlaceReceptor() {
 
   if (errores.length > 0) {
     alert(
-      "Antes de generar el enlace del receptor revisa estos puntos:
-
-" +
-      errores.map((e) => `• ${e}`).join("
-")
+      "Antes de generar el enlace del receptor revisa estos puntos:\n\n" +
+      errores.map((e) => `• ${e}`).join("\n")
     );
     return;
   }
@@ -919,10 +916,7 @@ async function prepararEnvioParaPagoTemporal() {
   const errores = validarDatosEnvio(datos);
 
   if (errores.length > 0) {
-    alert("Antes de enviar el paquete revisa estos puntos:
-
-" + errores.map((e) => `• ${e}`).join("
-"));
+    alert("Antes de enviar el paquete revisa estos puntos:\n\n" + errores.map((e) => `• ${e}`).join("\n"));
     return;
   }
 
@@ -972,12 +966,7 @@ async function prepararEnvioParaPagoTemporal() {
     }
 
     alert(
-      `Envío preparado en BHUZ.
-
-Total a pagar: $${totalEnvio}
-Distancia: ${distanciaKm} km aprox.
-
-Próxima fase: conectar pasarela de pago y luego buscar repartidor.`
+      `Envío preparado en BHUZ.\n\nTotal a pagar: $${totalEnvio}\nDistancia: ${distanciaKm} km aprox.\n\nPróxima fase: conectar pasarela de pago y luego buscar repartidor.`
     );
   } catch (error) {
     console.error("BHUZ enviar paquete:", error);
@@ -1028,6 +1017,7 @@ function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
 function gradosARadianes(grados) {
   return grados * (Math.PI / 180);
 }
+
 
 
 
