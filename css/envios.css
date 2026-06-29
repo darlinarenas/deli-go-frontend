@@ -683,6 +683,86 @@
   font-size: 13px;
 }
 
+/* ==========================================================
+   BHUZ - FIX VISUAL MÓVIL ENVÍOS
+   Corrige ancho, columnas internas y evita que el contenido se comprima.
+========================================================== */
+
+.modulo-envios,
+.modulo-envios * {
+  box-sizing: border-box;
+}
+
+.modulo-envios {
+  overflow-x: hidden;
+}
+
+.envios-formulario {
+  min-width: 0;
+}
+
+.envios-bloque {
+  width: 100%;
+  min-width: 0;
+}
+
+.campo-envio,
+.envio-link-receptor,
+.envio-terminos,
+.envio-accion-final,
+.envios-calculo-formulario {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  .envios-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .envios-formulario,
+  .envios-resumen,
+  .envios-bloque {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .envios-bloque-titulo {
+    grid-template-columns: 42px minmax(0, 1fr) !important;
+  }
+
+  .envios-bloque-titulo h2,
+  .envios-bloque-titulo p {
+    word-break: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .campo-envio input,
+  .campo-envio textarea,
+  .campo-envio select,
+  .envio-link-box input {
+    max-width: 100%;
+  }
+
+  .envio-terminos {
+    grid-template-columns: 24px minmax(0, 1fr) !important;
+  }
+
+  .envio-terminos span {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .btn-envio-principal,
+  .btn-envio-secundario,
+  .btn-envio-whatsapp {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+
+
 
 
 
