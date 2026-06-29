@@ -24,17 +24,44 @@ const BHUZ_SERVICES_STATE = {
 
 function obtenerBackendBaseUrl() {
   /*
-    En producción puedes definir:
+    Fuente real:
+    - El envío, token, estado y código viven en PostgreSQL.
+    - El frontend solo llama al backend.
+
+    Producción:
+    Define window.BHUZ_API_URL en el index si quieres apuntar directo a Render:
     window.BHUZ_API_URL = "https://tu-backend-render.onrender.com";
+
+    Desarrollo:
+    Si abres el frontend desde la IP de tu PC, usa esa misma IP con puerto 3001.
   */
   const desdeWindow = window.BHUZ_API_URL || window.API_BASE_URL || "";
-  const desdeStorage = localStorage.getItem("bhuz_api_url") || "";
 
-  return String(desdeWindow || desdeStorage || "http://localhost:3001").replace(/\/+$/, "");
+  if (desdeWindow) {
+    return String(desdeWindow).replace(/\/+$/, "");
+  }
+
+  const host = window.location.hostname || "localhost";
+
+  if (host === "localhost" || host === "127.0.0.1") {
+    return "http://127.0.0.1:3001";
+  }
+
+  return `${window.location.protocol}//${host}:3001`;
 }
 
 function construirUrlApi(ruta) {
   return `${obtenerBackendBaseUrl()}${ruta}`;
+}
+
+function obtenerFrontendBaseUrlCompartible() {
+  /*
+    Ya no usamos esta URL como fuente real del link.
+    El backend arma el link con process.env.FRONTEND_URL.
+    Se deja como respaldo informativo para desarrollo.
+  */
+  const urlActual = new URL(window.location.href);
+  return `${urlActual.origin}${urlActual.pathname}`;
 }
 
 
@@ -120,7 +147,6 @@ function inicializarModuloEnvios() {
 
 
   detectarFlujoReceptorEnvioTemporal();
-  restaurarEnvioTemporalDesdeStorage();
 
   if (btnCalcular) {
     btnCalcular.addEventListener("click", calcularEnvioTemporal);
@@ -196,6 +222,15 @@ async function generarEnlaceReceptor() {
   const datos = obtenerDatosFormularioEnvio();
   const errores = validarDatosEnvio(datos);
 
+  if (!BHUZ_SERVICES_STATE.calculoListo) {
+    actualizarEstado(
+      estado,
+      "Primero calcula el envío. Luego podrás generar el link para el receptor.",
+      "error"
+    );
+    return;
+  }
+
   if (errores.length > 0) {
     alert(
       "Antes de generar el enlace del receptor revisa estos puntos:\n\n" +
@@ -231,8 +266,6 @@ async function generarEnlaceReceptor() {
     BHUZ_SERVICES_STATE.shareUrl = tokenResponse.shareUrl || "";
     BHUZ_SERVICES_STATE.token = tokenResponse.token?.token || "";
     BHUZ_SERVICES_STATE.receptorConfirmado = Boolean(service.deliveryLatitude && service.deliveryLongitude);
-
-    guardarEnvioTemporalEnStorage();
 
     if (inputLink) inputLink.value = BHUZ_SERVICES_STATE.shareUrl;
     if (cajaLink) cajaLink.style.display = "grid";
@@ -280,6 +313,16 @@ async function copiarEnlaceReceptor() {
   }
 }
 
+function advertirLinkLocalNoCompartible(link) {
+  try {
+    const url = new URL(link);
+    if (url.hostname === "127.0.0.1" || url.hostname === "localhost") {
+      return "IMPORTANTE: El backend devolvió un link local. Configura FRONTEND_URL en el backend con la URL pública del frontend.";
+    }
+  } catch {}
+  return "";
+}
+
 function compartirEnlaceReceptorPorWhatsapp() {
   const inputLink = document.getElementById("envio-link-confirmacion");
   const estado = document.getElementById("estado-ubicacion-entrega");
@@ -287,6 +330,12 @@ function compartirEnlaceReceptorPorWhatsapp() {
   if (!inputLink || !inputLink.value) {
     actualizarEstado(estado, "Primero genera el enlace del receptor.", "error");
     return;
+  }
+
+  const advertencia = advertirLinkLocalNoCompartible(inputLink.value);
+
+  if (advertencia) {
+    alert(advertencia);
   }
 
   const mensaje = [
@@ -578,9 +627,7 @@ async function generarTokenReceptorBackend(serviceId) {
       "Content-Type": "application/json"
     },
     credentials: "include",
-    body: JSON.stringify({
-      frontendBaseUrl: window.location.origin + window.location.pathname
-    })
+    body: JSON.stringify({})
   });
 
   const data = await respuesta.json().catch(() => ({}));
@@ -661,7 +708,10 @@ function procesarServicioActualizado(service) {
     const notaCalculo = document.getElementById("envio-nota-calculo");
     const notaFinal = document.getElementById("envio-nota-final");
 
+    const linkAccion = document.getElementById("envio-link-accion");
+
     if (resumenFormulario) resumenFormulario.style.display = "grid";
+    if (linkAccion) linkAccion.style.display = "grid";
     if (accionFinal) accionFinal.style.display = "grid";
 
     if (notaCalculo) {
@@ -672,7 +722,6 @@ function procesarServicioActualizado(service) {
       notaFinal.textContent = "Listo para continuar con el cobro. La pasarela de pago se conectará aquí.";
     }
 
-    guardarEnvioTemporalEnStorage();
     detenerPollingServicio();
   } else {
     bloquearBotonEnviarHastaConfirmacion();
@@ -698,42 +747,19 @@ function bloquearBotonEnviarHastaConfirmacion() {
 }
 
 function guardarEnvioTemporalEnStorage() {
-  const payload = {
-    serviceId: BHUZ_SERVICES_STATE.serviceId,
-    shareUrl: BHUZ_SERVICES_STATE.shareUrl,
-    token: BHUZ_SERVICES_STATE.token,
-    receptorConfirmado: BHUZ_SERVICES_STATE.receptorConfirmado
-  };
-
-  localStorage.setItem("bhuz_envio_actual", JSON.stringify(payload));
+  /*
+    Ya no guardamos el envío real en localStorage.
+    La fuente real es PostgreSQL.
+  */
 }
 
 function restaurarEnvioTemporalDesdeStorage() {
-  try {
-    const raw = localStorage.getItem("bhuz_envio_actual");
-    if (!raw) return;
-
-    const payload = JSON.parse(raw);
-    if (!payload?.serviceId) return;
-
-    BHUZ_SERVICES_STATE.serviceId = payload.serviceId || "";
-    BHUZ_SERVICES_STATE.shareUrl = payload.shareUrl || "";
-    BHUZ_SERVICES_STATE.token = payload.token || "";
-    BHUZ_SERVICES_STATE.receptorConfirmado = payload.receptorConfirmado === true;
-
-    const inputLink = document.getElementById("envio-link-confirmacion");
-    const cajaLink = document.getElementById("envio-link-receptor");
-
-    if (inputLink && BHUZ_SERVICES_STATE.shareUrl) inputLink.value = BHUZ_SERVICES_STATE.shareUrl;
-    if (cajaLink && BHUZ_SERVICES_STATE.shareUrl) cajaLink.style.display = "grid";
-
-    if (!BHUZ_SERVICES_STATE.receptorConfirmado) {
-      iniciarPollingServicio(BHUZ_SERVICES_STATE.serviceId);
-    }
-  } catch (error) {
-    console.warn("BHUZ restaurar envío temporal:", error);
-  }
+  /*
+    Ya no restauramos envíos desde localStorage.
+    Más adelante el módulo de usuario consultará sus envíos desde PostgreSQL.
+  */
 }
+
 
 function obtenerEmailClienteActual() {
   try {
@@ -809,7 +835,10 @@ function calcularEnvioTemporal() {
 
   BHUZ_SERVICES_STATE.calculoListo = true;
 
+  const linkAccion = document.getElementById("envio-link-accion");
+
   if (resumenFormulario) resumenFormulario.style.display = "grid";
+  if (linkAccion) linkAccion.style.display = "grid";
 
   if (accionFinal) {
     accionFinal.style.display = "none";
@@ -817,12 +846,12 @@ function calcularEnvioTemporal() {
 
   if (notaCalculo) {
     notaCalculo.textContent =
-      "Costo calculado. Ahora genera el enlace y espera que el receptor confirme su ubicación para activar Enviar paquete.";
+      "Costo calculado. Ahora genera el link y envíaselo al receptor por WhatsApp.";
   }
 
   if (notaFinal) {
     notaFinal.textContent =
-      "El botón Enviar paquete se activará cuando el receptor confirme la ubicación desde el enlace.";
+      "Enviar paquete se activará cuando el receptor confirme su ubicación.";
   }
 
   bloquearBotonEnviarHastaConfirmacion();
@@ -1017,6 +1046,8 @@ function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
 function gradosARadianes(grados) {
   return grados * (Math.PI / 180);
 }
+
+
 
 
 

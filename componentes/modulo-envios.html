@@ -64,66 +64,6 @@
         </div>
       </div>
 
-      <!-- DATOS DE ENTREGA -->
-      <div class="envios-bloque">
-        <div class="envios-bloque-titulo">
-          <span>🏁</span>
-          <div>
-            <h2>Dirección de entrega</h2>
-            <p>El receptor puede confirmar su ubicación mediante un enlace.</p>
-          </div>
-        </div>
-
-        <div class="campo-envio">
-          <label for="envio-destino">Dirección o referencia de entrega</label>
-          <input id="envio-destino" name="destino" type="text" placeholder="Ej: Sector, calle, casa, edificio, punto cercano...">
-        </div>
-
-        <div class="campo-envio">
-          <label for="envio-referencia-entrega">Referencia adicional de entrega</label>
-          <input id="envio-referencia-entrega" name="referenciaEntrega" type="text" placeholder="Casa, color, local, apartamento, punto cercano...">
-        </div>
-
-        <div class="campo-envio">
-          <label for="envio-contacto">Contacto de quien recibe</label>
-          <input id="envio-contacto" name="contacto" type="text" placeholder="Nombre y teléfono del receptor">
-        </div>
-
-        <button class="btn-envio-secundario" id="btn-generar-link-receptor" type="button">
-          🔗 Generar enlace para confirmar ubicación
-        </button>
-
-        <div class="envio-link-receptor" id="envio-link-receptor" style="display:none;">
-          <label>Enlace para enviar al receptor</label>
-
-          <div class="envio-link-box">
-            <input id="envio-link-confirmacion" type="text" readonly>
-            <button id="btn-copiar-link-receptor" type="button">Copiar</button>
-          </div>
-
-          <button class="btn-envio-whatsapp" id="btn-compartir-whatsapp-receptor" type="button">
-            🟢 Compartir por WhatsApp
-          </button>
-
-          <small>Envía este enlace por WhatsApp para que el receptor confirme su ubicación.</small>
-        </div>
-
-        <div class="envio-estado-receptor" id="envio-estado-receptor" style="display:none;">
-          <div class="envio-estado-receptor-icono">📍</div>
-          <div>
-            <strong>Estado del receptor</strong>
-            <p id="envio-estado-receptor-texto">Esperando ubicación del receptor.</p>
-          </div>
-        </div>
-
-        <input id="envio-entrega-lat" name="entregaLat" type="hidden">
-        <input id="envio-entrega-lng" name="entregaLng" type="hidden">
-
-        <p class="envio-estado" id="estado-ubicacion-entrega">
-          Ubicación de entrega pendiente.
-        </p>
-      </div>
-
       <!-- DATOS DE RETIRO -->
       <div class="envios-bloque">
         <div class="envios-bloque-titulo">
@@ -156,6 +96,38 @@
         </p>
       </div>
 
+      <!-- DATOS DE ENTREGA -->
+      <div class="envios-bloque">
+        <div class="envios-bloque-titulo">
+          <span>🏁</span>
+          <div>
+            <h2>Dirección de entrega</h2>
+            <p>El receptor puede confirmar su ubicación mediante un enlace.</p>
+          </div>
+        </div>
+
+        <div class="campo-envio">
+          <label for="envio-destino">Dirección o referencia de entrega</label>
+          <input id="envio-destino" name="destino" type="text" placeholder="Ej: Sector, calle, casa, edificio, punto cercano...">
+        </div>
+
+        <div class="campo-envio">
+          <label for="envio-referencia-entrega">Referencia adicional de entrega</label>
+          <input id="envio-referencia-entrega" name="referenciaEntrega" type="text" placeholder="Casa, color, local, apartamento, punto cercano...">
+        </div>
+
+        <div class="campo-envio">
+          <label for="envio-contacto">Contacto de quien recibe</label>
+          <input id="envio-contacto" name="contacto" type="text" placeholder="Nombre y teléfono del receptor">
+        </div>
+<input id="envio-entrega-lat" name="entregaLat" type="hidden">
+        <input id="envio-entrega-lng" name="entregaLng" type="hidden">
+
+        <p class="envio-estado" id="estado-ubicacion-entrega">
+          Ubicación de entrega pendiente.
+        </p>
+      </div>
+
       <!-- TERMINOS -->
       <div class="envios-bloque">
         <label class="envio-terminos">
@@ -167,6 +139,7 @@
         </label>
       </div>
 
+
       <button class="btn-envio-principal" id="btn-calcular-envio" type="button">
         Calcular envío
       </button>
@@ -177,18 +150,48 @@
         <p id="envio-resumen-cliente">Total del envío: pendiente</p>
       </div>
 
+      <div class="envio-link-accion" id="envio-link-accion" style="display:none;">
+        <button class="btn-envio-secundario btn-generar-link-final" id="btn-generar-link-receptor" type="button">
+          🔗 Generar link para el receptor
+        </button>
+
+        <div class="envio-link-receptor" id="envio-link-receptor" style="display:none;">
+          <label>Enlace para enviar al receptor</label>
+
+          <div class="envio-link-box">
+            <input id="envio-link-confirmacion" type="text" readonly>
+            <button id="btn-copiar-link-receptor" type="button">Copiar</button>
+          </div>
+
+          <button class="btn-envio-whatsapp" id="btn-compartir-whatsapp-receptor" type="button">
+            🟢 Compartir por WhatsApp
+          </button>
+
+          <small>Envía este enlace por WhatsApp para que el receptor confirme su ubicación.</small>
+        </div>
+
+        <div class="envio-estado-receptor" id="envio-estado-receptor" style="display:none;">
+          <div class="envio-estado-receptor-icono">📍</div>
+          <div>
+            <strong>Estado del receptor</strong>
+            <p id="envio-estado-receptor-texto">Esperando ubicación del receptor.</p>
+          </div>
+        </div>
+      </div>
+
       <div class="envio-accion-final" id="envio-accion-final" style="display:none;">
         <button class="btn-envio-principal btn-enviar-paquete" id="btn-enviar-paquete" type="button">
           Enviar paquete
         </button>
         <p class="envio-nota" id="envio-nota-final">
-          Este botón quedará conectado a la pasarela de pago cuando activemos el cobro real.
+          El botón Enviar paquete se activará cuando el receptor confirme su ubicación.
         </p>
       </div>
 
       <p class="envio-nota" id="envio-nota-calculo">
-        Calcula el envío para ver el costo total antes de continuar.
+        Completa los datos, acepta las condiciones y calcula el envío.
       </p>
+
     </form>
 
     <!-- RESUMEN -->
@@ -202,9 +205,9 @@
 
       <div class="envios-pasos">
         <div><span>1</span><strong>Describe el paquete</strong></div>
-        <div><span>2</span><strong>Confirma destino</strong></div>
-        <div><span>3</span><strong>Indica retiro</strong></div>
-        <div><span>4</span><strong>Calcula y envía</strong></div>
+        <div><span>2</span><strong>Indica retiro</strong></div>
+        <div><span>3</span><strong>Confirma destino</strong></div>
+        <div><span>4</span><strong>Calcula y comparte link</strong></div>
       </div>
 
       <div class="envios-calculo">
