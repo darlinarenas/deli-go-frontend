@@ -8,6 +8,36 @@
    - Preparar GPS, link receptor, foto, términos y cálculo temporal.
 ========================================================== */
 
+
+/* ==========================================================
+   CONFIGURACIÓN BACKEND BHUZ SERVICES
+========================================================== */
+
+const BHUZ_SERVICES_STATE = {
+  serviceId: "",
+  shareUrl: "",
+  token: "",
+  pollingId: null,
+  calculoListo: false,
+  receptorConfirmado: false
+};
+
+function obtenerBackendBaseUrl() {
+  /*
+    En producción puedes definir:
+    window.BHUZ_API_URL = "https://tu-backend-render.onrender.com";
+  */
+  const desdeWindow = window.BHUZ_API_URL || window.API_BASE_URL || "";
+  const desdeStorage = localStorage.getItem("bhuz_api_url") || "";
+
+  return String(desdeWindow || desdeStorage || "http://localhost:3001").replace(/\/+$/, "");
+}
+
+function construirUrlApi(ruta) {
+  return `${obtenerBackendBaseUrl()}${ruta}`;
+}
+
+
 document.addEventListener("DOMContentLoaded", async () => {
   const contenedor = document.getElementById("modulo-envios");
   if (!contenedor) return;
@@ -90,6 +120,7 @@ function inicializarModuloEnvios() {
 
 
   detectarFlujoReceptorEnvioTemporal();
+  restaurarEnvioTemporalDesdeStorage();
 
   if (btnCalcular) {
     btnCalcular.addEventListener("click", calcularEnvioTemporal);
@@ -156,34 +187,80 @@ function obtenerUbicacionRetiro() {
    LINK DEL RECEPTOR
 ========================================================== */
 
-function generarEnlaceReceptor() {
-  const contacto = limpiarTexto(document.getElementById("envio-contacto")?.value);
-  const destino = limpiarTexto(document.getElementById("envio-destino")?.value);
+async function generarEnlaceReceptor() {
+  const estado = document.getElementById("estado-ubicacion-entrega");
   const cajaLink = document.getElementById("envio-link-receptor");
   const inputLink = document.getElementById("envio-link-confirmacion");
-  const estado = document.getElementById("estado-ubicacion-entrega");
+  const boton = document.getElementById("btn-generar-link-receptor");
 
-  if (!contacto || !destino) {
-    actualizarEstado(
-      estado,
-      "Para generar el enlace, coloca primero la dirección de entrega y el contacto del receptor.",
-      "error"
+  const datos = obtenerDatosFormularioEnvio();
+  const errores = validarDatosEnvio(datos);
+
+  if (errores.length > 0) {
+    alert(
+      "Antes de generar el enlace del receptor revisa estos puntos:
+
+" +
+      errores.map((e) => `• ${e}`).join("
+")
     );
     return;
   }
 
-  const codigoTemporal = generarCodigoTemporal();
-  const baseUrl = window.location.origin + window.location.pathname;
-  const enlace = `${baseUrl}?confirmar_envio=${codigoTemporal}#envios`;
+  try {
+    if (boton) {
+      boton.disabled = true;
+      boton.textContent = "Generando enlace...";
+    }
 
-  if (inputLink) inputLink.value = enlace;
-  if (cajaLink) cajaLink.style.display = "grid";
+    actualizarEstado(
+      estado,
+      "Creando envío temporal en BHUZ para generar el enlace del receptor...",
+      "cargando"
+    );
 
-  actualizarEstado(
-    estado,
-    "Enlace generado. Envíalo por WhatsApp para que el receptor confirme su ubicación.",
-    "ok"
-  );
+    const distanciaKm = calcularDistanciaTemporal(datos);
+    const totalEnvio = calcularMontoCliente(distanciaKm);
+
+    const service = await crearServicioEnvioBackend({
+      datos,
+      distanciaKm,
+      totalEnvio
+    });
+
+    const tokenResponse = await generarTokenReceptorBackend(service.id);
+
+    BHUZ_SERVICES_STATE.serviceId = service.id;
+    BHUZ_SERVICES_STATE.shareUrl = tokenResponse.shareUrl || "";
+    BHUZ_SERVICES_STATE.token = tokenResponse.token?.token || "";
+    BHUZ_SERVICES_STATE.receptorConfirmado = Boolean(service.deliveryLatitude && service.deliveryLongitude);
+
+    guardarEnvioTemporalEnStorage();
+
+    if (inputLink) inputLink.value = BHUZ_SERVICES_STATE.shareUrl;
+    if (cajaLink) cajaLink.style.display = "grid";
+
+    actualizarEstado(
+      estado,
+      "Enlace real generado. Envíalo por WhatsApp y espera que el receptor confirme su ubicación.",
+      "ok"
+    );
+
+    bloquearBotonEnviarHastaConfirmacion();
+    iniciarPollingServicio(BHUZ_SERVICES_STATE.serviceId);
+  } catch (error) {
+    console.error("BHUZ generar enlace receptor:", error);
+    actualizarEstado(
+      estado,
+      error.message || "No se pudo generar el enlace del receptor.",
+      "error"
+    );
+  } finally {
+    if (boton) {
+      boton.disabled = false;
+      boton.textContent = "🔗 Generar enlace para confirmar ubicación";
+    }
+  }
 }
 
 async function copiarEnlaceReceptor() {
@@ -234,7 +311,7 @@ function compartirEnlaceReceptorPorWhatsapp() {
   );
 }
 
-function detectarFlujoReceptorEnvioTemporal() {
+async function detectarFlujoReceptorEnvioTemporal() {
   const parametros = new URLSearchParams(window.location.search);
   const tokenEnvio = parametros.get("confirmar_envio") || parametros.get("confirmar_entrega");
 
@@ -244,6 +321,7 @@ function detectarFlujoReceptorEnvioTemporal() {
   const resumen = document.querySelector(".envios-resumen");
   const hero = document.querySelector(".envios-hero");
   const panelReceptor = document.getElementById("envio-receptor-panel");
+  const nota = document.getElementById("envio-receptor-nota");
 
   if (formulario) formulario.style.display = "none";
   if (resumen) resumen.style.display = "none";
@@ -257,12 +335,44 @@ function detectarFlujoReceptorEnvioTemporal() {
   if (panelReceptor) panelReceptor.style.display = "grid";
 
   actualizarEstadoReceptorTemporal("esperando_ubicacion");
+
+  try {
+    const respuesta = await fetch(construirUrlApi(`/api/services/confirmar/${encodeURIComponent(tokenEnvio)}`));
+    const data = await respuesta.json().catch(() => ({}));
+
+    if (!respuesta.ok || !data.ok) {
+      throw new Error(data.message || "No se pudo consultar el enlace del envío.");
+    }
+
+    BHUZ_SERVICES_STATE.serviceId = data.service?.id || "";
+    BHUZ_SERVICES_STATE.token = tokenEnvio;
+
+    if (data.token?.receiverConfirmed) {
+      actualizarEstadoReceptorTemporal("ubicacion_confirmada");
+      mostrarCodigoEntregaDesdeServicio(data.service);
+      if (nota) {
+        nota.textContent = "Tu ubicación ya fue confirmada. Entrega el código únicamente al repartidor cuando recibas el paquete.";
+      }
+    }
+  } catch (error) {
+    console.error("BHUZ consultar token receptor:", error);
+    actualizarEstadoReceptorTemporal("error");
+    if (nota) {
+      nota.textContent = error.message || "No se pudo consultar el enlace. Intenta nuevamente.";
+    }
+  }
 }
 
 function confirmarUbicacionReceptorTemporal() {
   const nota = document.getElementById("envio-receptor-nota");
-  const inputLat = document.getElementById("envio-entrega-lat");
-  const inputLng = document.getElementById("envio-entrega-lng");
+  const parametros = new URLSearchParams(window.location.search);
+  const tokenEnvio = parametros.get("confirmar_envio") || parametros.get("confirmar_entrega");
+
+  if (!tokenEnvio) {
+    if (nota) nota.textContent = "No se encontró el token del envío.";
+    actualizarEstadoReceptorTemporal("error");
+    return;
+  }
 
   if (!navigator.geolocation) {
     if (nota) nota.textContent = "Tu navegador no permite obtener ubicación.";
@@ -274,26 +384,48 @@ function confirmarUbicacionReceptorTemporal() {
   actualizarEstadoReceptorTemporal("solicitando_ubicacion");
 
   navigator.geolocation.getCurrentPosition(
-    (posicion) => {
+    async (posicion) => {
       const lat = posicion.coords.latitude;
       const lng = posicion.coords.longitude;
 
-      if (inputLat) inputLat.value = lat;
-      if (inputLng) inputLng.value = lng;
+      try {
+        const respuesta = await fetch(construirUrlApi(`/api/services/confirmar/${encodeURIComponent(tokenEnvio)}`), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            latitude: lat,
+            longitude: lng
+          })
+        });
 
-      if (nota) {
-        nota.textContent = `Ubicación confirmada correctamente. Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}.`;
+        const data = await respuesta.json().catch(() => ({}));
+
+        if (!respuesta.ok || !data.ok) {
+          throw new Error(data.message || "No se pudo confirmar la ubicación.");
+        }
+
+        if (nota) {
+          nota.textContent = "Ubicación confirmada correctamente. Entrega el código únicamente al repartidor cuando recibas el paquete.";
+        }
+
+        actualizarEstadoReceptorTemporal("ubicacion_confirmada");
+        mostrarCodigoEntregaDesdeServicio(data.service);
+
+        const estadoEntrega = document.getElementById("estado-ubicacion-entrega");
+        actualizarEstado(
+          estadoEntrega,
+          `Ubicación del receptor confirmada. Lat: ${Number(lat).toFixed(6)}, Lng: ${Number(lng).toFixed(6)}`,
+          "ok"
+        );
+      } catch (error) {
+        console.error("BHUZ confirmar ubicación receptor:", error);
+        if (nota) {
+          nota.textContent = error.message || "No se pudo confirmar la ubicación. Intenta nuevamente.";
+        }
+        actualizarEstadoReceptorTemporal("error");
       }
-
-      actualizarEstadoReceptorTemporal("ubicacion_confirmada");
-      generarCodigoEntregaTemporal();
-
-      const estadoEntrega = document.getElementById("estado-ubicacion-entrega");
-      actualizarEstado(
-        estadoEntrega,
-        `Ubicación del receptor confirmada. Lat: ${lat.toFixed(6)}, Lng: ${lng.toFixed(6)}`,
-        "ok"
-      );
     },
     (error) => {
       console.warn("BHUZ ubicación receptor:", error);
@@ -311,20 +443,16 @@ function confirmarUbicacionReceptorTemporal() {
   );
 }
 
-function generarCodigoEntregaTemporal() {
+function mostrarCodigoEntregaDesdeServicio(service) {
   const cajaCodigo = document.getElementById("envio-codigo-entrega");
   const textoCodigo = document.getElementById("envio-codigo-entrega-texto");
 
-  const codigo = generarCodigoCortoEntrega();
+  const codigo = limpiarTexto(service?.deliveryCode || service?.delivery_code || "");
+
+  if (!codigo) return "";
 
   if (textoCodigo) textoCodigo.textContent = codigo;
   if (cajaCodigo) cajaCodigo.style.display = "grid";
-
-  /*
-    FASE BACKEND:
-    Este código debe guardarse en PostgreSQL y validarse desde el panel del repartidor.
-    El receptor solo lo ve. No puede marcar el envío como entregado.
-  */
 
   return codigo;
 }
@@ -393,6 +521,242 @@ function actualizarLineasSeguimientoReceptor(estado) {
 
 
 /* ==========================================================
+   BACKEND SERVICES / SINCRONIZACIÓN
+========================================================== */
+
+async function crearServicioEnvioBackend({ datos, distanciaKm, totalEnvio }) {
+  const payload = {
+    serviceType: "PACKAGE",
+
+    customerEmail: obtenerEmailClienteActual(),
+    customerName: obtenerNombreClienteActual(),
+    customerPhone: "",
+
+    receiverName: datos.contacto,
+    receiverPhone: datos.contacto,
+
+    pickupAddress: datos.origen,
+    pickupReference: datos.referenciaRetiro,
+    pickupLatitude: datos.retiroLat || "",
+    pickupLongitude: datos.retiroLng || "",
+
+    deliveryAddress: datos.destino,
+    deliveryReference: datos.referenciaEntrega,
+    deliveryLatitude: "",
+    deliveryLongitude: "",
+
+    packageDescription: datos.descripcion,
+    packageSize: datos.tamano,
+    packagePhotoUrl: "",
+
+    distanceKm,
+    totalAmount: totalEnvio,
+    paymentStatus: "PENDING",
+    paymentMethod: "",
+    status: "PENDING_PAYMENT"
+  };
+
+  const respuesta = await fetch(construirUrlApi("/api/services"), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    credentials: "include",
+    body: JSON.stringify(payload)
+  });
+
+  const data = await respuesta.json().catch(() => ({}));
+
+  if (!respuesta.ok || !data.ok) {
+    throw new Error(data.message || "No se pudo crear el envío en BHUZ.");
+  }
+
+  return data.service;
+}
+
+async function generarTokenReceptorBackend(serviceId) {
+  const respuesta = await fetch(construirUrlApi(`/api/services/${encodeURIComponent(serviceId)}/receiver-token`), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    credentials: "include",
+    body: JSON.stringify({
+      frontendBaseUrl: window.location.origin + window.location.pathname
+    })
+  });
+
+  const data = await respuesta.json().catch(() => ({}));
+
+  if (!respuesta.ok || !data.ok) {
+    throw new Error(data.message || "No se pudo generar el link del receptor.");
+  }
+
+  return data;
+}
+
+async function consultarServicioBackend(serviceId) {
+  const respuesta = await fetch(construirUrlApi(`/api/services/${encodeURIComponent(serviceId)}`), {
+    credentials: "include"
+  });
+
+  const data = await respuesta.json().catch(() => ({}));
+
+  if (!respuesta.ok || !data.ok) {
+    throw new Error(data.message || "No se pudo consultar el envío.");
+  }
+
+  return data.service;
+}
+
+function iniciarPollingServicio(serviceId) {
+  detenerPollingServicio();
+
+  if (!serviceId) return;
+
+  BHUZ_SERVICES_STATE.pollingId = setInterval(async () => {
+    try {
+      const service = await consultarServicioBackend(serviceId);
+      procesarServicioActualizado(service);
+    } catch (error) {
+      console.warn("BHUZ polling servicio:", error.message);
+    }
+  }, 5000);
+}
+
+function detenerPollingServicio() {
+  if (BHUZ_SERVICES_STATE.pollingId) {
+    clearInterval(BHUZ_SERVICES_STATE.pollingId);
+    BHUZ_SERVICES_STATE.pollingId = null;
+  }
+}
+
+function procesarServicioActualizado(service) {
+  if (!service) return;
+
+  const estadoEntrega = document.getElementById("estado-ubicacion-entrega");
+  const inputLat = document.getElementById("envio-entrega-lat");
+  const inputLng = document.getElementById("envio-entrega-lng");
+
+  const lat = service.deliveryLatitude || "";
+  const lng = service.deliveryLongitude || "";
+  const receptorConfirmado = Boolean(lat && lng);
+
+  if (receptorConfirmado) {
+    BHUZ_SERVICES_STATE.receptorConfirmado = true;
+
+    if (inputLat) inputLat.value = lat;
+    if (inputLng) inputLng.value = lng;
+
+    actualizarEstado(
+      estadoEntrega,
+      "Receptor confirmó ubicación. Ya puedes enviar el paquete.",
+      "ok"
+    );
+
+    actualizarResumenCalculo({
+      distanciaKm: service.distanceKm || calcularDistanciaTemporal(obtenerDatosFormularioEnvio()),
+      clientePaga: service.totalAmount || calcularMontoCliente(service.distanceKm || 0)
+    });
+
+    const resumenFormulario = document.getElementById("envio-resumen-formulario");
+    const accionFinal = document.getElementById("envio-accion-final");
+    const notaCalculo = document.getElementById("envio-nota-calculo");
+    const notaFinal = document.getElementById("envio-nota-final");
+
+    if (resumenFormulario) resumenFormulario.style.display = "grid";
+    if (accionFinal) accionFinal.style.display = "grid";
+
+    if (notaCalculo) {
+      notaCalculo.textContent = "Ubicación del receptor confirmada. Revisa el total y continúa con Enviar paquete.";
+    }
+
+    if (notaFinal) {
+      notaFinal.textContent = "Listo para continuar con el cobro. La pasarela de pago se conectará aquí.";
+    }
+
+    guardarEnvioTemporalEnStorage();
+    detenerPollingServicio();
+  } else {
+    bloquearBotonEnviarHastaConfirmacion();
+  }
+}
+
+function bloquearBotonEnviarHastaConfirmacion() {
+  const accionFinal = document.getElementById("envio-accion-final");
+  const botonEnviar = document.getElementById("btn-enviar-paquete");
+  const notaFinal = document.getElementById("envio-nota-final");
+
+  if (!BHUZ_SERVICES_STATE.receptorConfirmado) {
+    if (accionFinal) accionFinal.style.display = "none";
+    if (botonEnviar) botonEnviar.disabled = true;
+    if (notaFinal) {
+      notaFinal.textContent = "Enviar paquete se activará cuando el receptor confirme su ubicación.";
+    }
+    return;
+  }
+
+  if (accionFinal) accionFinal.style.display = "grid";
+  if (botonEnviar) botonEnviar.disabled = false;
+}
+
+function guardarEnvioTemporalEnStorage() {
+  const payload = {
+    serviceId: BHUZ_SERVICES_STATE.serviceId,
+    shareUrl: BHUZ_SERVICES_STATE.shareUrl,
+    token: BHUZ_SERVICES_STATE.token,
+    receptorConfirmado: BHUZ_SERVICES_STATE.receptorConfirmado
+  };
+
+  localStorage.setItem("bhuz_envio_actual", JSON.stringify(payload));
+}
+
+function restaurarEnvioTemporalDesdeStorage() {
+  try {
+    const raw = localStorage.getItem("bhuz_envio_actual");
+    if (!raw) return;
+
+    const payload = JSON.parse(raw);
+    if (!payload?.serviceId) return;
+
+    BHUZ_SERVICES_STATE.serviceId = payload.serviceId || "";
+    BHUZ_SERVICES_STATE.shareUrl = payload.shareUrl || "";
+    BHUZ_SERVICES_STATE.token = payload.token || "";
+    BHUZ_SERVICES_STATE.receptorConfirmado = payload.receptorConfirmado === true;
+
+    const inputLink = document.getElementById("envio-link-confirmacion");
+    const cajaLink = document.getElementById("envio-link-receptor");
+
+    if (inputLink && BHUZ_SERVICES_STATE.shareUrl) inputLink.value = BHUZ_SERVICES_STATE.shareUrl;
+    if (cajaLink && BHUZ_SERVICES_STATE.shareUrl) cajaLink.style.display = "grid";
+
+    if (!BHUZ_SERVICES_STATE.receptorConfirmado) {
+      iniciarPollingServicio(BHUZ_SERVICES_STATE.serviceId);
+    }
+  } catch (error) {
+    console.warn("BHUZ restaurar envío temporal:", error);
+  }
+}
+
+function obtenerEmailClienteActual() {
+  try {
+    const user = JSON.parse(localStorage.getItem("bhuz_user") || localStorage.getItem("deli_user") || "{}");
+    return limpiarTexto(user.email || "");
+  } catch {
+    return "";
+  }
+}
+
+function obtenerNombreClienteActual() {
+  try {
+    const user = JSON.parse(localStorage.getItem("bhuz_user") || localStorage.getItem("deli_user") || "{}");
+    return limpiarTexto(user.fullName || user.name || "");
+  } catch {
+    return "";
+  }
+}
+
+/* ==========================================================
    FOTO DEL PAQUETE
 ========================================================== */
 
@@ -436,9 +800,6 @@ function calcularEnvioTemporal() {
 
   const distanciaKm = calcularDistanciaTemporal(datos);
   const clientePaga = calcularMontoCliente(distanciaKm);
-  const comisionBhuz = redondear(clientePaga * 0.18);
-  const repartidorRecibe = redondear(clientePaga - comisionBhuz);
-
   actualizarResumenCalculo({
     distanciaKm,
     clientePaga
@@ -449,16 +810,25 @@ function calcularEnvioTemporal() {
   const notaCalculo = document.getElementById("envio-nota-calculo");
   const notaFinal = document.getElementById("envio-nota-final");
 
+  BHUZ_SERVICES_STATE.calculoListo = true;
+
   if (resumenFormulario) resumenFormulario.style.display = "grid";
-  if (accionFinal) accionFinal.style.display = "grid";
+
+  if (accionFinal) {
+    accionFinal.style.display = "none";
+  }
 
   if (notaCalculo) {
-    notaCalculo.textContent = "Costo calculado. Si estás de acuerdo, continúa con Enviar paquete.";
+    notaCalculo.textContent =
+      "Costo calculado. Ahora genera el enlace y espera que el receptor confirme su ubicación para activar Enviar paquete.";
   }
 
   if (notaFinal) {
-    notaFinal.textContent = "Siguiente paso: conectar este botón con la pasarela de pago y luego crear el envío real.";
+    notaFinal.textContent =
+      "El botón Enviar paquete se activará cuando el receptor confirme la ubicación desde el enlace.";
   }
+
+  bloquearBotonEnviarHastaConfirmacion();
 }
 
 function obtenerDatosFormularioEnvio() {
@@ -544,12 +914,25 @@ function actualizarResumenCalculo({ distanciaKm, clientePaga }) {
    PREPARAR ENVÍO PARA PAGO / CREACIÓN REAL
 ========================================================== */
 
-function prepararEnvioParaPagoTemporal() {
+async function prepararEnvioParaPagoTemporal() {
   const datos = obtenerDatosFormularioEnvio();
   const errores = validarDatosEnvio(datos);
 
   if (errores.length > 0) {
-    alert("Antes de enviar el paquete revisa estos puntos:\n\n" + errores.map((e) => `• ${e}`).join("\n"));
+    alert("Antes de enviar el paquete revisa estos puntos:
+
+" + errores.map((e) => `• ${e}`).join("
+"));
+    return;
+  }
+
+  if (!BHUZ_SERVICES_STATE.serviceId) {
+    alert("Primero genera el enlace del receptor y espera que confirme su ubicación.");
+    return;
+  }
+
+  if (!BHUZ_SERVICES_STATE.receptorConfirmado) {
+    alert("Todavía falta que el receptor confirme su ubicación. Cuando confirme, se activará el envío.");
     return;
   }
 
@@ -558,29 +941,48 @@ function prepararEnvioParaPagoTemporal() {
 
   /*
     PREPARADO PARA PASARELA DE PAGO:
-    Aquí conectaremos el cobro real antes de crear el envío definitivo.
+    Este servicio ya existe en PostgreSQL.
+    Aquí conectaremos el cobro real antes de pasar a buscar repartidor.
 
     Flujo futuro:
     1. Crear intento de pago en backend.
     2. Redirigir o abrir pasarela de pago.
     3. Confirmar pago.
-    4. Crear envío real en PostgreSQL.
-    5. Cambiar estado a "Buscando repartidor".
+    4. Cambiar estado a PAID / SEARCHING_DRIVER.
+    5. Mostrarlo en panel repartidor.
   */
 
-  const payloadEnvio = {
-    ...datos,
-    distanciaKm,
-    totalEnvio,
-    estado: "pendiente_pago",
-    tipoServicio: "envio_paquete"
-  };
+  try {
+    const respuesta = await fetch(construirUrlApi(`/api/services/${encodeURIComponent(BHUZ_SERVICES_STATE.serviceId)}/status`), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        status: "PENDING_PAYMENT",
+        changedBy: "customer",
+        notes: "Cliente presionó Enviar paquete. Pendiente conexión con pasarela de pago."
+      })
+    });
 
-  console.log("BHUZ envío preparado para pago:", payloadEnvio);
+    const data = await respuesta.json().catch(() => ({}));
 
-  alert(
-    `Envío preparado.\n\nTotal a pagar: $${totalEnvio}\nDistancia: ${distanciaKm} km aprox.\n\nPróxima fase: conectar pasarela de pago, crear el envío real y generar el código único de entrega.`
-  );
+    if (!respuesta.ok || !data.ok) {
+      throw new Error(data.message || "No se pudo preparar el envío.");
+    }
+
+    alert(
+      `Envío preparado en BHUZ.
+
+Total a pagar: $${totalEnvio}
+Distancia: ${distanciaKm} km aprox.
+
+Próxima fase: conectar pasarela de pago y luego buscar repartidor.`
+    );
+  } catch (error) {
+    console.error("BHUZ enviar paquete:", error);
+    alert(error.message || "No se pudo preparar el envío.");
+  }
 }
 
 /* ==========================================================
@@ -626,6 +1028,8 @@ function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
 function gradosARadianes(grados) {
   return grados * (Math.PI / 180);
 }
+
+
 
 
 
