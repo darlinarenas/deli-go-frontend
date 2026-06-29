@@ -140,20 +140,14 @@
       </div>
 
 
-      <button class="btn-envio-principal" id="btn-calcular-envio" type="button">
-        Calcular envío
-      </button>
-
-      <div class="envios-calculo envios-calculo-formulario" id="envio-resumen-formulario" style="display:none;">
-        <h3>Resumen del envío</h3>
-        <p id="envio-resumen-distancia">Distancia: pendiente</p>
-        <p id="envio-resumen-cliente">Total del envío: pendiente</p>
-      </div>
-
-      <div class="envio-link-accion" id="envio-link-accion" style="display:none;">
-        <button class="btn-envio-secundario btn-generar-link-final" id="btn-generar-link-receptor" type="button">
-          🔗 Generar link para el receptor
+      <div class="envio-link-accion" id="envio-link-accion">
+        <button class="btn-envio-principal btn-generar-link-final" id="btn-generar-link-receptor" type="button">
+          Generar link para el receptor
         </button>
+
+        <p class="envio-nota" id="envio-nota-calculo">
+          Cuando el receptor confirme su ubicación, BHUZ calculará la distancia real y el total del envío.
+        </p>
 
         <div class="envio-link-receptor" id="envio-link-receptor" style="display:none;">
           <label>Enlace para enviar al receptor</label>
@@ -164,7 +158,7 @@
           </div>
 
           <button class="btn-envio-whatsapp" id="btn-compartir-whatsapp-receptor" type="button">
-            🟢 Compartir por WhatsApp
+            Compartir por WhatsApp
           </button>
 
           <small>Envía este enlace por WhatsApp para que el receptor confirme su ubicación.</small>
@@ -179,6 +173,12 @@
         </div>
       </div>
 
+      <div class="envios-calculo envios-calculo-formulario" id="envio-resumen-formulario" style="display:none;">
+        <h3>Resumen del envío</h3>
+        <p id="envio-resumen-distancia">Distancia: pendiente</p>
+        <p id="envio-resumen-cliente">Total del envío: pendiente</p>
+      </div>
+
       <div class="envio-accion-final" id="envio-accion-final" style="display:none;">
         <button class="btn-envio-principal btn-enviar-paquete" id="btn-enviar-paquete" type="button">
           Enviar paquete
@@ -187,10 +187,6 @@
           El botón Enviar paquete se activará cuando el receptor confirme su ubicación.
         </p>
       </div>
-
-      <p class="envio-nota" id="envio-nota-calculo">
-        Completa los datos, acepta las condiciones y calcula el envío.
-      </p>
 
     </form>
 
@@ -205,14 +201,14 @@
 
       <div class="envios-pasos">
         <div><span>1</span><strong>Describe el paquete</strong></div>
-        <div><span>2</span><strong>Indica retiro</strong></div>
-        <div><span>3</span><strong>Confirma destino</strong></div>
-        <div><span>4</span><strong>Calcula y comparte link</strong></div>
+        <div><span>2</span><strong>Confirma retiro GPS</strong></div>
+        <div><span>3</span><strong>Envía link al receptor</strong></div>
+        <div><span>4</span><strong>Calcula y envía</strong></div>
       </div>
 
       <div class="envios-calculo">
         <h3>Proceso del envío</h3>
-        <p>El resumen del costo aparecerá debajo del botón Calcular envío.</p>
+        <p>El resumen del costo aparecerá cuando el receptor confirme su ubicación.</p>
         <p>Luego podrás continuar con Enviar paquete.</p>
       </div>
     </aside>

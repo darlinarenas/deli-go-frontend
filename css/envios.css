@@ -820,6 +820,81 @@
   }
 }
 
+/* ==========================================================
+   BHUZ - FLUJO CORREGIDO ENVÍOS
+   1) Datos paquete
+   2) Retiro GPS
+   3) Entrega
+   4) Link receptor
+   5) Cálculo real tras GPS receptor
+========================================================== */
+
+.envio-link-accion {
+  gap: 14px;
+  padding: 16px;
+  border-radius: 24px;
+  border: 1px solid rgba(16, 233, 129, 0.18);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(16, 233, 129, 0.12), transparent 34%),
+    rgba(255, 255, 255, 0.035);
+}
+
+.btn-generar-link-final {
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+}
+
+.envio-link-receptor {
+  padding: 14px;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.envio-link-box input {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.envios-calculo-formulario {
+  padding: 18px;
+  border-color: rgba(16, 233, 129, 0.34);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(16, 233, 129, 0.16), transparent 36%),
+    rgba(0, 0, 0, 0.26);
+}
+
+.envios-calculo-formulario p {
+  font-size: 15px;
+}
+
+.envios-calculo-formulario #envio-resumen-cliente {
+  font-size: 20px;
+  color: #ffffff;
+  font-weight: 950;
+}
+
+.envio-accion-final {
+  border-color: rgba(16, 233, 129, 0.34);
+  box-shadow: 0 18px 45px rgba(16, 233, 129, 0.08);
+}
+
+@media (max-width: 768px) {
+  .envio-link-box {
+    grid-template-columns: 1fr !important;
+  }
+
+  .envio-link-receptor {
+    padding: 12px;
+  }
+
+  .envio-link-box input {
+    font-size: 12px;
+  }
+}
+
+
 
 
 

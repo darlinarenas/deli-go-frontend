@@ -54,6 +54,20 @@ function construirUrlApi(ruta) {
   return `${obtenerBackendBaseUrl()}${ruta}`;
 }
 
+async function fetchConTimeout(url, opciones = {}, timeoutMs = 15000) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, {
+      ...opciones,
+      signal: controller.signal
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 function obtenerFrontendBaseUrlCompartible() {
   /*
     Ya no usamos esta URL como fuente real del link.
@@ -117,7 +131,6 @@ function inicializarModuloEnvios() {
   const btnCopiarLink = document.getElementById("btn-copiar-link-receptor");
   const btnCompartirWhatsapp = document.getElementById("btn-compartir-whatsapp-receptor");
   const btnConfirmarUbicacionReceptor = document.getElementById("btn-confirmar-ubicacion-receptor");
-  const btnCalcular = document.getElementById("btn-calcular-envio");
   const btnEnviarPaquete = document.getElementById("btn-enviar-paquete");
   const inputFoto = document.getElementById("envio-foto");
 
@@ -147,10 +160,6 @@ function inicializarModuloEnvios() {
 
 
   detectarFlujoReceptorEnvioTemporal();
-
-  if (btnCalcular) {
-    btnCalcular.addEventListener("click", calcularEnvioTemporal);
-  }
 
   if (btnEnviarPaquete) {
     btnEnviarPaquete.addEventListener("click", prepararEnvioParaPagoTemporal);
@@ -222,14 +231,6 @@ async function generarEnlaceReceptor() {
   const datos = obtenerDatosFormularioEnvio();
   const errores = validarDatosEnvio(datos);
 
-  if (!BHUZ_SERVICES_STATE.calculoListo) {
-    actualizarEstado(
-      estado,
-      "Primero calcula el envío. Luego podrás generar el link para el receptor.",
-      "error"
-    );
-    return;
-  }
 
   if (errores.length > 0) {
     alert(
@@ -247,12 +248,12 @@ async function generarEnlaceReceptor() {
 
     actualizarEstado(
       estado,
-      "Creando envío temporal en BHUZ para generar el enlace del receptor...",
+      "Creando solicitud en BHUZ para generar el link del receptor...",
       "cargando"
     );
 
-    const distanciaKm = calcularDistanciaTemporal(datos);
-    const totalEnvio = calcularMontoCliente(distanciaKm);
+    const distanciaKm = 0;
+    const totalEnvio = 0;
 
     const service = await crearServicioEnvioBackend({
       datos,
@@ -272,9 +273,20 @@ async function generarEnlaceReceptor() {
 
     actualizarEstado(
       estado,
-      "Enlace real generado. Envíalo por WhatsApp y espera que el receptor confirme su ubicación.",
+      "Link generado. Envíalo por WhatsApp y espera que el receptor confirme su ubicación.",
       "ok"
     );
+
+    const resumenFormulario = document.getElementById("envio-resumen-formulario");
+    const accionFinal = document.getElementById("envio-accion-final");
+    const notaCalculo = document.getElementById("envio-nota-calculo");
+
+    if (resumenFormulario) resumenFormulario.style.display = "none";
+    if (accionFinal) accionFinal.style.display = "none";
+    if (notaCalculo) {
+      notaCalculo.textContent =
+        "Link generado. Cuando el receptor confirme su ubicación, se calculará la distancia real y el total.";
+    }
 
     bloquearBotonEnviarHastaConfirmacion();
     iniciarPollingServicio(BHUZ_SERVICES_STATE.serviceId);
@@ -288,7 +300,7 @@ async function generarEnlaceReceptor() {
   } finally {
     if (boton) {
       boton.disabled = false;
-      boton.textContent = "🔗 Generar enlace para confirmar ubicación";
+      boton.textContent = "Generar link para el receptor";
     }
   }
 }
@@ -383,7 +395,7 @@ async function detectarFlujoReceptorEnvioTemporal() {
   actualizarEstadoReceptorTemporal("esperando_ubicacion");
 
   try {
-    const respuesta = await fetch(construirUrlApi(`/api/services/confirmar/${encodeURIComponent(tokenEnvio)}`));
+    const respuesta = await fetchConTimeout(construirUrlApi(`/api/services/confirmar/${encodeURIComponent(tokenEnvio)}`));
     const data = await respuesta.json().catch(() => ({}));
 
     if (!respuesta.ok || !data.ok) {
@@ -435,7 +447,7 @@ function confirmarUbicacionReceptorTemporal() {
       const lng = posicion.coords.longitude;
 
       try {
-        const respuesta = await fetch(construirUrlApi(`/api/services/confirmar/${encodeURIComponent(tokenEnvio)}`), {
+        const respuesta = await fetchConTimeout(construirUrlApi(`/api/services/confirmar/${encodeURIComponent(tokenEnvio)}`), {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -602,7 +614,7 @@ async function crearServicioEnvioBackend({ datos, distanciaKm, totalEnvio }) {
     status: "PENDING_PAYMENT"
   };
 
-  const respuesta = await fetch(construirUrlApi("/api/services"), {
+  const respuesta = await fetchConTimeout(construirUrlApi("/api/services"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -621,7 +633,7 @@ async function crearServicioEnvioBackend({ datos, distanciaKm, totalEnvio }) {
 }
 
 async function generarTokenReceptorBackend(serviceId) {
-  const respuesta = await fetch(construirUrlApi(`/api/services/${encodeURIComponent(serviceId)}/receiver-token`), {
+  const respuesta = await fetchConTimeout(construirUrlApi(`/api/services/${encodeURIComponent(serviceId)}/receiver-token`), {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -640,7 +652,7 @@ async function generarTokenReceptorBackend(serviceId) {
 }
 
 async function consultarServicioBackend(serviceId) {
-  const respuesta = await fetch(construirUrlApi(`/api/services/${encodeURIComponent(serviceId)}`), {
+  const respuesta = await fetchConTimeout(construirUrlApi(`/api/services/${encodeURIComponent(serviceId)}`), {
     credentials: "include"
   });
 
@@ -715,7 +727,7 @@ function procesarServicioActualizado(service) {
     if (accionFinal) accionFinal.style.display = "grid";
 
     if (notaCalculo) {
-      notaCalculo.textContent = "Ubicación del receptor confirmada. Revisa el total y continúa con Enviar paquete.";
+      notaCalculo.textContent = "Ubicación del receptor confirmada. Distancia real calculada. Revisa el total y continúa con Enviar paquete.";
     }
 
     if (notaFinal) {
@@ -813,48 +825,7 @@ function mostrarVistaPreviaFoto(event) {
 ========================================================== */
 
 function calcularEnvioTemporal() {
-  const datos = obtenerDatosFormularioEnvio();
-  const errores = validarDatosEnvio(datos);
-
-  if (errores.length > 0) {
-    alert("Revisa estos puntos:\n\n" + errores.map((e) => `• ${e}`).join("\n"));
-    return;
-  }
-
-  const distanciaKm = calcularDistanciaTemporal(datos);
-  const clientePaga = calcularMontoCliente(distanciaKm);
-  actualizarResumenCalculo({
-    distanciaKm,
-    clientePaga
-  });
-
-  const resumenFormulario = document.getElementById("envio-resumen-formulario");
-  const accionFinal = document.getElementById("envio-accion-final");
-  const notaCalculo = document.getElementById("envio-nota-calculo");
-  const notaFinal = document.getElementById("envio-nota-final");
-
-  BHUZ_SERVICES_STATE.calculoListo = true;
-
-  const linkAccion = document.getElementById("envio-link-accion");
-
-  if (resumenFormulario) resumenFormulario.style.display = "grid";
-  if (linkAccion) linkAccion.style.display = "grid";
-
-  if (accionFinal) {
-    accionFinal.style.display = "none";
-  }
-
-  if (notaCalculo) {
-    notaCalculo.textContent =
-      "Costo calculado. Ahora genera el link y envíaselo al receptor por WhatsApp.";
-  }
-
-  if (notaFinal) {
-    notaFinal.textContent =
-      "Enviar paquete se activará cuando el receptor confirme su ubicación.";
-  }
-
-  bloquearBotonEnviarHastaConfirmacion();
+  alert("El cálculo se realizará automáticamente cuando el receptor confirme su ubicación.");
 }
 
 function obtenerDatosFormularioEnvio() {
@@ -886,6 +857,7 @@ function validarDatosEnvio(datos) {
   if (!datos.contacto) errores.push("Coloca el nombre y teléfono de quien recibe.");
   if (!datos.descripcion) errores.push("Describe qué vas a enviar.");
   if (!datos.tamano) errores.push("Selecciona el tamaño aproximado del paquete.");
+  if (!datos.retiroLat || !datos.retiroLng) errores.push('Captura la ubicación de retiro con el botón "Usar mi ubicación actual".');
   if (!datos.aceptaTerminos) errores.push("Debes aceptar los términos y condiciones del envío.");
 
   return errores;
@@ -976,7 +948,7 @@ async function prepararEnvioParaPagoTemporal() {
   */
 
   try {
-    const respuesta = await fetch(construirUrlApi(`/api/services/${encodeURIComponent(BHUZ_SERVICES_STATE.serviceId)}/status`), {
+    const respuesta = await fetchConTimeout(construirUrlApi(`/api/services/${encodeURIComponent(BHUZ_SERVICES_STATE.serviceId)}/status`), {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -1046,6 +1018,7 @@ function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
 function gradosARadianes(grados) {
   return grados * (Math.PI / 180);
 }
+
 
 
 
