@@ -54,7 +54,7 @@ function construirUrlApi(ruta) {
   return `${obtenerBackendBaseUrl()}${ruta}`;
 }
 
-async function fetchConTimeout(url, opciones = {}, timeoutMs = 15000) {
+async function fetchConTimeout(url, opciones = {}, timeoutMs = 60000) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -63,6 +63,14 @@ async function fetchConTimeout(url, opciones = {}, timeoutMs = 15000) {
       ...opciones,
       signal: controller.signal
     });
+  } catch (error) {
+    if (error.name === "AbortError") {
+      throw new Error(
+        "El backend tardó demasiado en responder. Verifica que el servidor esté encendido, que PostgreSQL responda y vuelve a intentar."
+      );
+    }
+
+    throw error;
   } finally {
     clearTimeout(timeout);
   }
@@ -294,7 +302,7 @@ async function generarEnlaceReceptor() {
     console.error("BHUZ generar enlace receptor:", error);
     actualizarEstado(
       estado,
-      error.message || "No se pudo generar el enlace del receptor.",
+      error.message || "No se pudo generar el link del receptor. Revisa la consola del backend.",
       "error"
     );
   } finally {
@@ -1018,6 +1026,7 @@ function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
 function gradosARadianes(grados) {
   return grados * (Math.PI / 180);
 }
+
 
 
 
