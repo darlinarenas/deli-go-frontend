@@ -24,55 +24,30 @@ const BHUZ_SERVICES_STATE = {
 
 function obtenerBackendBaseUrl() {
   /*
-    Fuente real:
-    - El envío, token, estado y código viven en PostgreSQL.
-    - El frontend solo llama al backend.
-
-    Producción:
-    Define window.BHUZ_API_URL en el index si quieres apuntar directo a Render:
-    window.BHUZ_API_URL = "https://tu-backend-render.onrender.com";
-
-    Desarrollo:
-    Si abres el frontend desde la IP de tu PC, usa esa misma IP con puerto 3001.
+    Fuente real del módulo:
+    - Servicios, tokens, estados, ubicación y código viven en PostgreSQL.
+    - El frontend solo consume el backend.
+    - No depende de localStorage ni de 127.0.0.1.
   */
-  const desdeWindow = window.BHUZ_API_URL || window.API_BASE_URL || "";
-
-  if (desdeWindow) {
-    return String(desdeWindow).replace(/\/+$/, "");
-  }
-
-  const host = window.location.hostname || "localhost";
-
-  if (host === "localhost" || host === "127.0.0.1") {
-    return "http://127.0.0.1:3001";
-  }
-
-  return `${window.location.protocol}//${host}:3001`;
+  const backend = window.BHUZ_API_URL || window.API_BASE_URL || "https://deligo-backend-i554.onrender.com";
+  return String(backend).replace(/\/+$/, "");
 }
 
 function construirUrlApi(ruta) {
   return `${obtenerBackendBaseUrl()}${ruta}`;
 }
 
-async function fetchConTimeout(url, opciones = {}, timeoutMs = 60000) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), timeoutMs);
-
+async function fetchConTimeout(url, opciones = {}, timeoutMs = 0) {
+  /*
+    No abortamos la solicitud de crear link.
+    Render puede tardar algunos segundos si está despertando.
+  */
   try {
-    return await fetch(url, {
-      ...opciones,
-      signal: controller.signal
-    });
+    return await fetch(url, opciones);
   } catch (error) {
-    if (error.name === "AbortError") {
-      throw new Error(
-        "El backend tardó demasiado en responder. Verifica que el servidor esté encendido, que PostgreSQL responda y vuelve a intentar."
-      );
-    }
-
-    throw error;
-  } finally {
-    clearTimeout(timeout);
+    throw new Error(
+      error.message || "No se pudo conectar con el backend de BHUZ."
+    );
   }
 }
 
@@ -302,7 +277,7 @@ async function generarEnlaceReceptor() {
     console.error("BHUZ generar enlace receptor:", error);
     actualizarEstado(
       estado,
-      error.message || "No se pudo generar el link del receptor. Revisa la consola del backend.",
+      error.message || "No se pudo generar el enlace del receptor.",
       "error"
     );
   } finally {
@@ -337,7 +312,7 @@ function advertirLinkLocalNoCompartible(link) {
   try {
     const url = new URL(link);
     if (url.hostname === "127.0.0.1" || url.hostname === "localhost") {
-      return "IMPORTANTE: El backend devolvió un link local. Configura FRONTEND_URL en el backend con la URL pública del frontend.";
+      return "El backend devolvió un link local. Revisa FRONTEND_URL en Render.";
     }
   } catch {}
   return "";
@@ -768,18 +743,17 @@ function bloquearBotonEnviarHastaConfirmacion() {
 
 function guardarEnvioTemporalEnStorage() {
   /*
-    Ya no guardamos el envío real en localStorage.
+    No se guarda el envío real en localStorage.
     La fuente real es PostgreSQL.
   */
 }
 
 function restaurarEnvioTemporalDesdeStorage() {
   /*
-    Ya no restauramos envíos desde localStorage.
+    No se restaura el envío desde localStorage.
     Más adelante el módulo de usuario consultará sus envíos desde PostgreSQL.
   */
 }
-
 
 function obtenerEmailClienteActual() {
   try {
