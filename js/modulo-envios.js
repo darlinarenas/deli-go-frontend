@@ -962,9 +962,9 @@ async function prepararEnvioParaPagoTemporal() {
         "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        status: "PENDING_PAYMENT",
+        status: "SEARCHING_DRIVER",
         changedBy: "customer",
-        notes: "Cliente presionó Enviar paquete. Pendiente conexión con pasarela de pago."
+        notes: "Cliente presionó Enviar paquete. Servicio listo para búsqueda/asignación de repartidor."
       })
     });
 
@@ -975,7 +975,7 @@ async function prepararEnvioParaPagoTemporal() {
     }
 
     alert(
-      `Envío preparado en BHUZ.\n\nTotal a pagar: $${totalEnvio}\nDistancia: ${distanciaKm} km aprox.\n\nPróxima fase: conectar pasarela de pago y luego buscar repartidor.`
+      `Envío publicado en BHUZ.\n\nTotal: $${totalEnvio}\nDistancia: ${distanciaKm} km aprox.\n\nAhora el servicio está disponible para que un repartidor lo acepte.`
     );
   } catch (error) {
     console.error("BHUZ enviar paquete:", error);
@@ -1031,6 +1031,7 @@ function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
 function gradosARadianes(grados) {
   return grados * (Math.PI / 180);
 }
+
 
 
 
