@@ -31,6 +31,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     history: [],
     currentView: "home",
     pollingId: null,
+    confirmandoEntrega: false,
+    codigoEntregaTemporal: "",
     driver: crearDriverDesdeSesion(user)
   };
 
@@ -115,11 +117,18 @@ document.addEventListener("DOMContentLoaded", async () => {
       state.availableServices = Array.isArray(availableData.services) ? availableData.services : [];
       state.history = Array.isArray(historyData.services) ? historyData.services : [];
 
-      renderAll();
+      if (state.confirmandoEntrega) {
+        renderDeliveries();
+        renderEarnings();
+        renderProfile();
+        renderMenuAvailability();
+      } else {
+        renderAll();
+      }
     } catch (error) {
       console.error("BHUZ panel repartidor:", error);
       if (!silent) showToast(error.message || "No se pudo conectar con el backend.");
-      renderAll();
+      if (!state.confirmandoEntrega) renderAll();
     } finally {
       state.loading = false;
     }
@@ -373,16 +382,37 @@ document.addEventListener("DOMContentLoaded", async () => {
           <button class="btn btn-orange" data-open-active-map="delivery" type="button">⌁ Abrir mapa entrega</button>
           <button class="btn btn-light" data-show-code-panel="true" type="button">Llegué al receptor</button>
         </div>
-        <div id="driver-code-panel" class="notice-box" style="display:none; margin-top:14px;">
+        <div id="driver-code-panel" class="notice-box" style="${state.confirmandoEntrega ? "display:block" : "display:none"}; margin-top:14px;">
           <strong>Código de entrega</strong>
-          <p class="small-text">Ingresa el código que ve el receptor en su pantalla.</p>
-          <input id="driver-delivery-code-input" inputmode="numeric" maxlength="6" placeholder="Código de 6 dígitos" style="width:100%;padding:14px;border-radius:14px;border:1px solid rgba(255,255,255,.15);font-size:18px;text-align:center;" />
+          <p class="small-text">Ingresa el código de 6 dígitos que ve el receptor en su pantalla.</p>
+
+          <div class="driver-code-grid" aria-label="Código de entrega" style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:12px;">
+            ${renderCodeInputs()}
+          </div>
+
           <div class="action-stack" style="margin-top:12px;">
             <button class="btn btn-green" data-confirm-delivery="true" type="button">Confirmar entrega</button>
+            <button class="btn btn-light" data-cancel-code-panel="true" type="button">Cancelar</button>
           </div>
         </div>
       </article>
     `;
+  }
+
+  function renderCodeInputs() {
+    const digits = String(state.codigoEntregaTemporal || "").replace(/[^0-9]/g, "").slice(0, 6).padEnd(6, " ").split("");
+
+    return digits.map((digit, index) => `
+      <input
+        class="driver-code-digit"
+        data-code-index="${index}"
+        inputmode="numeric"
+        maxlength="1"
+        aria-label="Dígito ${index + 1}"
+        value="${digit.trim()}"
+        style="width:100%;height:52px;border-radius:14px;border:1px solid rgba(255,255,255,.18);font-size:22px;font-weight:900;text-align:center;background:rgba(255,255,255,.08);color:inherit;"
+      />
+    `).join("");
   }
 
   function renderDeliveries() {
@@ -474,6 +504,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   async function cambiarEstadoServicio(status) {
     if (!state.activeService?.id) return;
 
+    state.confirmandoEntrega = false;
+    state.codigoEntregaTemporal = "";
+
     try {
       const data = await fetchJson(construirUrlApi(`/api/services/${encodeURIComponent(state.activeService.id)}/status`), {
         method: "POST",
@@ -495,11 +528,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   async function confirmarEntrega() {
     if (!state.activeService?.id) return;
 
-    const input = document.getElementById("driver-delivery-code-input");
-    const code = String(input?.value || "").trim();
+    const code = obtenerCodigoEntregaDigitado();
 
-    if (code.length < 4) {
-      showToast("Ingresa el código de entrega.");
+    if (code.length < 6) {
+      showToast("Ingresa los 6 dígitos del código.");
+      enfocarPrimerCodigoVacio();
       return;
     }
 
@@ -515,12 +548,52 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       state.history.unshift(data.service);
       state.activeService = null;
+      state.confirmandoEntrega = false;
+      state.codigoEntregaTemporal = "";
       await refrescarPanelRepartidor({ silent: true });
       setView("home");
       showToast("Entrega confirmada correctamente.");
     } catch (error) {
       showToast(error.message || "Código incorrecto o entrega no confirmada.");
     }
+  }
+
+  function obtenerCodigoEntregaDigitado() {
+    const inputs = Array.from(document.querySelectorAll(".driver-code-digit"));
+    const codeFromInputs = inputs.map((input) => input.value || "").join("").replace(/[^0-9]/g, "").slice(0, 6);
+    state.codigoEntregaTemporal = codeFromInputs;
+    return codeFromInputs;
+  }
+
+  function enfocarPrimerCodigoVacio() {
+    const inputVacio = Array.from(document.querySelectorAll(".driver-code-digit")).find((input) => !input.value);
+    const primerInput = document.querySelector(".driver-code-digit");
+    const target = inputVacio || primerInput;
+    if (target) target.focus();
+  }
+
+  function abrirPanelCodigoEntrega() {
+    state.confirmandoEntrega = true;
+    state.codigoEntregaTemporal = obtenerCodigoEntregaDigitado();
+
+    const panel = document.getElementById("driver-code-panel");
+    if (panel) panel.style.display = "block";
+
+    setTimeout(enfocarPrimerCodigoVacio, 50);
+  }
+
+  function cerrarPanelCodigoEntrega() {
+    state.confirmandoEntrega = false;
+    state.codigoEntregaTemporal = "";
+
+    const panel = document.getElementById("driver-code-panel");
+    if (panel) panel.style.display = "none";
+
+    renderAll();
+  }
+
+  function actualizarCodigoDesdeInputs() {
+    state.codigoEntregaTemporal = obtenerCodigoEntregaDigitado();
   }
 
   function toggleAvailability() {
@@ -649,10 +722,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     if (event.target.closest("[data-show-code-panel]")) {
-      const panel = document.getElementById("driver-code-panel");
-      if (panel) panel.style.display = "block";
-      const input = document.getElementById("driver-delivery-code-input");
-      if (input) input.focus();
+      abrirPanelCodigoEntrega();
+    }
+
+    if (event.target.closest("[data-cancel-code-panel]")) {
+      cerrarPanelCodigoEntrega();
     }
 
     if (event.target.closest("[data-confirm-delivery]")) {
@@ -681,9 +755,61 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   document.body.addEventListener("input", (event) => {
-    const input = event.target.closest("#driver-delivery-code-input");
+    const input = event.target.closest(".driver-code-digit");
     if (!input) return;
-    input.value = input.value.replace(/[^0-9]/g, "").slice(0, 6);
+
+    const clean = input.value.replace(/[^0-9]/g, "");
+
+    if (clean.length > 1) {
+      const inputs = Array.from(document.querySelectorAll(".driver-code-digit"));
+      const startIndex = Number(input.dataset.codeIndex || 0);
+      clean.slice(0, 6).split("").forEach((digit, offset) => {
+        const target = inputs[startIndex + offset];
+        if (target) target.value = digit;
+      });
+      actualizarCodigoDesdeInputs();
+      enfocarPrimerCodigoVacio();
+      return;
+    }
+
+    input.value = clean.slice(0, 1);
+    actualizarCodigoDesdeInputs();
+
+    if (input.value) {
+      const next = input.nextElementSibling;
+      if (next && next.classList.contains("driver-code-digit")) next.focus();
+    }
+  });
+
+  document.body.addEventListener("keydown", (event) => {
+    const input = event.target.closest(".driver-code-digit");
+    if (!input) return;
+
+    if (event.key === "Backspace" && !input.value) {
+      const previous = input.previousElementSibling;
+      if (previous && previous.classList.contains("driver-code-digit")) previous.focus();
+    }
+  });
+
+  document.body.addEventListener("paste", (event) => {
+    const input = event.target.closest(".driver-code-digit");
+    if (!input) return;
+
+    event.preventDefault();
+
+    const pasted = (event.clipboardData || window.clipboardData).getData("text").replace(/[^0-9]/g, "").slice(0, 6);
+    if (!pasted) return;
+
+    const inputs = Array.from(document.querySelectorAll(".driver-code-digit"));
+    const startIndex = Number(input.dataset.codeIndex || 0);
+
+    pasted.split("").forEach((digit, offset) => {
+      const target = inputs[startIndex + offset];
+      if (target) target.value = digit;
+    });
+
+    actualizarCodigoDesdeInputs();
+    enfocarPrimerCodigoVacio();
   });
 
   if (els.openMenuBtn) {
@@ -702,6 +828,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   window.addEventListener("beforeunload", detenerPolling);
 });
+
 
 
 
