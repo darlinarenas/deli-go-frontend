@@ -26,7 +26,9 @@ const BHUZ_SERVICES_STATE = {
   receptorPollingId: null,
   receptorToken: "",
   receptorUltimoEstadoVisual: "",
-  receptorSonidoHabilitado: true
+  receptorSonidoHabilitado: true,
+  receptorRating: 0,
+  envioPublicado: false
 };
 
 function obtenerBackendBaseUrl() {
@@ -188,6 +190,109 @@ function aplicarMejorasVisualesReceptor() {
       box-shadow: 0 0 0 1px rgba(251, 191, 36, .32) inset;
     }
 
+
+    .bhuz-receptor-rating-actions {
+      display: grid;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .bhuz-receptor-rating-btn {
+      border: 0;
+      border-radius: 16px;
+      padding: 12px 14px;
+      background: linear-gradient(135deg, #10e981, #0bbf68);
+      color: #04130b;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 12px 28px rgba(16, 233, 129, .20);
+    }
+
+    .bhuz-receptor-rating-btn:disabled {
+      opacity: .65;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .bhuz-envio-publicado-box {
+      display: grid;
+      gap: 12px;
+      margin-top: 16px;
+      padding: 18px;
+      border-radius: 24px;
+      border: 1px solid rgba(16, 233, 129, .28);
+      background:
+        radial-gradient(circle at 0% 0%, rgba(16, 233, 129, .18), transparent 38%),
+        linear-gradient(145deg, rgba(5, 18, 12, .96), rgba(7, 10, 16, .96));
+      color: #fff;
+      box-shadow: 0 18px 42px rgba(0, 0, 0, .28);
+    }
+
+    .bhuz-envio-publicado-box h3 {
+      margin: 0;
+      color: #10e981;
+      font-size: 22px;
+      line-height: 1.1;
+    }
+
+    .bhuz-envio-publicado-box p {
+      margin: 0;
+      color: rgba(255, 255, 255, .76);
+      font-size: 14px;
+      line-height: 1.35;
+    }
+
+    .bhuz-envio-publicado-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .bhuz-envio-publicado-item {
+      padding: 12px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, .07);
+      border: 1px solid rgba(255, 255, 255, .08);
+    }
+
+    .bhuz-envio-publicado-item span {
+      display: block;
+      color: rgba(255, 255, 255, .58);
+      font-size: 12px;
+      margin-bottom: 4px;
+    }
+
+    .bhuz-envio-publicado-item strong {
+      color: #fff;
+      font-size: 15px;
+      word-break: break-word;
+    }
+
+    .bhuz-envio-publicado-actions {
+      display: grid;
+      gap: 9px;
+      grid-template-columns: 1fr;
+    }
+
+    .bhuz-envio-publicado-actions button {
+      border: 0;
+      border-radius: 16px;
+      padding: 13px 14px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .bhuz-envio-publicado-primary {
+      background: linear-gradient(135deg, #10e981, #0bbf68);
+      color: #03140b;
+    }
+
+    .bhuz-envio-publicado-secondary {
+      background: rgba(255,255,255,.09);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.12) !important;
+    }
+
     @media (max-width: 480px) {
       .envio-receptor-card.bhuz-receptor-compacto {
         padding: 15px !important;
@@ -297,6 +402,25 @@ function inicializarModuloEnvios() {
       const estrella = event.target.closest("[data-bhuz-star]");
       if (estrella) {
         manejarEncuestaReceptor(estrella.dataset.bhuzStar);
+        return;
+      }
+
+      const enviarRating = event.target.closest("[data-bhuz-enviar-rating]");
+      if (enviarRating) {
+        enviarEncuestaReceptor();
+        return;
+      }
+
+      const crearOtroEnvio = event.target.closest("[data-bhuz-crear-otro-envio]");
+      if (crearOtroEnvio) {
+        window.location.reload();
+        return;
+      }
+
+      const verSeguimientoCliente = event.target.closest("[data-bhuz-ver-seguimiento-cliente]");
+      if (verSeguimientoCliente) {
+        const objetivo = document.getElementById("envio-link-receptor") || document.getElementById("envio-resumen-formulario") || document.getElementById("modulo-envios");
+        if (objetivo) objetivo.scrollIntoView({ behavior: "smooth", block: "center" });
         return;
       }
 
@@ -767,7 +891,10 @@ function mostrarCierreReceptorConEncuesta() {
     <div class="bhuz-receptor-stars" aria-label="Calificar experiencia">
       ${[1, 2, 3, 4, 5].map((n) => `<button class="bhuz-receptor-star" data-bhuz-star="${n}" type="button" aria-label="${n} estrella${n === 1 ? "" : "s"}">★</button>`).join("")}
     </div>
-    <p id="bhuz-receptor-rating-msg">Tu opinión nos ayuda a mejorar.</p>
+    <div class="bhuz-receptor-rating-actions">
+      <button id="bhuz-receptor-rating-btn" class="bhuz-receptor-rating-btn" data-bhuz-enviar-rating="true" type="button" style="display:none;">Enviar opinión</button>
+      <p id="bhuz-receptor-rating-msg">Tu opinión nos ayuda a mejorar.</p>
+    </div>
   `;
 
   card.appendChild(finalBox);
@@ -777,17 +904,58 @@ function manejarEncuestaReceptor(valor) {
   const rating = Number(valor || 0);
   const botones = document.querySelectorAll("[data-bhuz-star]");
   const mensaje = document.getElementById("bhuz-receptor-rating-msg");
+  const botonEnviar = document.getElementById("bhuz-receptor-rating-btn");
+
+  BHUZ_SERVICES_STATE.receptorRating = rating;
 
   botones.forEach((boton) => {
     const value = Number(boton.dataset.bhuzStar || 0);
     boton.classList.toggle("is-selected", value <= rating);
   });
 
+  if (botonEnviar) {
+    botonEnviar.style.display = rating > 0 ? "block" : "none";
+    botonEnviar.disabled = false;
+    botonEnviar.textContent = "Enviar opinión";
+  }
+
+  if (mensaje) {
+    mensaje.textContent = "Listo. Presiona Enviar opinión para cerrar tu calificación.";
+  }
+}
+
+function enviarEncuestaReceptor() {
+  const rating = Number(BHUZ_SERVICES_STATE.receptorRating || 0);
+  const botones = document.querySelectorAll("[data-bhuz-star]");
+  const mensaje = document.getElementById("bhuz-receptor-rating-msg");
+  const botonEnviar = document.getElementById("bhuz-receptor-rating-btn");
+
+  if (!rating) {
+    if (mensaje) mensaje.textContent = "Selecciona una calificación antes de enviar.";
+    return;
+  }
+
+  botones.forEach((boton) => {
+    boton.disabled = true;
+    boton.style.cursor = "default";
+  });
+
+  if (botonEnviar) {
+    botonEnviar.disabled = true;
+    botonEnviar.textContent = "Opinión enviada";
+  }
+
   if (mensaje) {
     mensaje.textContent = rating >= 4
       ? "Gracias por confiar en BHUZ 💚"
       : "Gracias. Tomaremos en cuenta tu experiencia.";
   }
+
+  /*
+    Preparado para siguiente fase:
+    aquí podremos enviar la calificación al backend/PostgreSQL
+    sin cambiar la experiencia visual del receptor.
+  */
 }
 
 function reproducirSonidoReceptor(estado) {
@@ -1323,13 +1491,18 @@ async function prepararEnvioParaPagoTemporal() {
       throw new Error(data.message || "No se pudo preparar el envío.");
     }
 
+    BHUZ_SERVICES_STATE.envioPublicado = true;
+    BHUZ_SERVICES_STATE.ultimoServicio = data.service || BHUZ_SERVICES_STATE.ultimoServicio;
+
     if (notaFinal) {
       notaFinal.textContent = "Envío publicado correctamente. Ahora está disponible para repartidores.";
     }
 
-    alert(
-      `Envío publicado en BHUZ.\n\nTotal: $${totalEnvio}\nDistancia: ${distanciaKm} km aprox.\n\nAhora el servicio está disponible para que un repartidor lo acepte.`
-    );
+    mostrarComprobanteEnvioPublicado({
+      service: data.service || BHUZ_SERVICES_STATE.ultimoServicio,
+      distanciaKm,
+      totalEnvio
+    });
   } catch (error) {
     console.error("BHUZ enviar paquete:", error);
     if (notaFinal) {
@@ -1339,10 +1512,99 @@ async function prepararEnvioParaPagoTemporal() {
   } finally {
     if (botonEnviar) {
       botonEnviar.dataset.enviando = "false";
-      botonEnviar.disabled = false;
-      botonEnviar.textContent = "Enviar paquete";
+
+      if (BHUZ_SERVICES_STATE.envioPublicado) {
+        botonEnviar.disabled = true;
+        botonEnviar.textContent = "✅ Envío publicado";
+      } else {
+        botonEnviar.disabled = false;
+        botonEnviar.textContent = "Enviar paquete";
+      }
     }
   }
+}
+
+function mostrarComprobanteEnvioPublicado({ service, distanciaKm, totalEnvio }) {
+  aplicarMejorasVisualesReceptor();
+
+  const accionFinal = document.getElementById("envio-accion-final");
+  const botonEnviar = document.getElementById("btn-enviar-paquete");
+  const notaFinal = document.getElementById("envio-nota-final");
+  const resumenFormulario = document.getElementById("envio-resumen-formulario");
+
+  if (botonEnviar) {
+    botonEnviar.disabled = true;
+    botonEnviar.textContent = "✅ Envío publicado";
+    botonEnviar.dataset.publicado = "true";
+  }
+
+  if (notaFinal) {
+    notaFinal.textContent = "Tu envío ya fue publicado. Te avisaremos cuando un repartidor lo tome.";
+  }
+
+  if (resumenFormulario) {
+    resumenFormulario.style.display = "grid";
+  }
+
+  const existente = document.getElementById("bhuz-envio-publicado-box");
+  if (existente) existente.remove();
+
+  const serviceId = limpiarTexto(service?.id || BHUZ_SERVICES_STATE.serviceId || "");
+  const distanciaTexto = Number(distanciaKm || 0) < 0.1 && Number(distanciaKm || 0) > 0
+    ? "Menos de 100 m"
+    : `${redondear(distanciaKm)} km`;
+  const totalTexto = `$${redondear(totalEnvio)}`;
+
+  const box = document.createElement("div");
+  box.id = "bhuz-envio-publicado-box";
+  box.className = "bhuz-envio-publicado-box";
+  box.innerHTML = `
+    <h3>✅ Envío creado correctamente</h3>
+    <p>Tu paquete ya está disponible para que un repartidor BHUZ lo acepte.</p>
+
+    <div class="bhuz-envio-publicado-grid">
+      <div class="bhuz-envio-publicado-item">
+        <span>Estado</span>
+        <strong>Buscando repartidor</strong>
+      </div>
+      <div class="bhuz-envio-publicado-item">
+        <span>Total</span>
+        <strong>${totalTexto}</strong>
+      </div>
+      <div class="bhuz-envio-publicado-item">
+        <span>Distancia</span>
+        <strong>${distanciaTexto}</strong>
+      </div>
+      <div class="bhuz-envio-publicado-item">
+        <span>ID envío</span>
+        <strong>${escapeHtmlCorto(serviceId)}</strong>
+      </div>
+    </div>
+
+    <div class="bhuz-envio-publicado-actions">
+      <button class="bhuz-envio-publicado-primary" data-bhuz-ver-seguimiento-cliente="true" type="button">Ver seguimiento</button>
+      <button class="bhuz-envio-publicado-secondary" data-bhuz-crear-otro-envio="true" type="button">Crear otro envío</button>
+    </div>
+  `;
+
+  if (accionFinal) {
+    accionFinal.appendChild(box);
+    box.scrollIntoView({ behavior: "smooth", block: "center" });
+  } else {
+    const modulo = document.getElementById("modulo-envios");
+    if (modulo) modulo.appendChild(box);
+  }
+}
+
+function escapeHtmlCorto(value) {
+  const clean = limpiarTexto(value);
+  const corto = clean.length > 22 ? `${clean.slice(0, 8)}...${clean.slice(-6)}` : clean;
+  return corto
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 /* ==========================================================
@@ -1398,6 +1660,7 @@ window.addEventListener("beforeunload", () => {
   detenerPollingServicio();
   detenerPollingReceptor();
 });
+
 
 
 
