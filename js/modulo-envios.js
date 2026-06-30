@@ -242,6 +242,29 @@ function aplicarMejorasVisualesReceptor() {
       line-height: 1.35;
     }
 
+    .bhuz-envio-publicado-status {
+      display: grid;
+      gap: 6px;
+      padding: 14px;
+      border-radius: 20px;
+      background: rgba(16, 233, 129, .10);
+      border: 1px solid rgba(16, 233, 129, .25);
+    }
+
+    .bhuz-envio-publicado-status span {
+      color: rgba(255, 255, 255, .62);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .bhuz-envio-publicado-status strong {
+      color: #10e981;
+      font-size: 20px;
+      line-height: 1.15;
+    }
+
     .bhuz-envio-publicado-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -266,6 +289,21 @@ function aplicarMejorasVisualesReceptor() {
       color: #fff;
       font-size: 15px;
       word-break: break-word;
+    }
+
+    .bhuz-envio-publicado-item.codigo strong,
+    .bhuz-envio-publicado-item.id-envio strong {
+      display: inline-block;
+      padding: 6px 9px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.12);
+      letter-spacing: .06em;
+    }
+
+    .bhuz-envio-publicado-actions.oculto,
+    .btn-envio-principal.bhuz-btn-envio-publicado-oculto {
+      display: none !important;
     }
 
     .bhuz-envio-publicado-actions {
@@ -428,6 +466,7 @@ function inicializarModuloEnvios() {
       if (!botonEnviar) return;
 
       event.preventDefault();
+      if (botonEnviar.dataset.publicado === "true" || BHUZ_SERVICES_STATE.envioPublicado) return;
       prepararEnvioParaPagoTemporal();
     });
   }
@@ -849,7 +888,7 @@ function procesarServicioReceptor(service, tokenData = null, opciones = {}) {
     if (estadoVisual === "recibido") {
       nota.textContent = "Entrega finalizada correctamente. Gracias por utilizar BHUZ.";
     } else if (estadoVisual === "en_camino") {
-      nota.textContent = "Tu paquete ya va en camino. Ten a mano el código de entrega.";
+      nota.textContent = "Tu paquete ya fue tomado por un repartidor. Ten a mano el código de entrega.";
     } else if (ubicacionConfirmada) {
       nota.textContent = "Ubicación confirmada. Entrega el código únicamente al repartidor cuando recibas el paquete.";
     }
@@ -866,11 +905,11 @@ function mapearEstadoReceptorDesdeServicio(service, ubicacionConfirmada) {
 
   if (status === "DELIVERED") return "recibido";
 
-  if (["GOING_TO_DELIVERY"].includes(status)) {
-    return "en_camino";
+  if (["DRIVER_ASSIGNED", "GOING_TO_PICKUP", "PACKAGE_PICKED", "GOING_TO_DELIVERY"].includes(status)) {
+    return ubicacionConfirmada ? "en_camino" : "esperando_ubicacion";
   }
 
-  if (["DRIVER_ASSIGNED", "GOING_TO_PICKUP", "PACKAGE_PICKED", "SEARCHING_DRIVER", "PAID"].includes(status)) {
+  if (["SEARCHING_DRIVER", "PAID"].includes(status)) {
     return ubicacionConfirmada ? "ubicacion_confirmada" : "esperando_ubicacion";
   }
 
@@ -1241,9 +1280,19 @@ function procesarServicioActualizado(service) {
       notaFinal.textContent = "Listo para continuar con el cobro. La pasarela de pago se conectará aquí.";
     }
 
+    if (BHUZ_SERVICES_STATE.envioPublicado) {
+      actualizarComprobanteEnvioPublicado(service);
+    }
+
     bloquearBotonEnviarHastaConfirmacion();
-    detenerPollingServicio();
+
+    if (!BHUZ_SERVICES_STATE.envioPublicado) {
+      detenerPollingServicio();
+    }
   } else {
+    if (BHUZ_SERVICES_STATE.envioPublicado) {
+      actualizarComprobanteEnvioPublicado(service);
+    }
     bloquearBotonEnviarHastaConfirmacion();
   }
 }
@@ -1503,6 +1552,8 @@ async function prepararEnvioParaPagoTemporal() {
       distanciaKm,
       totalEnvio
     });
+
+    iniciarPollingServicio(BHUZ_SERVICES_STATE.serviceId);
   } catch (error) {
     console.error("BHUZ enviar paquete:", error);
     if (notaFinal) {
@@ -1516,6 +1567,8 @@ async function prepararEnvioParaPagoTemporal() {
       if (BHUZ_SERVICES_STATE.envioPublicado) {
         botonEnviar.disabled = true;
         botonEnviar.textContent = "✅ Envío publicado";
+        botonEnviar.classList.add("bhuz-btn-envio-publicado-oculto");
+        botonEnviar.style.display = "none";
       } else {
         botonEnviar.disabled = false;
         botonEnviar.textContent = "Enviar paquete";
@@ -1536,6 +1589,8 @@ function mostrarComprobanteEnvioPublicado({ service, distanciaKm, totalEnvio }) 
     botonEnviar.disabled = true;
     botonEnviar.textContent = "✅ Envío publicado";
     botonEnviar.dataset.publicado = "true";
+    botonEnviar.classList.add("bhuz-btn-envio-publicado-oculto");
+    botonEnviar.style.display = "none";
   }
 
   if (notaFinal) {
@@ -1550,22 +1605,37 @@ function mostrarComprobanteEnvioPublicado({ service, distanciaKm, totalEnvio }) 
   if (existente) existente.remove();
 
   const serviceId = limpiarTexto(service?.id || BHUZ_SERVICES_STATE.serviceId || "");
+  const codigoEntrega = limpiarTexto(service?.deliveryCode || service?.delivery_code || "");
+  const estadoTexto = obtenerEstadoClienteServicioTexto(service);
+  const driverTexto = limpiarTexto(service?.driverName || service?.driver_name || "") || "Pendiente por asignar";
   const distanciaTexto = Number(distanciaKm || 0) < 0.1 && Number(distanciaKm || 0) > 0
     ? "Menos de 100 m"
     : `${redondear(distanciaKm)} km`;
   const totalTexto = `$${redondear(totalEnvio)}`;
+
+  BHUZ_SERVICES_STATE.comprobanteUltimoEstado = limpiarTexto(service?.status || "SEARCHING_DRIVER").toUpperCase();
 
   const box = document.createElement("div");
   box.id = "bhuz-envio-publicado-box";
   box.className = "bhuz-envio-publicado-box";
   box.innerHTML = `
     <h3>✅ Envío creado correctamente</h3>
-    <p>Tu paquete ya está disponible para que un repartidor BHUZ lo acepte.</p>
+    <p>Tu paquete ya está registrado en BHUZ. No necesitas presionar Enviar paquete otra vez.</p>
+
+    <div class="bhuz-envio-publicado-status">
+      <span>Estado actual</span>
+      <strong id="bhuz-envio-publicado-estado">${escapeHtmlCorto(estadoTexto)}</strong>
+      <p id="bhuz-envio-publicado-driver">Repartidor: ${escapeHtmlCorto(driverTexto)}</p>
+    </div>
 
     <div class="bhuz-envio-publicado-grid">
-      <div class="bhuz-envio-publicado-item">
-        <span>Estado</span>
-        <strong>Buscando repartidor</strong>
+      <div class="bhuz-envio-publicado-item codigo">
+        <span>Código receptor</span>
+        <strong>${escapeHtmlCorto(codigoEntrega || "Por generar")}</strong>
+      </div>
+      <div class="bhuz-envio-publicado-item id-envio">
+        <span>ID envío</span>
+        <strong>${escapeHtmlCorto(serviceId)}</strong>
       </div>
       <div class="bhuz-envio-publicado-item">
         <span>Total</span>
@@ -1574,10 +1644,6 @@ function mostrarComprobanteEnvioPublicado({ service, distanciaKm, totalEnvio }) 
       <div class="bhuz-envio-publicado-item">
         <span>Distancia</span>
         <strong>${distanciaTexto}</strong>
-      </div>
-      <div class="bhuz-envio-publicado-item">
-        <span>ID envío</span>
-        <strong>${escapeHtmlCorto(serviceId)}</strong>
       </div>
     </div>
 
@@ -1594,6 +1660,47 @@ function mostrarComprobanteEnvioPublicado({ service, distanciaKm, totalEnvio }) 
     const modulo = document.getElementById("modulo-envios");
     if (modulo) modulo.appendChild(box);
   }
+}
+
+function actualizarComprobanteEnvioPublicado(service) {
+  if (!service || !document.getElementById("bhuz-envio-publicado-box")) return;
+
+  const estado = limpiarTexto(service.status || service.estado || "").toUpperCase();
+  const estadoTexto = obtenerEstadoClienteServicioTexto(service);
+  const driverTexto = limpiarTexto(service.driverName || service.driver_name || "") || "Pendiente por asignar";
+  const estadoEl = document.getElementById("bhuz-envio-publicado-estado");
+  const driverEl = document.getElementById("bhuz-envio-publicado-driver");
+
+  if (estadoEl) estadoEl.textContent = estadoTexto;
+  if (driverEl) driverEl.textContent = `Repartidor: ${driverTexto}`;
+
+  const anterior = BHUZ_SERVICES_STATE.comprobanteUltimoEstado;
+  if (estado && anterior && estado !== anterior) {
+    BHUZ_SERVICES_STATE.comprobanteUltimoEstado = estado;
+    if (["DRIVER_ASSIGNED", "GOING_TO_PICKUP", "PACKAGE_PICKED", "GOING_TO_DELIVERY"].includes(estado)) {
+      reproducirSonidoReceptor("en_camino");
+    }
+  } else if (estado && !anterior) {
+    BHUZ_SERVICES_STATE.comprobanteUltimoEstado = estado;
+  }
+}
+
+function obtenerEstadoClienteServicioTexto(service) {
+  const status = limpiarTexto(service?.status || service?.estado || "SEARCHING_DRIVER").toUpperCase();
+
+  const estados = {
+    PENDING_PAYMENT: "Pendiente por publicar",
+    PAID: "Pago confirmado",
+    SEARCHING_DRIVER: "Buscando repartidor",
+    DRIVER_ASSIGNED: "Repartidor aceptó el envío",
+    GOING_TO_PICKUP: "Repartidor en camino al retiro",
+    PACKAGE_PICKED: "Paquete retirado",
+    GOING_TO_DELIVERY: "En camino al receptor",
+    DELIVERED: "Entregado",
+    CANCELLED: "Cancelado"
+  };
+
+  return estados[status] || "Buscando repartidor";
 }
 
 function escapeHtmlCorto(value) {
@@ -1660,6 +1767,7 @@ window.addEventListener("beforeunload", () => {
   detenerPollingServicio();
   detenerPollingReceptor();
 });
+
 
 
 
