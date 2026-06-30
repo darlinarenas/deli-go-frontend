@@ -28,7 +28,10 @@ const BHUZ_SERVICES_STATE = {
   receptorUltimoEstadoVisual: "",
   receptorSonidoHabilitado: true,
   receptorRating: 0,
-  envioPublicado: false
+  envioPublicado: false,
+  envioCancelado: false,
+  receptorAudioDesbloqueado: false,
+  receptorAudioCache: {}
 };
 
 function obtenerBackendBaseUrl() {
@@ -457,8 +460,15 @@ function inicializarModuloEnvios() {
 
       const verSeguimientoCliente = event.target.closest("[data-bhuz-ver-seguimiento-cliente]");
       if (verSeguimientoCliente) {
-        const objetivo = document.getElementById("envio-link-receptor") || document.getElementById("envio-resumen-formulario") || document.getElementById("modulo-envios");
+        const objetivo = document.getElementById("bhuz-envio-publicado-box") || document.getElementById("envio-link-receptor") || document.getElementById("envio-resumen-formulario") || document.getElementById("modulo-envios");
         if (objetivo) objetivo.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+
+      const cancelarEnvio = event.target.closest("[data-bhuz-cancelar-envio]");
+      if (cancelarEnvio) {
+        event.preventDefault();
+        cancelarEnvioPublicado();
         return;
       }
 
@@ -744,6 +754,8 @@ function confirmarUbicacionReceptorTemporal() {
     return;
   }
 
+  desbloquearSonidosReceptor();
+
   if (boton?.dataset.confirmando === "true" || boton?.dataset.confirmado === "true") return;
 
   if (boton) {
@@ -885,13 +897,24 @@ function procesarServicioReceptor(service, tokenData = null, opciones = {}) {
   actualizarEstadoReceptorTemporal(estadoVisual, opciones);
 
   if (nota) {
-    if (estadoVisual === "recibido") {
+    if (estadoVisual === "cancelado") {
+      nota.textContent = "Este envío fue cancelado por la persona que lo creó.";
+    } else if (estadoVisual === "recibido") {
       nota.textContent = "Entrega finalizada correctamente. Gracias por utilizar BHUZ.";
+    } else if (estadoVisual === "repartidor_retiro") {
+      nota.textContent = "Un repartidor aceptó el envío y va camino a buscar el paquete.";
+    } else if (estadoVisual === "paquete_retirado") {
+      nota.textContent = "El repartidor ya retiró el paquete y se dirige a tu ubicación.";
     } else if (estadoVisual === "en_camino") {
-      nota.textContent = "Tu paquete ya fue tomado por un repartidor. Ten a mano el código de entrega.";
+      nota.textContent = "Tu paquete va en camino. Ten a mano el código de entrega.";
     } else if (ubicacionConfirmada) {
       nota.textContent = "Ubicación confirmada. Entrega el código únicamente al repartidor cuando recibas el paquete.";
     }
+  }
+
+  if (estadoVisual === "cancelado") {
+    bloquearBotonConfirmarUbicacionReceptor(true);
+    detenerPollingReceptor();
   }
 
   if (estadoVisual === "recibido") {
@@ -903,9 +926,18 @@ function procesarServicioReceptor(service, tokenData = null, opciones = {}) {
 function mapearEstadoReceptorDesdeServicio(service, ubicacionConfirmada) {
   const status = limpiarTexto(service?.status || service?.estado || "").toUpperCase();
 
+  if (status === "CANCELLED") return "cancelado";
   if (status === "DELIVERED") return "recibido";
 
-  if (["DRIVER_ASSIGNED", "GOING_TO_PICKUP", "PACKAGE_PICKED", "GOING_TO_DELIVERY"].includes(status)) {
+  if (["DRIVER_ASSIGNED", "GOING_TO_PICKUP"].includes(status)) {
+    return ubicacionConfirmada ? "repartidor_retiro" : "esperando_ubicacion";
+  }
+
+  if (status === "PACKAGE_PICKED") {
+    return ubicacionConfirmada ? "paquete_retirado" : "esperando_ubicacion";
+  }
+
+  if (status === "GOING_TO_DELIVERY") {
     return ubicacionConfirmada ? "en_camino" : "esperando_ubicacion";
   }
 
@@ -997,24 +1029,76 @@ function enviarEncuestaReceptor() {
   */
 }
 
-function reproducirSonidoReceptor(estado) {
-  if (!BHUZ_SERVICES_STATE.receptorSonidoHabilitado) return;
-
+function obtenerSrcSonidoReceptor(estado) {
   const sonidos = {
     ubicacion_confirmada: "assets/sounds/bhuz-pedido-aceptado.mp3",
+    repartidor_retiro: "assets/sounds/bhuz-pedido-en-camino.mp3",
+    paquete_retirado: "assets/sounds/bhuz-pedido-en-camino.mp3",
     en_camino: "assets/sounds/bhuz-pedido-en-camino.mp3",
     recibido: "assets/sounds/bhuz-pedido-aceptado.mp3",
+    cancelado: "assets/sounds/bhuz-pedido-restaurant.mp3",
     error: "assets/sounds/bhuz-pedido-restaurant.mp3"
   };
 
-  const src = sonidos[estado];
-  if (!src) return;
+  return sonidos[estado] || "";
+}
+
+function obtenerAudioReceptor(estado) {
+  const src = obtenerSrcSonidoReceptor(estado);
+  if (!src) return null;
+
+  if (!BHUZ_SERVICES_STATE.receptorAudioCache) {
+    BHUZ_SERVICES_STATE.receptorAudioCache = {};
+  }
+
+  if (!BHUZ_SERVICES_STATE.receptorAudioCache[src]) {
+    const audio = new Audio(src);
+    audio.preload = "auto";
+    audio.volume = 0.65;
+    BHUZ_SERVICES_STATE.receptorAudioCache[src] = audio;
+  }
+
+  return BHUZ_SERVICES_STATE.receptorAudioCache[src];
+}
+
+function desbloquearSonidosReceptor() {
+  if (BHUZ_SERVICES_STATE.receptorAudioDesbloqueado) return;
 
   try {
-    const audio = new Audio(src);
-    audio.volume = 0.55;
+    ["ubicacion_confirmada", "repartidor_retiro", "paquete_retirado", "en_camino", "recibido", "cancelado"].forEach((estado) => {
+      const audio = obtenerAudioReceptor(estado);
+      if (!audio) return;
+      audio.muted = true;
+      audio.play()
+        .then(() => {
+          audio.pause();
+          audio.currentTime = 0;
+          audio.muted = false;
+        })
+        .catch(() => {
+          audio.muted = false;
+        });
+    });
+
+    BHUZ_SERVICES_STATE.receptorAudioDesbloqueado = true;
+  } catch {
+    BHUZ_SERVICES_STATE.receptorAudioDesbloqueado = true;
+  }
+}
+
+function reproducirSonidoReceptor(estado) {
+  if (!BHUZ_SERVICES_STATE.receptorSonidoHabilitado) return;
+
+  const audio = obtenerAudioReceptor(estado);
+  if (!audio) return;
+
+  try {
+    audio.pause();
+    audio.currentTime = 0;
+    audio.muted = false;
+    audio.volume = 0.65;
     audio.play().catch(() => {
-      /* Algunos navegadores bloquean audio automático sin interacción. */
+      /* Algunos navegadores bloquean audio automático. Se desbloquea con el botón de confirmar ubicación. */
     });
   } catch {}
 }
@@ -1049,8 +1133,11 @@ function actualizarEstadoReceptorTemporal(estado, opciones = {}) {
     esperando_ubicacion: "Esperando ubicación",
     solicitando_ubicacion: "Solicitando ubicación",
     ubicacion_confirmada: "Ubicación confirmada",
-    en_camino: "En camino",
+    repartidor_retiro: "Repartidor va al retiro",
+    paquete_retirado: "Paquete retirado",
+    en_camino: "En camino a tu ubicación",
     recibido: "Recibido",
+    cancelado: "Envío cancelado",
     error: "Error de ubicación"
   };
 
@@ -1084,24 +1171,84 @@ function actualizarLineasSeguimientoReceptor(estado) {
   const enCamino = document.getElementById("estado-linea-en-camino");
   const recibido = document.getElementById("estado-linea-recibido");
 
-  [esperando, enCamino, recibido].forEach((item) => {
-    if (item) item.classList.remove("is-activa", "is-completada");
+  const lineas = [esperando, enCamino, recibido].filter(Boolean);
+
+  lineas.forEach((item) => {
+    item.classList.remove("is-activa", "is-completada");
   });
 
-  if (estado === "recibido") {
-    if (esperando) esperando.classList.add("is-completada");
-    if (enCamino) enCamino.classList.add("is-completada");
-    if (recibido) recibido.classList.add("is-activa");
+  configurarLineaReceptor(esperando, "1", "Ubicación confirmada");
+  configurarLineaReceptor(enCamino, "2", "Repartidor va a buscar el paquete");
+  configurarLineaReceptor(recibido, "3", "Entregado");
+
+  if (estado === "cancelado") {
+    configurarLineaReceptor(esperando, "✕", "Envío cancelado");
+    configurarLineaReceptor(enCamino, "2", "Sin retiro");
+    configurarLineaReceptor(recibido, "3", "No entregado");
+    if (esperando) esperando.classList.add("is-activa");
     return;
   }
 
-  if (estado === "en_camino") {
+  if (["esperando_ubicacion", "solicitando_ubicacion", "error"].includes(estado)) {
+    configurarLineaReceptor(esperando, "1", "Esperando ubicación");
+    configurarLineaReceptor(enCamino, "2", "Repartidor va a buscar el paquete");
+    configurarLineaReceptor(recibido, "3", "Entregado");
+    if (esperando) esperando.classList.add("is-activa");
+    return;
+  }
+
+  if (estado === "ubicacion_confirmada") {
+    configurarLineaReceptor(esperando, "✓", "Ubicación confirmada");
+    configurarLineaReceptor(enCamino, "2", "Esperando repartidor");
+    configurarLineaReceptor(recibido, "3", "Entregado");
     if (esperando) esperando.classList.add("is-completada");
     if (enCamino) enCamino.classList.add("is-activa");
     return;
   }
 
-  if (esperando) esperando.classList.add("is-activa");
+  if (estado === "repartidor_retiro") {
+    configurarLineaReceptor(esperando, "✓", "Ubicación confirmada");
+    configurarLineaReceptor(enCamino, "2", "Repartidor va a buscar el paquete");
+    configurarLineaReceptor(recibido, "3", "Entregado");
+    if (esperando) esperando.classList.add("is-completada");
+    if (enCamino) enCamino.classList.add("is-activa");
+    return;
+  }
+
+  if (estado === "paquete_retirado") {
+    configurarLineaReceptor(esperando, "✓", "Ubicación confirmada");
+    configurarLineaReceptor(enCamino, "✓", "Paquete retirado, va en camino");
+    configurarLineaReceptor(recibido, "3", "Entregado");
+    if (esperando) esperando.classList.add("is-completada");
+    if (enCamino) enCamino.classList.add("is-activa");
+    return;
+  }
+
+  if (estado === "en_camino") {
+    configurarLineaReceptor(esperando, "✓", "Ubicación confirmada");
+    configurarLineaReceptor(enCamino, "✓", "Repartidor en camino a tu ubicación");
+    configurarLineaReceptor(recibido, "3", "Entregado");
+    if (esperando) esperando.classList.add("is-completada");
+    if (enCamino) enCamino.classList.add("is-activa");
+    return;
+  }
+
+  if (estado === "recibido") {
+    configurarLineaReceptor(esperando, "✓", "Ubicación confirmada");
+    configurarLineaReceptor(enCamino, "✓", "Paquete recibido por el repartidor");
+    configurarLineaReceptor(recibido, "✓", "Entregado");
+    if (esperando) esperando.classList.add("is-completada");
+    if (enCamino) enCamino.classList.add("is-completada");
+    if (recibido) recibido.classList.add("is-activa");
+  }
+}
+
+function configurarLineaReceptor(elemento, numero, texto) {
+  if (!elemento) return;
+  const span = elemento.querySelector("span");
+  const strong = elemento.querySelector("strong");
+  if (span) span.textContent = numero;
+  if (strong) strong.textContent = texto;
 }
 
 
@@ -1220,6 +1367,15 @@ function procesarServicioActualizado(service) {
 
   BHUZ_SERVICES_STATE.ultimoServicio = service;
 
+  const estadoServicioActual = limpiarTexto(service.status || service.estado || "").toUpperCase();
+  if (estadoServicioActual === "CANCELLED") {
+    BHUZ_SERVICES_STATE.envioCancelado = true;
+    BHUZ_SERVICES_STATE.envioPublicado = true;
+    actualizarComprobanteEnvioPublicado(service);
+    bloquearBotonEnviarHastaConfirmacion();
+    return;
+  }
+
   const estadoEntrega = document.getElementById("estado-ubicacion-entrega");
   const inputLat = document.getElementById("envio-entrega-lat");
   const inputLng = document.getElementById("envio-entrega-lng");
@@ -1302,6 +1458,16 @@ function bloquearBotonEnviarHastaConfirmacion() {
   const botonEnviar = document.getElementById("btn-enviar-paquete");
   const notaFinal = document.getElementById("envio-nota-final");
 
+  if (BHUZ_SERVICES_STATE.envioPublicado || BHUZ_SERVICES_STATE.envioCancelado) {
+    if (accionFinal) accionFinal.style.display = "grid";
+    if (botonEnviar) {
+      botonEnviar.disabled = true;
+      botonEnviar.dataset.publicado = "true";
+      botonEnviar.style.display = "none";
+    }
+    return;
+  }
+
   if (!BHUZ_SERVICES_STATE.receptorConfirmado) {
     if (accionFinal) accionFinal.style.display = "none";
     if (botonEnviar) botonEnviar.disabled = true;
@@ -1312,7 +1478,10 @@ function bloquearBotonEnviarHastaConfirmacion() {
   }
 
   if (accionFinal) accionFinal.style.display = "grid";
-  if (botonEnviar) botonEnviar.disabled = false;
+  if (botonEnviar) {
+    botonEnviar.disabled = false;
+    botonEnviar.style.display = "inline-flex";
+  }
 }
 
 function guardarEnvioTemporalEnStorage() {
@@ -1649,6 +1818,7 @@ function mostrarComprobanteEnvioPublicado({ service, distanciaKm, totalEnvio }) 
 
     <div class="bhuz-envio-publicado-actions">
       <button class="bhuz-envio-publicado-primary" data-bhuz-ver-seguimiento-cliente="true" type="button">Ver seguimiento</button>
+      <button class="bhuz-envio-publicado-cancel" data-bhuz-cancelar-envio="true" type="button">Cancelar envío</button>
       <button class="bhuz-envio-publicado-secondary" data-bhuz-crear-otro-envio="true" type="button">Crear otro envío</button>
     </div>
   `;
@@ -1674,14 +1844,76 @@ function actualizarComprobanteEnvioPublicado(service) {
   if (estadoEl) estadoEl.textContent = estadoTexto;
   if (driverEl) driverEl.textContent = `Repartidor: ${driverTexto}`;
 
+  const box = document.getElementById("bhuz-envio-publicado-box");
+  if (box) box.classList.toggle("is-cancelado", estado === "CANCELLED");
+
+  const botonCancelar = document.querySelector("[data-bhuz-cancelar-envio]");
+  if (botonCancelar && ["CANCELLED", "DELIVERED"].includes(estado)) {
+    botonCancelar.disabled = true;
+    botonCancelar.textContent = estado === "CANCELLED" ? "Envío cancelado" : "Entrega completada";
+  }
+
   const anterior = BHUZ_SERVICES_STATE.comprobanteUltimoEstado;
   if (estado && anterior && estado !== anterior) {
     BHUZ_SERVICES_STATE.comprobanteUltimoEstado = estado;
-    if (["DRIVER_ASSIGNED", "GOING_TO_PICKUP", "PACKAGE_PICKED", "GOING_TO_DELIVERY"].includes(estado)) {
-      reproducirSonidoReceptor("en_camino");
-    }
+    if (["DRIVER_ASSIGNED", "GOING_TO_PICKUP"].includes(estado)) reproducirSonidoReceptor("repartidor_retiro");
+    if (estado === "PACKAGE_PICKED") reproducirSonidoReceptor("paquete_retirado");
+    if (estado === "GOING_TO_DELIVERY") reproducirSonidoReceptor("en_camino");
+    if (estado === "CANCELLED") reproducirSonidoReceptor("cancelado");
   } else if (estado && !anterior) {
     BHUZ_SERVICES_STATE.comprobanteUltimoEstado = estado;
+  }
+}
+
+async function cancelarEnvioPublicado() {
+  if (!BHUZ_SERVICES_STATE.serviceId) return;
+
+  const confirmar = window.confirm("¿Seguro que quieres cancelar este envío? El receptor verá que fue cancelado.");
+  if (!confirmar) return;
+
+  const botonCancelar = document.querySelector("[data-bhuz-cancelar-envio]");
+
+  try {
+    if (botonCancelar) {
+      botonCancelar.disabled = true;
+      botonCancelar.textContent = "Cancelando...";
+    }
+
+    const respuesta = await fetchConTimeout(construirUrlApi(`/api/services/${encodeURIComponent(BHUZ_SERVICES_STATE.serviceId)}/status`), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        status: "CANCELLED",
+        changedBy: "customer",
+        notes: "Cliente canceló el envío desde la ficha de seguimiento."
+      })
+    });
+
+    const data = await respuesta.json().catch(() => ({}));
+
+    if (!respuesta.ok || !data.ok) {
+      throw new Error(data.message || "No se pudo cancelar el envío.");
+    }
+
+    BHUZ_SERVICES_STATE.envioCancelado = true;
+    BHUZ_SERVICES_STATE.envioPublicado = true;
+    BHUZ_SERVICES_STATE.ultimoServicio = data.service || BHUZ_SERVICES_STATE.ultimoServicio;
+
+    actualizarComprobanteEnvioPublicado(data.service || { status: "CANCELLED" });
+
+    const notaFinal = document.getElementById("envio-nota-final");
+    if (notaFinal) notaFinal.textContent = "Envío cancelado correctamente.";
+
+    alert("Envío cancelado correctamente.");
+  } catch (error) {
+    console.error("BHUZ cancelar envío:", error);
+    if (botonCancelar) {
+      botonCancelar.disabled = false;
+      botonCancelar.textContent = "Cancelar envío";
+    }
+    alert(error.message || "No se pudo cancelar el envío.");
   }
 }
 
@@ -1767,6 +1999,8 @@ window.addEventListener("beforeunload", () => {
   detenerPollingServicio();
   detenerPollingReceptor();
 });
+
+
 
 
 
