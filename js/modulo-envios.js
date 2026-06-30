@@ -22,7 +22,11 @@ const BHUZ_SERVICES_STATE = {
   receptorConfirmado: false,
   distanceKm: 0,
   totalAmount: 0,
-  ultimoServicio: null
+  ultimoServicio: null,
+  receptorPollingId: null,
+  receptorToken: "",
+  receptorUltimoEstadoVisual: "",
+  receptorSonidoHabilitado: true
 };
 
 function obtenerBackendBaseUrl() {
@@ -64,6 +68,139 @@ function obtenerFrontendBaseUrlCompartible() {
   return `${urlActual.origin}${urlActual.pathname}`;
 }
 
+
+function aplicarMejorasVisualesReceptor() {
+  if (document.getElementById("bhuz-receptor-compact-style")) return;
+
+  const style = document.createElement("style");
+  style.id = "bhuz-receptor-compact-style";
+  style.textContent = `
+    .envio-receptor-panel {
+      min-height: auto !important;
+      padding: 8px 0 24px !important;
+    }
+
+    .envio-receptor-card.bhuz-receptor-compacto {
+      gap: 12px !important;
+      padding: 18px !important;
+      border-radius: 26px !important;
+    }
+
+    .envio-receptor-card.bhuz-receptor-compacto h2 {
+      font-size: clamp(24px, 7vw, 34px) !important;
+      line-height: 1 !important;
+      margin: 0 !important;
+    }
+
+    .envio-receptor-card.bhuz-receptor-compacto > p {
+      font-size: 13px !important;
+      line-height: 1.35 !important;
+    }
+
+    .envio-receptor-card.bhuz-receptor-compacto .envio-receptor-status {
+      padding: 11px 12px !important;
+      border-radius: 16px !important;
+    }
+
+    .envio-receptor-card.bhuz-receptor-compacto .envio-receptor-seguimiento {
+      gap: 7px !important;
+      padding: 12px !important;
+      border-radius: 18px !important;
+    }
+
+    .envio-receptor-card.bhuz-receptor-compacto .envio-receptor-seguimiento h3 {
+      font-size: 15px !important;
+      margin-bottom: 0 !important;
+    }
+
+    .envio-receptor-card.bhuz-receptor-compacto .envio-receptor-linea {
+      grid-template-columns: 30px 1fr !important;
+      padding: 8px !important;
+      border-radius: 14px !important;
+    }
+
+    .envio-receptor-card.bhuz-receptor-compacto .envio-receptor-linea span {
+      width: 30px !important;
+      height: 30px !important;
+      font-size: 13px !important;
+    }
+
+    .envio-receptor-card.bhuz-receptor-compacto .envio-codigo-entrega {
+      padding: 13px !important;
+      border-radius: 20px !important;
+    }
+
+    .envio-receptor-card.bhuz-receptor-compacto .envio-codigo-entrega strong {
+      font-size: clamp(32px, 10vw, 48px) !important;
+      letter-spacing: .10em !important;
+    }
+
+    .btn-envio-principal.bhuz-btn-confirmado,
+    .btn-envio-principal:disabled {
+      opacity: .72 !important;
+      cursor: not-allowed !important;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    .bhuz-receptor-final {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(16, 233, 129, .28);
+      background: radial-gradient(circle at 0% 0%, rgba(16, 233, 129, .16), transparent 38%), rgba(0, 0, 0, .24);
+      text-align: center;
+    }
+
+    .bhuz-receptor-final h3 {
+      margin: 0;
+      color: #10e981;
+      font-size: 20px;
+    }
+
+    .bhuz-receptor-final p {
+      margin: 0;
+      font-size: 13px;
+      color: rgba(255, 255, 255, .72);
+    }
+
+    .bhuz-receptor-stars {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .bhuz-receptor-star {
+      border: 0;
+      background: rgba(255, 255, 255, .08);
+      color: #fbbf24;
+      width: 38px;
+      height: 38px;
+      border-radius: 14px;
+      font-size: 21px;
+      cursor: pointer;
+    }
+
+    .bhuz-receptor-star.is-selected {
+      background: rgba(251, 191, 36, .18);
+      box-shadow: 0 0 0 1px rgba(251, 191, 36, .32) inset;
+    }
+
+    @media (max-width: 480px) {
+      .envio-receptor-card.bhuz-receptor-compacto {
+        padding: 15px !important;
+        gap: 10px !important;
+      }
+
+      .envio-receptor-card.bhuz-receptor-compacto .mini-label {
+        font-size: 11px !important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
   const contenedor = document.getElementById("modulo-envios");
@@ -157,6 +294,12 @@ function inicializarModuloEnvios() {
     document.body.dataset.bhuzEnvioFinalListener = "true";
 
     document.body.addEventListener("click", (event) => {
+      const estrella = event.target.closest("[data-bhuz-star]");
+      if (estrella) {
+        manejarEncuestaReceptor(estrella.dataset.bhuzStar);
+        return;
+      }
+
       const botonEnviar = event.target.closest("#btn-enviar-paquete");
       if (!botonEnviar) return;
 
@@ -375,6 +518,9 @@ async function detectarFlujoReceptorEnvioTemporal() {
 
   if (!tokenEnvio) return;
 
+  BHUZ_SERVICES_STATE.receptorToken = tokenEnvio;
+  aplicarMejorasVisualesReceptor();
+
   const formulario = document.getElementById("formulario-envio-paquete");
   const resumen = document.querySelector(".envios-resumen");
   const hero = document.querySelector(".envios-hero");
@@ -392,7 +538,8 @@ async function detectarFlujoReceptorEnvioTemporal() {
 
   if (panelReceptor) panelReceptor.style.display = "grid";
 
-  actualizarEstadoReceptorTemporal("esperando_ubicacion");
+  compactarVistaReceptor();
+  actualizarEstadoReceptorTemporal("esperando_ubicacion", { silencioso: true });
 
   try {
     const respuesta = await fetchConTimeout(construirUrlApi(`/api/services/confirmar/${encodeURIComponent(tokenEnvio)}`));
@@ -405,13 +552,8 @@ async function detectarFlujoReceptorEnvioTemporal() {
     BHUZ_SERVICES_STATE.serviceId = data.service?.id || "";
     BHUZ_SERVICES_STATE.token = tokenEnvio;
 
-    if (data.token?.receiverConfirmed) {
-      actualizarEstadoReceptorTemporal("ubicacion_confirmada");
-      mostrarCodigoEntregaDesdeServicio(data.service);
-      if (nota) {
-        nota.textContent = "Tu ubicación ya fue confirmada. Entrega el código únicamente al repartidor cuando recibas el paquete.";
-      }
-    }
+    procesarServicioReceptor(data.service, data.token, { silencioso: true });
+    iniciarPollingReceptor(BHUZ_SERVICES_STATE.serviceId);
   } catch (error) {
     console.error("BHUZ consultar token receptor:", error);
     actualizarEstadoReceptorTemporal("error");
@@ -423,6 +565,7 @@ async function detectarFlujoReceptorEnvioTemporal() {
 
 function confirmarUbicacionReceptorTemporal() {
   const nota = document.getElementById("envio-receptor-nota");
+  const boton = document.getElementById("btn-confirmar-ubicacion-receptor");
   const parametros = new URLSearchParams(window.location.search);
   const tokenEnvio = parametros.get("confirmar_envio") || parametros.get("confirmar_entrega");
 
@@ -436,6 +579,14 @@ function confirmarUbicacionReceptorTemporal() {
     if (nota) nota.textContent = "Tu navegador no permite obtener ubicación.";
     actualizarEstadoReceptorTemporal("error");
     return;
+  }
+
+  if (boton?.dataset.confirmando === "true" || boton?.dataset.confirmado === "true") return;
+
+  if (boton) {
+    boton.dataset.confirmando = "true";
+    boton.disabled = true;
+    boton.textContent = "📡 Confirmando ubicación...";
   }
 
   if (nota) nota.textContent = "Solicitando permiso de ubicación...";
@@ -464,12 +615,14 @@ function confirmarUbicacionReceptorTemporal() {
           throw new Error(data.message || "No se pudo confirmar la ubicación.");
         }
 
+        bloquearBotonConfirmarUbicacionReceptor(true);
+
         if (nota) {
-          nota.textContent = "Ubicación confirmada correctamente. Entrega el código únicamente al repartidor cuando recibas el paquete.";
+          nota.textContent = "Ubicación confirmada. Entrega el código únicamente al repartidor cuando recibas el paquete.";
         }
 
-        actualizarEstadoReceptorTemporal("ubicacion_confirmada");
-        mostrarCodigoEntregaDesdeServicio(data.service);
+        procesarServicioReceptor(data.service, data.token);
+        iniciarPollingReceptor(data.service?.id || BHUZ_SERVICES_STATE.serviceId);
 
         const estadoEntrega = document.getElementById("estado-ubicacion-entrega");
         actualizarEstado(
@@ -483,6 +636,7 @@ function confirmarUbicacionReceptorTemporal() {
           nota.textContent = error.message || "No se pudo confirmar la ubicación. Intenta nuevamente.";
         }
         actualizarEstadoReceptorTemporal("error");
+        bloquearBotonConfirmarUbicacionReceptor(false);
       }
     },
     (error) => {
@@ -492,6 +646,7 @@ function confirmarUbicacionReceptorTemporal() {
           "No se pudo obtener la ubicación. Permite el acceso GPS desde el navegador e intenta nuevamente.";
       }
       actualizarEstadoReceptorTemporal("error");
+      bloquearBotonConfirmarUbicacionReceptor(false);
     },
     {
       enableHighAccuracy: true,
@@ -500,6 +655,163 @@ function confirmarUbicacionReceptorTemporal() {
     }
   );
 }
+
+function compactarVistaReceptor() {
+  const card = document.querySelector(".envio-receptor-card");
+  const hero = document.querySelector(".envios-hero");
+  const volver = document.getElementById("btn-volver-inicio-desde-envios");
+
+  if (card) card.classList.add("bhuz-receptor-compacto");
+  if (volver) volver.style.display = "none";
+
+  if (hero) {
+    hero.style.padding = "18px";
+    hero.style.borderRadius = "24px";
+  }
+}
+
+function bloquearBotonConfirmarUbicacionReceptor(confirmado) {
+  const boton = document.getElementById("btn-confirmar-ubicacion-receptor");
+  if (!boton) return;
+
+  boton.dataset.confirmando = "false";
+  boton.dataset.confirmado = confirmado ? "true" : "false";
+  boton.disabled = Boolean(confirmado);
+  boton.classList.toggle("bhuz-btn-confirmado", Boolean(confirmado));
+  boton.textContent = confirmado ? "✅ Ubicación confirmada" : "📡 Confirmar mi ubicación";
+}
+
+function iniciarPollingReceptor(serviceId) {
+  detenerPollingReceptor();
+  if (!serviceId) return;
+
+  BHUZ_SERVICES_STATE.receptorPollingId = setInterval(async () => {
+    try {
+      const service = await consultarServicioBackend(serviceId);
+      procesarServicioReceptor(service, null, { desdePolling: true });
+    } catch (error) {
+      console.warn("BHUZ polling receptor:", error.message);
+    }
+  }, 5000);
+}
+
+function detenerPollingReceptor() {
+  if (BHUZ_SERVICES_STATE.receptorPollingId) {
+    clearInterval(BHUZ_SERVICES_STATE.receptorPollingId);
+    BHUZ_SERVICES_STATE.receptorPollingId = null;
+  }
+}
+
+function procesarServicioReceptor(service, tokenData = null, opciones = {}) {
+  if (!service) return;
+
+  const nota = document.getElementById("envio-receptor-nota");
+  const confirmadoPorToken = Boolean(tokenData?.receiverConfirmed);
+  const tieneUbicacion = Boolean(
+    Number(service.deliveryLatitude || service.delivery_latitude || 0) &&
+    Number(service.deliveryLongitude || service.delivery_longitude || 0)
+  );
+  const ubicacionConfirmada = confirmadoPorToken || tieneUbicacion;
+
+  if (ubicacionConfirmada) {
+    bloquearBotonConfirmarUbicacionReceptor(true);
+    mostrarCodigoEntregaDesdeServicio(service);
+  }
+
+  const estadoVisual = mapearEstadoReceptorDesdeServicio(service, ubicacionConfirmada);
+  actualizarEstadoReceptorTemporal(estadoVisual, opciones);
+
+  if (nota) {
+    if (estadoVisual === "recibido") {
+      nota.textContent = "Entrega finalizada correctamente. Gracias por utilizar BHUZ.";
+    } else if (estadoVisual === "en_camino") {
+      nota.textContent = "Tu paquete ya va en camino. Ten a mano el código de entrega.";
+    } else if (ubicacionConfirmada) {
+      nota.textContent = "Ubicación confirmada. Entrega el código únicamente al repartidor cuando recibas el paquete.";
+    }
+  }
+
+  if (estadoVisual === "recibido") {
+    mostrarCierreReceptorConEncuesta();
+    detenerPollingReceptor();
+  }
+}
+
+function mapearEstadoReceptorDesdeServicio(service, ubicacionConfirmada) {
+  const status = limpiarTexto(service?.status || service?.estado || "").toUpperCase();
+
+  if (status === "DELIVERED") return "recibido";
+
+  if (["GOING_TO_DELIVERY"].includes(status)) {
+    return "en_camino";
+  }
+
+  if (["DRIVER_ASSIGNED", "GOING_TO_PICKUP", "PACKAGE_PICKED", "SEARCHING_DRIVER", "PAID"].includes(status)) {
+    return ubicacionConfirmada ? "ubicacion_confirmada" : "esperando_ubicacion";
+  }
+
+  return ubicacionConfirmada ? "ubicacion_confirmada" : "esperando_ubicacion";
+}
+
+function mostrarCierreReceptorConEncuesta() {
+  const card = document.querySelector(".envio-receptor-card");
+  if (!card || document.getElementById("bhuz-receptor-final")) return;
+
+  const finalBox = document.createElement("div");
+  finalBox.id = "bhuz-receptor-final";
+  finalBox.className = "bhuz-receptor-final";
+  finalBox.innerHTML = `
+    <h3>✅ Entrega realizada</h3>
+    <p>Tu paquete fue entregado correctamente.</p>
+    <p><strong>¿Cómo fue tu experiencia?</strong></p>
+    <div class="bhuz-receptor-stars" aria-label="Calificar experiencia">
+      ${[1, 2, 3, 4, 5].map((n) => `<button class="bhuz-receptor-star" data-bhuz-star="${n}" type="button" aria-label="${n} estrella${n === 1 ? "" : "s"}">★</button>`).join("")}
+    </div>
+    <p id="bhuz-receptor-rating-msg">Tu opinión nos ayuda a mejorar.</p>
+  `;
+
+  card.appendChild(finalBox);
+}
+
+function manejarEncuestaReceptor(valor) {
+  const rating = Number(valor || 0);
+  const botones = document.querySelectorAll("[data-bhuz-star]");
+  const mensaje = document.getElementById("bhuz-receptor-rating-msg");
+
+  botones.forEach((boton) => {
+    const value = Number(boton.dataset.bhuzStar || 0);
+    boton.classList.toggle("is-selected", value <= rating);
+  });
+
+  if (mensaje) {
+    mensaje.textContent = rating >= 4
+      ? "Gracias por confiar en BHUZ 💚"
+      : "Gracias. Tomaremos en cuenta tu experiencia.";
+  }
+}
+
+function reproducirSonidoReceptor(estado) {
+  if (!BHUZ_SERVICES_STATE.receptorSonidoHabilitado) return;
+
+  const sonidos = {
+    ubicacion_confirmada: "assets/sounds/bhuz-pedido-aceptado.mp3",
+    en_camino: "assets/sounds/bhuz-pedido-en-camino.mp3",
+    recibido: "assets/sounds/bhuz-pedido-aceptado.mp3",
+    error: "assets/sounds/bhuz-pedido-restaurant.mp3"
+  };
+
+  const src = sonidos[estado];
+  if (!src) return;
+
+  try {
+    const audio = new Audio(src);
+    audio.volume = 0.55;
+    audio.play().catch(() => {
+      /* Algunos navegadores bloquean audio automático sin interacción. */
+    });
+  } catch {}
+}
+
 
 function mostrarCodigoEntregaDesdeServicio(service) {
   const cajaCodigo = document.getElementById("envio-codigo-entrega");
@@ -520,7 +832,7 @@ function generarCodigoCortoEntrega() {
   return String(numero);
 }
 
-function actualizarEstadoReceptorTemporal(estado) {
+function actualizarEstadoReceptorTemporal(estado, opciones = {}) {
   const texto = document.getElementById("envio-receptor-status-text");
   const dot = document.getElementById("envio-receptor-status-dot");
   const cajaEstado = document.getElementById("envio-estado-receptor");
@@ -536,6 +848,14 @@ function actualizarEstadoReceptorTemporal(estado) {
   };
 
   const mensaje = estados[estado] || estados.esperando_ubicacion;
+  const estadoAnterior = BHUZ_SERVICES_STATE.receptorUltimoEstadoVisual;
+  const cambioEstado = estadoAnterior && estadoAnterior !== estado;
+
+  BHUZ_SERVICES_STATE.receptorUltimoEstadoVisual = estado;
+
+  if (cambioEstado && !opciones.silencioso) {
+    reproducirSonidoReceptor(estado);
+  }
 
   if (texto) texto.textContent = mensaje;
   if (dot) dot.dataset.estado = estado;
@@ -1073,6 +1393,12 @@ function calcularDistanciaKm(lat1, lng1, lat2, lng2) {
 function gradosARadianes(grados) {
   return grados * (Math.PI / 180);
 }
+
+window.addEventListener("beforeunload", () => {
+  detenerPollingServicio();
+  detenerPollingReceptor();
+});
+
 
 
 
