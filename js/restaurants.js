@@ -858,7 +858,7 @@ function renderTopDishes() {
   if (title) {
     title.textContent = hasContext
       ? `Platos populares en ${contextLabel.charAt(0).toUpperCase() + contextLabel.slice(1)}`
-      : "Platos más pedidos";
+      : "Los más elegidos ⭐";
   }
 
   if (more) {
