@@ -781,7 +781,7 @@ function renderTopRestaurants(filteredRestaurants = []) {
   if (title) {
     title.textContent = hasContext
       ? `Restaurantes que venden ${contextLabel.charAt(0).toUpperCase() + contextLabel.slice(1)}`
-      : "Restaurantes más pedidos";
+      : "Top restaurantes ⭐";
   }
 
   if (more) {
