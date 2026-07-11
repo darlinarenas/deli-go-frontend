@@ -1,5 +1,73 @@
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>BHUZ · Acceso repartidor</title><link rel="stylesheet" href="css/panel-repartidor.css"></head><body class="driver-access-body">
-<main class="driver-access"><img src="assets/image/bhuz.png" alt="BHUZ" class="access-logo"><section class="access-card"><div class="access-tabs"><button class="active" data-access-tab="login">Ingresar</button><button data-access-tab="register">Crear cuenta</button></div>
-<form id="driverLoginForm" class="access-form active"><h1>Panel repartidor</h1><p>Ingresa a tu jornada, entregas y liquidaciones.</p><label>Correo<input name="email" type="email" required></label><label>Contraseña<input name="password" type="password" required></label><button class="btn btn-green">Ingresar</button></form>
-<form id="driverRegisterForm" class="access-form"><h1>Registro de repartidor</h1><div class="form-grid"><label>Nombre completo<input name="fullName" required></label><label>Teléfono<input name="phone" required></label><label>Correo<input name="email" type="email" required></label><label>Contraseña<input name="password" type="password" required></label><label>Cédula<input name="identityDocument"></label><label>País<select name="countryCode"><option value="VE">Venezuela</option><option value="CL">Chile</option><option value="AR">Argentina</option><option value="PE">Perú</option><option value="CO">Colombia</option></select></label><label>Ciudad<input name="city" value="Punto Fijo"></label><label>Zona<input name="zone"></label><label>Vehículo<select name="vehicleType"><option>Moto</option><option>Bicicleta</option><option>Automóvil</option><option>A pie</option></select></label><label>Placa<input name="vehiclePlate"></label></div><button class="btn btn-green">Enviar registro</button></form><p id="accessMessage" class="access-message"></p></section></main>
-<script src="js/config.js"></script><script src="js/acceso-repartidor.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#07110d">
+  <title>BHUZ · Acceso repartidor</title>
+  <link rel="stylesheet" href="./css/panel-repartidor.css?v=20260711-2">
+</head>
+<body class="driver-access-body">
+  <main class="driver-access-shell">
+    <header class="access-header">
+      <div class="brand-lockup" aria-label="BHUZ Repartidor">
+        <span class="brand-name">BHU<span>Z</span></span>
+        <small>REPARTIDOR</small>
+      </div>
+      <button class="icon-button" id="themeToggle" type="button" aria-label="Cambiar tema">☀</button>
+    </header>
+
+    <section class="access-card">
+      <div class="access-tabs" role="tablist">
+        <button class="active" type="button" data-access-tab="login">Ingresar</button>
+        <button type="button" data-access-tab="register">Crear cuenta</button>
+      </div>
+
+      <form id="driverLoginForm" class="access-form active" autocomplete="on">
+        <div class="access-intro">
+          <span class="section-kicker">TU JORNADA BHUZ</span>
+          <h1>Panel repartidor</h1>
+          <p>Ingresa para administrar entregas, ganancias y liquidaciones.</p>
+        </div>
+        <label class="field-label">Correo electrónico
+          <input name="email" type="email" inputmode="email" autocomplete="email" placeholder="repartidor@email.com" required>
+        </label>
+        <label class="field-label">Contraseña
+          <input name="password" type="password" autocomplete="current-password" placeholder="••••••••" required>
+        </label>
+        <button class="btn btn-green btn-block" type="submit">Ingresar</button>
+      </form>
+
+      <form id="driverRegisterForm" class="access-form" autocomplete="on">
+        <div class="access-intro">
+          <span class="section-kicker">NUEVO REPARTIDOR</span>
+          <h1>Crear cuenta</h1>
+          <p>Completa tus datos para registrarte en BHUZ.</p>
+        </div>
+        <div class="form-grid access-grid">
+          <label class="field-label">Nombre completo<input name="fullName" autocomplete="name" required></label>
+          <label class="field-label">Teléfono<input name="phone" inputmode="tel" autocomplete="tel" required></label>
+          <label class="field-label">Correo<input name="email" type="email" inputmode="email" autocomplete="email" required></label>
+          <label class="field-label">Contraseña<input name="password" type="password" autocomplete="new-password" required></label>
+          <label class="field-label">Cédula<input name="identityDocument"></label>
+          <label class="field-label">País
+            <select name="countryCode">
+              <option value="VE">Venezuela</option><option value="CL">Chile</option><option value="AR">Argentina</option><option value="PE">Perú</option><option value="CO">Colombia</option>
+            </select>
+          </label>
+          <label class="field-label">Ciudad<input name="city" value="Punto Fijo"></label>
+          <label class="field-label">Zona<input name="zone"></label>
+          <label class="field-label">Vehículo
+            <select name="vehicleType"><option>Moto</option><option>Bicicleta</option><option>Automóvil</option><option>A pie</option></select>
+          </label>
+          <label class="field-label">Placa<input name="vehiclePlate"></label>
+        </div>
+        <button class="btn btn-green btn-block" type="submit">Enviar registro</button>
+      </form>
+      <p id="accessMessage" class="access-message" aria-live="polite"></p>
+    </section>
+  </main>
+  <script src="./js/config.js"></script>
+  <script src="./js/acceso-repartidor.js?v=20260711-2"></script>
+</body>
+</html>
