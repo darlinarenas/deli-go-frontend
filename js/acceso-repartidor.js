@@ -18,5 +18,20 @@ document.addEventListener('DOMContentLoaded',()=>{
   }
   const values=form=>Object.fromEntries(new FormData(form).entries());
   $('#driverLoginForm').addEventListener('submit',async e=>{e.preventDefault();const btn=e.submitter;btn.disabled=true;$('#accessMessage').textContent='Ingresando…';try{const d=await request('/api/drivers/login',{method:'POST',body:values(e.currentTarget)});localStorage.setItem('bhuz_driver_session',JSON.stringify(d.driver));location.href='panel-repartidor.html'}catch(err){$('#accessMessage').textContent=err.message}finally{btn.disabled=false}});
-  $('#driverRegisterForm').addEventListener('submit',async e=>{e.preventDefault();const btn=e.submitter;btn.disabled=true;$('#accessMessage').textContent='Creando cuenta…';try{const d=await request('/api/drivers/register',{method:'POST',body:values(e.currentTarget)});$('#accessMessage').textContent=d.message||'Registro creado correctamente.';e.currentTarget.reset()}catch(err){$('#accessMessage').textContent=err.message}finally{btn.disabled=false}});
+  $('#driverRegisterForm').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const form=e.currentTarget;
+    const btn=e.submitter||form.querySelector('button[type="submit"]');
+    if(btn)btn.disabled=true;
+    $('#accessMessage').textContent='Creando cuenta…';
+    try{
+      const d=await request('/api/drivers/register',{method:'POST',body:values(form)});
+      $('#accessMessage').textContent=d.message||'Registro creado correctamente.';
+      form.reset();
+    }catch(err){
+      $('#accessMessage').textContent=err.message;
+    }finally{
+      if(btn)btn.disabled=false;
+    }
+  });
 });
