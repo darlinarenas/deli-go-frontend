@@ -38,6 +38,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   prepararMenuAdministrador();
   abrirSeccionAdministrador(adminActiveSection, { silentScroll: true });
   cargarDatosAdministrador();
+  if (window.initAdminDrivers) window.initAdminDrivers();
 });
 
 /* =====================================================
@@ -253,7 +254,8 @@ function prepararTarjetasResumen() {
     { id: "totalPedidos", section: "pedidosSection" },
     { id: "ventasBrutas", section: "pedidosSection" },
     { id: "comisionDeli", section: "comisionesSection" },
-    { id: "restaurantesPendientes", section: "restaurantesSection" }
+    { id: "restaurantesPendientes", section: "restaurantesSection" },
+    { id: "repartidoresPendientes", section: "repartidoresSection" }
   ];
 
   links.forEach((item) => {
