@@ -26,7 +26,7 @@
 ====================================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
-  const API_URL = "https://deligo-backend-i554.onrender.com";
+  const API_URL = window.DELI_API_URL || "https://deligo-backend-i554.onrender.com";
 
   const params = new URLSearchParams(window.location.search);
   const token = String(params.get("token") || "").trim();

@@ -73,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
      CLAVES
   ====================================================== */
   // Restaurantes, platos, promociones, estados, sesión y pedidos deben venir del backend.
-  const API_URL = "https://deligo-backend-i554.onrender.com";
+  const API_URL = window.DELI_API_URL || "https://deligo-backend-i554.onrender.com";
 
   /* ======================================================
      BLOQUE 3

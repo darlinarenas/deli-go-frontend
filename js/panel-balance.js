@@ -17,7 +17,7 @@
 ========================================= */
 
 document.addEventListener("DOMContentLoaded", () => {
-  const RESTAURANTS_API_URL = "https://deligo-backend-i554.onrender.com";
+  const RESTAURANTS_API_URL = window.DELI_API_URL || "https://deligo-backend-i554.onrender.com";
 
   /* =========================================
      CONFIGURACIÓN BASE DE COMISIONES

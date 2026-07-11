@@ -5,7 +5,7 @@
 ========================================= */
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const RESTAURANTS_API_URL = "https://deligo-backend-i554.onrender.com";
+  const RESTAURANTS_API_URL = window.DELI_API_URL || "https://deligo-backend-i554.onrender.com";
 
   /*
     La comisión ya no queda fija en 15%.

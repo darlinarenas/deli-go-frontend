@@ -13,7 +13,7 @@
 /* =========================================================
    CONFIGURACIÓN BACKEND
 ========================================================= */
-const AUTH_API_URL = "https://deligo-backend-i554.onrender.com";
+const AUTH_API_URL = window.DELI_API_URL || "https://deligo-backend-i554.onrender.com";
 const AUTH_SESSION_KEY = "deliCurrentUserSession";
 
 /* =========================================================

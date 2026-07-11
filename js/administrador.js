@@ -3,7 +3,7 @@
    Conectado al backend
 ====================================================== */
 
-const API_URL = "https://deligo-backend-i554.onrender.com"; // CAMBIO: conectar frontend con backend Render
+const API_URL = window.DELI_API_URL || "https://deligo-backend-i554.onrender.com";
 
 let adminData = {
   users: [],

@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   /* Backend real de DELI.
      IMPORTANTE: el server.js actual corre en el puerto 3001. */
-  const API_URL = "https://deligo-backend-i554.onrender.com"; // CAMBIO: conectar frontend con backend Render
+  const API_URL = window.DELI_API_URL || "https://deligo-backend-i554.onrender.com";
 
   const restaurantEmail = (restaurant.email || "").toLowerCase().trim();
   const restaurantName = (restaurant.name || "Mi restaurante").trim();

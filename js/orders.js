@@ -15,7 +15,7 @@
    BLOQUE 0
    CONFIGURACIÓN BACKEND
 ====================================================== */
-const DELI_ORDERS_API_URL = "https://deligo-backend-i554.onrender.com"; // CAMBIO: conectar frontend con backend Render
+const DELI_ORDERS_API_URL = window.DELI_API_URL || "https://deligo-backend-i554.onrender.com";
 // La única fuente real de pedidos es el backend Node + JSON.
 
 /* ======================================================
