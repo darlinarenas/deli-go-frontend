@@ -63,7 +63,7 @@ input:focus,select:focus,textarea:focus{border-color:var(--green);box-shadow:0 0
 .job-route{display:grid;gap:12px;margin:15px 0}.route-row{display:grid;grid-template-columns:13px 1fr;gap:10px}.route-row strong{font-size:13px}.route-row small{display:block;color:var(--muted);line-height:1.45;margin-top:3px}.route-dot{width:10px;height:10px;border-radius:50%;background:var(--green);margin-top:4px}.route-row:last-child .route-dot{background:var(--warning)}
 .job-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:13px 0}.mini-box{background:var(--surface-2);border:1px solid var(--line);border-radius:13px;padding:10px;min-width:0}.mini-box span{display:block;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.04em}.mini-box b{font-size:12px;display:block;margin-top:4px;overflow:hidden;text-overflow:ellipsis}
 .action-row{display:grid;grid-template-columns:1fr;gap:9px}.geo-help{font-size:11px;color:var(--muted);line-height:1.45;margin:9px 2px 0}.geo-help.ok{color:var(--green)}.geo-help.warn{color:var(--warning)}
-.table-wrap{overflow:auto;border-radius:13px}.data-table{border-collapse:collapse;width:100%;min-width:660px}.data-table th,.data-table td{padding:11px;border-bottom:1px solid var(--line);text-align:left;font-size:12px;white-space:nowrap}.data-table th{color:var(--muted);font-size:10px}
+.table-wrap{width:100%;max-width:100%;overflow-x:hidden;border-radius:13px}.data-table{border-collapse:collapse;width:100%;max-width:100%;min-width:0;table-layout:fixed}.data-table th,.data-table td{padding:9px 7px;border-bottom:1px solid var(--line);text-align:left;font-size:11px;white-space:normal;overflow-wrap:anywhere;word-break:break-word}.data-table th{color:var(--muted);font-size:9px}
 .form-grid,.filters{display:grid;grid-template-columns:1fr;gap:11px}.settlement-preview{margin-top:13px}.positive{color:var(--green)}.negative{color:#ff8f8f}.empty{padding:26px 14px;text-align:center;color:var(--muted)}
 .bottom-nav{position:fixed;z-index:50;left:0;right:0;bottom:0;padding:8px max(8px,env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));display:grid;grid-template-columns:repeat(5,1fr);background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(18px);border-top:1px solid var(--line)}
 .side-link{border:0;background:transparent;color:var(--muted);display:grid;place-items:center;gap:3px;padding:7px 2px;border-radius:12px;cursor:pointer}.side-link span{font-size:18px;font-weight:900}.side-link small{font-size:9px}.side-link.active{color:var(--green);background:rgba(32,229,111,.08)}
@@ -122,3 +122,190 @@ textarea{resize:vertical}
 .logout-button strong{font-size:12px}
 .logout-button:active{transform:scale(.97)}
 @media(max-width:350px){.logout-button strong{display:none}.logout-button{width:42px;padding:0}}
+
+/* CORRECCIÓN DEFINITIVA — BLOQUEO REAL DEL SCROLL HORIZONTAL */
+html,
+body{
+  width:100%;
+  min-width:0;
+  max-width:100%;
+  overflow-x:hidden!important;
+  overscroll-behavior-x:none;
+}
+
+body,
+.driver-panel-body,
+.driver-mobile-app,
+.mobile-topbar,
+.driver-content,
+.driver-welcome,
+.driver-view,
+.section-stack,
+.grid-2,
+.form-grid,
+.filters,
+.stats-grid,
+.card,
+.stat-card,
+.job-card,
+.mobile-list-card,
+.movement-card,
+.finance-summary,
+.request-close-card,
+.error-card,
+.table-wrap,
+.bottom-nav{
+  min-width:0!important;
+  max-width:100%!important;
+}
+
+.driver-panel-body,
+.driver-mobile-app,
+.driver-content,
+.driver-view{
+  overflow-x:hidden!important;
+}
+
+.driver-mobile-app{
+  width:100%!important;
+}
+
+.mobile-topbar{
+  width:100%!important;
+}
+
+.topbar-actions{
+  min-width:0;
+  flex:0 0 auto;
+}
+
+.driver-content > *,
+.driver-view > *,
+.card > *,
+.job-card > *,
+.mobile-list-card > *{
+  min-width:0!important;
+  max-width:100%!important;
+}
+
+input,
+select,
+textarea,
+button,
+img,
+svg,
+video,
+canvas{
+  max-width:100%!important;
+}
+
+input,
+select,
+textarea{
+  min-width:0!important;
+}
+
+.table-wrap{
+  overflow-x:hidden!important;
+}
+
+.data-table{
+  width:100%!important;
+  max-width:100%!important;
+  min-width:0!important;
+  table-layout:fixed;
+}
+
+.data-table th,
+.data-table td{
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+  word-break:break-word!important;
+}
+
+.bottom-nav{
+  left:0!important;
+  right:0!important;
+  width:100%!important;
+  max-width:100%!important;
+  transform:none!important;
+}
+
+.driver-toast{
+  left:14px!important;
+  right:14px!important;
+  width:auto!important;
+  max-width:calc(100% - 28px)!important;
+  transform:translateY(12px)!important;
+}
+
+.driver-toast.show{
+  transform:none!important;
+}
+
+/* Mantiene el aspecto de aplicación centrada en pantallas grandes,
+   sin introducir ancho extra ni desplazamiento lateral. */
+@media(min-width:500px){
+  .driver-panel-body{
+    padding:18px 0;
+  }
+
+  .driver-mobile-app{
+    width:100%!important;
+    max-width:480px!important;
+    margin:0 auto;
+  }
+
+  .bottom-nav{
+    left:50%!important;
+    right:auto!important;
+    width:min(100%,480px)!important;
+    max-width:480px!important;
+    transform:translateX(-50%)!important;
+  }
+
+  .driver-toast{
+    left:50%!important;
+    right:auto!important;
+    width:min(calc(100% - 28px),430px)!important;
+    max-width:430px!important;
+    transform:translate(-50%,12px)!important;
+  }
+
+  .driver-toast.show{
+    transform:translate(-50%,0)!important;
+  }
+}
+
+/* En teléfonos, todo queda en una sola columna y dentro del viewport. */
+@media(max-width:499px){
+  .driver-panel-body{
+    padding:0!important;
+  }
+
+  .driver-mobile-app{
+    margin:0!important;
+    border:0!important;
+    box-shadow:none!important;
+  }
+
+  .grid-2,
+  .form-grid,
+  .filters{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+
+  .stats-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+
+  .job-meta{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+
+  .job-meta .mini-box:last-child{
+    grid-column:1/-1;
+  }
+}
+
+
