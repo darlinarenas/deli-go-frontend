@@ -3,7 +3,8 @@ document.addEventListener('DOMContentLoaded',async()=>{
   const q=s=>document.querySelector(s),qa=s=>[...document.querySelectorAll(s)];
   const PICKUP_RADIUS_M=120,DELIVERY_RADIUS_M=150;
   let session=JSON.parse(localStorage.getItem('bhuz_driver_session')||'null');
-  let data=null,current='inicio',position=null,watchId=null,lastLocationSent=0;
+  let data=null,current='inicio',position=null,watchId=null,lastLocationSent=0,loading=false;
+  const draftState={perfil:false,cierres:false};
 
   async function api(path,opt={}){const r=await fetch(API+path,{method:opt.method||'GET',headers:{'Content-Type':'application/json'},body:opt.body?JSON.stringify(opt.body):undefined});const d=await r.json().catch(()=>({}));if(!r.ok||d.ok===false)throw Error(d.message||'Error de conexión');return d}
   if(!session){const u=typeof getCurrentUser==='function'?getCurrentUser():null;if(u){const id=String(u.id||u.email||'legacy-driver').toLowerCase().replace(/[^a-z0-9@._-]/g,'-');const d=await api(`/api/drivers/${encodeURIComponent(id)}/bootstrap`,{method:'POST',body:{userId:u.id,fullName:u.fullName||u.name,email:u.email,phone:u.phone}});session=d.driver;localStorage.setItem('bhuz_driver_session',JSON.stringify(session));}else{location.href='acceso-repartidor.html';return}}
@@ -23,21 +24,36 @@ document.addEventListener('DOMContentLoaded',async()=>{
   function startGps(){if(!navigator.geolocation)return updateGps('GPS no compatible','Tu navegador no permite validar ubicación.',true);if(watchId!==null)return;watchId=navigator.geolocation.watchPosition(async p=>{position={latitude:p.coords.latitude,longitude:p.coords.longitude,accuracy:p.coords.accuracy};updateGps('GPS activo',`Precisión aproximada: ${Math.round(p.coords.accuracy)} m.`);if(Date.now()-lastLocationSent>25000){lastLocationSent=Date.now();api(`/api/drivers/${session.id}/location`,{method:'POST',body:position}).catch(()=>{})}if(data?.activeJob)renderInicio()},err=>updateGps('GPS pendiente',err.code===1?'Debes permitir el acceso a tu ubicación.':'No pudimos obtener tu ubicación.',true),{enableHighAccuracy:true,maximumAge:5000,timeout:15000})}
   function updateGps(title,text,warn=false){const box=q('#gpsStatus');box.hidden=false;q('#gpsStatusTitle').textContent=title;q('#gpsStatusText').textContent=text;box.querySelector('.gps-dot').style.background=warn?'var(--warning)':'var(--green)'}
 
+  function isEditingInside(viewId){
+    const active=document.activeElement;
+    return !!(active&&active.matches('input, textarea, select')&&active.closest('#'+viewId));
+  }
   async function load(){
+    if(loading)return;
+    loading=true;
+    const scrollBefore=window.scrollY;
     try{
       data=await api(`/api/drivers/${session.id}/dashboard`);
       session=data.driver;
       localStorage.setItem('bhuz_driver_session',JSON.stringify(session));
       render();
       if(data.activeJob||session.isAvailable)startGps();
+      requestAnimationFrame(()=>window.scrollTo(0,scrollBefore));
     }catch(e){
       data={driver:session,activeJob:null,availableJobs:[],history:[],ledger:[],settlements:[],settlementRequests:[],stats:{deliveries_today:0,earnings_today:0,km_today:0,deliveries_week:0,earnings_week:0,balance:0}};
       render();
       q('#inicioView').innerHTML=`<div class="card error-card"><h2>No pudimos cargar los datos</h2><p>${esc(e.message)}</p><p class="muted">Puedes navegar por las secciones mientras reintentamos la conexión.</p><button class="btn btn-green" id="retryDashboard">Reintentar</button></div>`;
       toast(e.message);
-    }
+    }finally{loading=false}
   }
-  function render(){q('#welcomeName').textContent=`Hola, ${session.fullName||'repartidor'} 👋`;q('#availabilityText').textContent=session.isAvailable?'Disponible':'No disponible';q('#availabilityToggle').classList.toggle('on',session.isAvailable);renderStats();renderInicio();renderEntregas();renderFinanzas();renderCierres();renderPerfil()}
+  function render(){
+    q('#welcomeName').textContent=`Hola, ${session.fullName||'repartidor'} 👋`;
+    q('#availabilityText').textContent=session.isAvailable?'Disponible':'No disponible';
+    q('#availabilityToggle').classList.toggle('on',session.isAvailable);
+    renderStats();renderInicio();renderEntregas();renderFinanzas();
+    if(!draftState.cierres&&!isEditingInside('cierresView'))renderCierres();
+    if(!draftState.perfil&&!isEditingInside('perfilView'))renderPerfil();
+  }
   function renderStats(){const s=data.stats||{};q('#driverStats').innerHTML=[['Entregas hoy',s.deliveries_today||0],['Ganancia hoy',money(s.earnings_today,session.baseCurrency)],['Kilómetros',`${Number(s.km_today||0).toFixed(1)} km`],['Saldo',money(s.balance,session.baseCurrency)]].map(x=>`<div class="stat-card"><span>${x[0]}</span><strong>${x[1]}</strong></div>`).join('')}
   function activeButtons(j){const next={ASSIGNED:'GOING_TO_PICKUP',GOING_TO_PICKUP:'ARRIVED_AT_PICKUP',ARRIVED_AT_PICKUP:'PICKED_UP',PICKED_UP:'GOING_TO_DELIVERY',GOING_TO_DELIVERY:'ARRIVED_AT_DELIVERY',ARRIVED_AT_DELIVERY:'DELIVERED'};const labels={GOING_TO_PICKUP:'Iniciar ruta al retiro',ARRIVED_AT_PICKUP:'Llegué al retiro',PICKED_UP:'Confirmar pedido retirado',GOING_TO_DELIVERY:'Iniciar ruta de entrega',ARRIVED_AT_DELIVERY:'Llegué al destino',DELIVERED:'Confirmar entrega'};const n=next[j.status];if(!n)return'';const geo=geoState(j),disabled=((n==='ARRIVED_AT_PICKUP'||n==='ARRIVED_AT_DELIVERY')&&!geo.allowed);return `<button class="btn btn-green" data-job-status="${n}" data-job-id="${j.id}" ${disabled?'disabled':''}>${labels[n]}</button><button class="btn btn-danger" data-incident="${j.id}">Reportar incidencia</button>${geo.text?`<p class="geo-help ${geo.allowed?'ok':'warn'}">${esc(geo.text)}</p>`:''}`}
   function jobCard(j,active=false){return `<article class="job-card"><div class="job-top"><div><span class="badge">${j.source_type==='FOOD_ORDER'?'PEDIDO DE RESTAURANTE':'ENVÍO DE PAQUETE'}</span><h3>${esc(j.pickup_name||'Punto de retiro')}</h3></div><strong>${money(j.driver_earning,j.currency)}</strong></div><div class="job-route"><div class="route-row"><i class="route-dot"></i><div><strong>Retiro</strong><small>${esc(j.pickup_address||'Dirección pendiente')}${j.pickup_reference?` · ${esc(j.pickup_reference)}`:''}</small></div></div><div class="route-row"><i class="route-dot"></i><div><strong>Entrega</strong><small>${esc(j.delivery_address||'Dirección pendiente')}${j.delivery_reference?` · ${esc(j.delivery_reference)}`:''}</small></div></div></div><div class="job-meta"><div class="mini-box"><span>Distancia</span><b>${Number(j.distance_km||0).toFixed(1)} km</b></div><div class="mini-box"><span>Total</span><b>${money(j.service_total,j.currency)}</b></div><div class="mini-box"><span>Estado</span><b>${esc(j.status)}</b></div></div><div class="action-row">${active?activeButtons(j):`<button class="btn btn-green" data-accept-job="${j.id}">Aceptar entrega</button>`}<button class="btn btn-dark" data-map="${encodeURIComponent(active&&['PICKED_UP','GOING_TO_DELIVERY','ARRIVED_AT_DELIVERY'].includes(j.status)?j.delivery_address||'':j.pickup_address||'')}">Abrir en mapa</button></div></article>`}
@@ -58,7 +74,15 @@ document.addEventListener('DOMContentLoaded',async()=>{
   }
   function renderPerfil(){q('#perfilView').innerHTML=`<div class="card"><h2>Mi perfil</h2><div class="form-grid"><div class="field"><label>Nombre</label><input id="pName" value="${esc(session.fullName)}"></div><div class="field"><label>Teléfono</label><input id="pPhone" value="${esc(session.phone||'')}"></div><div class="field"><label>Dirección</label><input id="pAddress" value="${esc(session.address||'')}"></div><div class="field"><label>Ciudad</label><input id="pCity" value="${esc(session.city||'')}"></div><div class="field"><label>Zona</label><input id="pZone" value="${esc(session.zone||'')}"></div><div class="field"><label>Vehículo</label><input id="pVehicle" value="${esc(session.vehicleType||'')}"></div><div class="field"><label>Marca</label><input id="pBrand" value="${esc(session.vehicleBrand||'')}"></div><div class="field"><label>Modelo</label><input id="pModel" value="${esc(session.vehicleModel||'')}"></div><div class="field"><label>Placa</label><input id="pPlate" value="${esc(session.vehiclePlate||'')}"></div><div class="field"><label>Color</label><input id="pColor" value="${esc(session.vehicleColor||'')}"></div></div><button class="btn btn-green btn-block" id="saveProfile" style="margin-top:14px">Guardar cambios</button></div>`}
   qa('.side-link').forEach(b=>b.onclick=()=>{current=b.dataset.view;qa('.side-link').forEach(x=>x.classList.toggle('active',x===b));qa('.driver-view').forEach(v=>v.classList.toggle('active',v.id===current+'View'));q('#viewTitle').textContent={inicio:'Mi jornada',entregas:'Historial',finanzas:'Cuenta corriente',cierres:'Liquidaciones',perfil:'Mi perfil'}[current];scrollTo({top:0,behavior:'smooth'})});
-  document.addEventListener('click',async e=>{try{if(e.target.id==='retryDashboard'){return load()} const a=e.target.closest('[data-accept-job]');if(a){await api(`/api/drivers/${session.id}/jobs/${a.dataset.acceptJob}/accept`,{method:'POST'});toast('Entrega aceptada');return load()}const st=e.target.closest('[data-job-status]');if(st&&!st.disabled){await api(`/api/drivers/${session.id}/jobs/${st.dataset.jobId}/status`,{method:'PATCH',body:{status:st.dataset.jobStatus}});toast('Estado actualizado');return load()}const mp=e.target.closest('[data-map]');if(mp)return window.open('https://www.google.com/maps/search/?api=1&query='+mp.dataset.map,'_blank');const inc=e.target.closest('[data-incident]');if(inc){const description=prompt('Describe la incidencia:');if(description){await api(`/api/drivers/${session.id}/incidents`,{method:'POST',body:{jobId:inc.dataset.incident,incidentType:'OTHER',description}});toast('Incidencia registrada')}}if(e.target.id==='requestWeeklySettlement'){const note=q('#settlementRequestNote')?.value||'';await api(`/api/drivers/${session.id}/settlement-requests`,{method:'POST',body:{note}});toast('Solicitud enviada');return load()}if(e.target.id==='saveProfile'){await api(`/api/drivers/${session.id}/profile`,{method:'PATCH',body:{fullName:q('#pName').value,phone:q('#pPhone').value,address:q('#pAddress').value,city:q('#pCity').value,zone:q('#pZone').value,vehicleType:q('#pVehicle').value,vehicleBrand:q('#pBrand').value,vehicleModel:q('#pModel').value,vehiclePlate:q('#pPlate').value,vehicleColor:q('#pColor').value}});toast('Perfil actualizado');load()}}catch(x){toast(x.message)}});
+  document.addEventListener('input',e=>{
+    if(e.target.closest('#perfilView'))draftState.perfil=true;
+    if(e.target.closest('#cierresView'))draftState.cierres=true;
+  });
+  document.addEventListener('change',e=>{
+    if(e.target.closest('#perfilView'))draftState.perfil=true;
+    if(e.target.closest('#cierresView'))draftState.cierres=true;
+  });
+  document.addEventListener('click',async e=>{try{if(e.target.id==='retryDashboard'){return load()} const a=e.target.closest('[data-accept-job]');if(a){await api(`/api/drivers/${session.id}/jobs/${a.dataset.acceptJob}/accept`,{method:'POST'});toast('Entrega aceptada');return load()}const st=e.target.closest('[data-job-status]');if(st&&!st.disabled){await api(`/api/drivers/${session.id}/jobs/${st.dataset.jobId}/status`,{method:'PATCH',body:{status:st.dataset.jobStatus}});toast('Estado actualizado');return load()}const mp=e.target.closest('[data-map]');if(mp)return window.open('https://www.google.com/maps/search/?api=1&query='+mp.dataset.map,'_blank');const inc=e.target.closest('[data-incident]');if(inc){const description=prompt('Describe la incidencia:');if(description){await api(`/api/drivers/${session.id}/incidents`,{method:'POST',body:{jobId:inc.dataset.incident,incidentType:'OTHER',description}});toast('Incidencia registrada')}}if(e.target.id==='requestWeeklySettlement'){const note=q('#settlementRequestNote')?.value||'';await api(`/api/drivers/${session.id}/settlement-requests`,{method:'POST',body:{note}});draftState.cierres=false;toast('Solicitud enviada');return load()}if(e.target.id==='saveProfile'){const payload={fullName:q('#pName').value,phone:q('#pPhone').value,address:q('#pAddress').value,city:q('#pCity').value,zone:q('#pZone').value,vehicleType:q('#pVehicle').value,vehicleBrand:q('#pBrand').value,vehicleModel:q('#pModel').value,vehiclePlate:q('#pPlate').value,vehicleColor:q('#pColor').value};await api(`/api/drivers/${session.id}/profile`,{method:'PATCH',body:payload});session={...session,...payload};localStorage.setItem('bhuz_driver_session',JSON.stringify(session));draftState.perfil=false;toast('Perfil actualizado');await load()}}catch(x){toast(x.message)}});
   q('#availabilityToggle').onclick=async()=>{try{const d=await api(`/api/drivers/${session.id}/availability`,{method:'PATCH',body:{available:!session.isAvailable}});session=d.driver;localStorage.setItem('bhuz_driver_session',JSON.stringify(session));render();if(session.isAvailable)startGps()}catch(e){toast(e.message)}};
   q('#logoutDriver').onclick=()=>{localStorage.removeItem('bhuz_driver_session');location.href='acceso-repartidor.html'};
   await load();setInterval(load,8000);
