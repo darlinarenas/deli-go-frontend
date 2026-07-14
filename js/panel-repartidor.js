@@ -93,3 +93,4 @@ document.addEventListener('DOMContentLoaded',async()=>{
   await load();setInterval(load,8000);
 });
 
+
