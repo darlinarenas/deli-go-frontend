@@ -240,32 +240,39 @@
       <strong id="envio-receptor-status-text">Esperando ubicación</strong>
     </div>
 
+    <div class="bhuz-receptor-address-box">
+      <label for="bhuz-receptor-direccion">Dirección de entrega</label>
+      <input id="bhuz-receptor-direccion" type="text" autocomplete="street-address" placeholder="Calle, avenida, edificio o número de casa">
+      <label for="bhuz-receptor-referencia">Referencia <span>(opcional)</span></label>
+      <input id="bhuz-receptor-referencia" type="text" placeholder="Color de casa, piso, local o punto cercano">
+    </div>
+
     <button class="btn-envio-principal" id="btn-confirmar-ubicacion-receptor" type="button">📡 Confirmar mi ubicación</button>
 
     <div class="bhuz-receptor-quick-actions">
       <button class="btn-envio-secundario" id="btn-actualizar-receptor" type="button">↻ Actualizar estado</button>
-      <button class="btn-envio-secundario" id="btn-toggle-actividad-receptor" type="button" aria-expanded="false">Ver actividad del envío</button>
-      <button class="btn-envio-secundario" id="btn-toggle-info-receptor" type="button" aria-expanded="false">Ver más información</button>
+      <button class="btn-envio-secundario" id="btn-toggle-actividad-receptor" type="button" aria-expanded="false">Ver seguimiento y código</button>
+      <button class="btn-envio-secundario" id="btn-toggle-info-receptor" type="button" aria-expanded="false">Ver detalles del envío</button>
     </div>
 
     <div id="bhuz-receptor-actividad" class="bhuz-receptor-collapsible hidden">
       <div class="envio-receptor-seguimiento">
-        <h3>Actividad del paquete</h3>
+        <h3>Seguimiento del paquete</h3>
         <div class="envio-receptor-linea is-activa" id="estado-linea-esperando"><span>1</span><strong>Esperando ubicación</strong></div>
         <div class="envio-receptor-linea" id="estado-linea-en-camino"><span>2</span><strong>En camino</strong></div>
         <div class="envio-receptor-linea" id="estado-linea-recibido"><span>3</span><strong>Recibido</strong></div>
       </div>
+      <div class="envio-codigo-entrega" id="envio-codigo-entrega" style="display:none;">
+        <span>Código de entrega</span>
+        <strong id="envio-codigo-entrega-texto">------</strong>
+        <p>Entrégalo únicamente al repartidor cuando recibas el paquete.</p>
+      </div>
     </div>
 
     <div id="bhuz-receptor-info" class="bhuz-receptor-collapsible hidden">
-      <p class="envio-nota">Tu ubicación se usa solamente para esta entrega. El estado se actualiza automáticamente y no puede modificarse manualmente.</p>
-      <p class="envio-nota" id="envio-receptor-nota">Presiona confirmar y acepta el permiso de ubicación.</p>
-    </div>
-
-    <div class="envio-codigo-entrega" id="envio-codigo-entrega" style="display:none;">
-      <span>Código de entrega</span>
-      <strong id="envio-codigo-entrega-texto">------</strong>
-      <p>Entrégalo únicamente al repartidor cuando recibas el paquete.</p>
+      <div id="bhuz-receptor-detalles-servicio" class="bhuz-receptor-detalles-servicio"></div>
+      <p class="envio-nota">Tu ubicación se utiliza únicamente para completar esta entrega.</p>
+      <p class="envio-nota" id="envio-receptor-nota">Escribe la dirección y confirma tu ubicación.</p>
     </div>
   </div>
 </section>

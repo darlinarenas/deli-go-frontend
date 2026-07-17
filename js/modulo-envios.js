@@ -511,8 +511,8 @@ function inicializarModuloEnvios() {
     btnActualizarHistorial.addEventListener("click", () => cargarHistorialEnviosCliente(true));
   }
   document.getElementById("btn-actualizar-receptor")?.addEventListener("click", actualizarReceptorAhora);
-  document.getElementById("btn-toggle-actividad-receptor")?.addEventListener("click", () => alternarBloqueReceptor("bhuz-receptor-actividad", "btn-toggle-actividad-receptor", "Ver actividad del envío", "Ocultar actividad"));
-  document.getElementById("btn-toggle-info-receptor")?.addEventListener("click", () => alternarBloqueReceptor("bhuz-receptor-info", "btn-toggle-info-receptor", "Ver más información", "Ocultar información"));
+  document.getElementById("btn-toggle-actividad-receptor")?.addEventListener("click", () => alternarBloqueReceptor("bhuz-receptor-actividad", "btn-toggle-actividad-receptor", "Ver seguimiento y código", "Ocultar seguimiento"));
+  document.getElementById("btn-toggle-info-receptor")?.addEventListener("click", () => alternarBloqueReceptor("bhuz-receptor-info", "btn-toggle-info-receptor", "Ver detalles del envío", "Ocultar detalles"));
   cargarHistorialEnviosCliente(false);
 
   console.log("✅ Módulo de envíos inicializado correctamente.");
@@ -728,10 +728,12 @@ async function detectarFlujoReceptorEnvioTemporal() {
   const resumen = document.querySelector(".envios-resumen");
   const hero = document.querySelector(".envios-hero");
   const panelReceptor = document.getElementById("envio-receptor-panel");
+  const historial = document.getElementById("bhuz-envios-history");
   const nota = document.getElementById("envio-receptor-nota");
 
   if (formulario) formulario.style.display = "none";
   if (resumen) resumen.style.display = "none";
+  if (historial) historial.style.display = "none";
 
   if (hero) {
     hero.querySelector("h1").textContent = "Confirmar entrega";
@@ -776,6 +778,31 @@ function alternarBloqueReceptor(blockId, buttonId, closedLabel, openLabel) {
   button.textContent=opening?openLabel:closedLabel;
 }
 
+function mostrarSeguimientoReceptorTrasConfirmacion() {
+  const block = document.getElementById("bhuz-receptor-actividad");
+  const button = document.getElementById("btn-toggle-actividad-receptor");
+  if (block) block.classList.remove("hidden");
+  if (button) {
+    button.setAttribute("aria-expanded", "true");
+    button.textContent = "Ocultar seguimiento";
+  }
+}
+
+function renderizarDetallesReceptor(service) {
+  const box = document.getElementById("bhuz-receptor-detalles-servicio");
+  if (!box || !service) return;
+  const sender = limpiarTexto(service.customerName || service.customer_name || "Persona remitente");
+  const description = limpiarTexto(service.packageDescription || service.package_description || "Paquete BHUZ");
+  const address = limpiarTexto(service.deliveryAddress || service.delivery_address || "");
+  const reference = limpiarTexto(service.deliveryReference || service.delivery_reference || "");
+  box.innerHTML = `
+    <div><span>Envía</span><strong>${bhuzEscapeHtml(sender)}</strong></div>
+    <div><span>Contenido</span><strong>${bhuzEscapeHtml(description)}</strong></div>
+    ${address ? `<div><span>Dirección confirmada</span><strong>${bhuzEscapeHtml(address)}</strong></div>` : ""}
+    ${reference ? `<div><span>Referencia</span><strong>${bhuzEscapeHtml(reference)}</strong></div>` : ""}
+  `;
+}
+
 async function actualizarReceptorAhora() {
   const button=document.getElementById("btn-actualizar-receptor");
   if(!BHUZ_SERVICES_STATE.serviceId){
@@ -807,8 +834,16 @@ function mostrarPopupReceptor(title,message,type="info") {
 function confirmarUbicacionReceptorTemporal() {
   const nota = document.getElementById("envio-receptor-nota");
   const boton = document.getElementById("btn-confirmar-ubicacion-receptor");
+  const direccion = limpiarTexto(document.getElementById("bhuz-receptor-direccion")?.value || "");
+  const referencia = limpiarTexto(document.getElementById("bhuz-receptor-referencia")?.value || "");
   const parametros = new URLSearchParams(window.location.search);
   const tokenEnvio = parametros.get("confirmar_envio") || parametros.get("confirmar_entrega");
+
+  if (!direccion) {
+    if (nota) nota.textContent = "Escribe la dirección donde recibirás el paquete.";
+    document.getElementById("bhuz-receptor-direccion")?.focus();
+    return;
+  }
 
   if (!tokenEnvio) {
     if (nota) nota.textContent = "No se encontró el token del envío.";
@@ -848,7 +883,9 @@ function confirmarUbicacionReceptorTemporal() {
           },
           body: JSON.stringify({
             latitude: lat,
-            longitude: lng
+            longitude: lng,
+            deliveryAddress: direccion,
+            deliveryReference: referencia
           })
         });
 
@@ -865,6 +902,7 @@ function confirmarUbicacionReceptorTemporal() {
         }
 
         procesarServicioReceptor(data.service, data.token);
+        mostrarSeguimientoReceptorTrasConfirmacion();
         iniciarPollingReceptor(data.service?.id || BHUZ_SERVICES_STATE.serviceId);
 
         const estadoEntrega = document.getElementById("estado-ubicacion-entrega");
@@ -948,6 +986,9 @@ function detenerPollingReceptor() {
 function procesarServicioReceptor(service, tokenData = null, opciones = {}) {
   if (!service) return;
 
+  BHUZ_SERVICES_STATE.ultimoServicio = service;
+  renderizarDetallesReceptor(service);
+
   const nota = document.getElementById("envio-receptor-nota");
   const confirmadoPorToken = Boolean(tokenData?.receiverConfirmed);
   const tieneUbicacion = Boolean(
@@ -959,6 +1000,15 @@ function procesarServicioReceptor(service, tokenData = null, opciones = {}) {
   if (ubicacionConfirmada) {
     bloquearBotonConfirmarUbicacionReceptor(true);
     mostrarCodigoEntregaDesdeServicio(service);
+    mostrarSeguimientoReceptorTrasConfirmacion();
+    const direccionInput = document.getElementById("bhuz-receptor-direccion");
+    const referenciaInput = document.getElementById("bhuz-receptor-referencia");
+    const direccionGuardada = limpiarTexto(service.deliveryAddress || service.delivery_address || "");
+    const referenciaGuardada = limpiarTexto(service.deliveryReference || service.delivery_reference || "");
+    if (direccionInput && direccionGuardada) direccionInput.value = direccionGuardada;
+    if (referenciaInput && referenciaGuardada) referenciaInput.value = referenciaGuardada;
+    if (direccionInput) direccionInput.disabled = true;
+    if (referenciaInput) referenciaInput.disabled = true;
   }
 
   const estadoVisual = mapearEstadoReceptorDesdeServicio(service, ubicacionConfirmada);
