@@ -228,55 +228,46 @@
 
   </section>
 
-<!-- VISTA TEMPORAL DEL RECEPTOR -->
+<!-- VISTA DEL RECEPTOR: compacta y progresiva -->
 <section class="envio-receptor-panel" id="envio-receptor-panel" style="display:none;">
   <div class="envio-receptor-card">
     <span class="mini-label">BHUZ Envíos</span>
-    <h2>Confirma tu ubicación de entrega</h2>
-    <p>
-      La persona que envía el paquete necesita confirmar dónde debe entregarlo el repartidor.
-      Presiona el botón, acepta el permiso de ubicación y BHUZ guardará el punto de entrega.
-    </p>
+    <h2>Confirma el punto de entrega</h2>
+    <p class="bhuz-receptor-intro">Comparte tu ubicación para que el repartidor llegue al lugar correcto.</p>
 
     <div class="envio-receptor-status">
       <span id="envio-receptor-status-dot"></span>
       <strong id="envio-receptor-status-text">Esperando ubicación</strong>
     </div>
 
-    <button class="btn-envio-principal" id="btn-confirmar-ubicacion-receptor" type="button">
-      📡 Confirmar mi ubicación
-    </button>
+    <button class="btn-envio-principal" id="btn-confirmar-ubicacion-receptor" type="button">📡 Confirmar mi ubicación</button>
 
-    <div class="envio-receptor-seguimiento">
-      <h3>Seguimiento del paquete</h3>
+    <div class="bhuz-receptor-quick-actions">
+      <button class="btn-envio-secundario" id="btn-actualizar-receptor" type="button">↻ Actualizar estado</button>
+      <button class="btn-envio-secundario" id="btn-toggle-actividad-receptor" type="button" aria-expanded="false">Ver actividad del envío</button>
+      <button class="btn-envio-secundario" id="btn-toggle-info-receptor" type="button" aria-expanded="false">Ver más información</button>
+    </div>
 
-      <div class="envio-receptor-linea is-activa" id="estado-linea-esperando">
-        <span>1</span>
-        <strong>Esperando ubicación</strong>
+    <div id="bhuz-receptor-actividad" class="bhuz-receptor-collapsible hidden">
+      <div class="envio-receptor-seguimiento">
+        <h3>Actividad del paquete</h3>
+        <div class="envio-receptor-linea is-activa" id="estado-linea-esperando"><span>1</span><strong>Esperando ubicación</strong></div>
+        <div class="envio-receptor-linea" id="estado-linea-en-camino"><span>2</span><strong>En camino</strong></div>
+        <div class="envio-receptor-linea" id="estado-linea-recibido"><span>3</span><strong>Recibido</strong></div>
       </div>
+    </div>
 
-      <div class="envio-receptor-linea" id="estado-linea-en-camino">
-        <span>2</span>
-        <strong>En camino</strong>
-      </div>
-
-      <div class="envio-receptor-linea" id="estado-linea-recibido">
-        <span>3</span>
-        <strong>Recibido</strong>
-      </div>
+    <div id="bhuz-receptor-info" class="bhuz-receptor-collapsible hidden">
+      <p class="envio-nota">Tu ubicación se usa solamente para esta entrega. El estado se actualiza automáticamente y no puede modificarse manualmente.</p>
+      <p class="envio-nota" id="envio-receptor-nota">Presiona confirmar y acepta el permiso de ubicación.</p>
     </div>
 
     <div class="envio-codigo-entrega" id="envio-codigo-entrega" style="display:none;">
       <span>Código de entrega</span>
       <strong id="envio-codigo-entrega-texto">------</strong>
-      <p>Entrega este código únicamente al repartidor cuando recibas el paquete.</p>
+      <p>Entrégalo únicamente al repartidor cuando recibas el paquete.</p>
     </div>
-
-    <p class="envio-nota" id="envio-receptor-nota">
-      El estado del envío se actualizará automáticamente desde BHUZ. El receptor no puede cambiarlo manualmente.
-    </p>
   </div>
 </section>
-
 
 </div>

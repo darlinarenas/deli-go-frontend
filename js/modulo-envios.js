@@ -334,6 +334,19 @@ function aplicarMejorasVisualesReceptor() {
       border: 1px solid rgba(255,255,255,.12) !important;
     }
 
+
+    .bhuz-receptor-quick-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+    .bhuz-receptor-quick-actions button{min-height:44px;padding:10px;font-size:12px}
+    .bhuz-receptor-collapsible.hidden{display:none!important}
+    .bhuz-receptor-collapsible{display:grid;gap:8px}
+    .bhuz-receptor-popup{position:fixed;left:50%;top:18px;transform:translate(-50%,-18px);z-index:100000;min-width:min(92vw,360px);display:grid;gap:4px;padding:14px 16px;border-radius:18px;background:#101820;color:#fff;box-shadow:0 18px 50px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:.22s ease}
+    .bhuz-receptor-popup.show{opacity:1;transform:translate(-50%,0)}
+    .bhuz-receptor-popup[data-type="success"]{border:1px solid rgba(16,233,129,.45)}
+    .bhuz-receptor-popup[data-type="error"]{border:1px solid rgba(248,113,113,.55)}
+    .bhuz-receptor-popup span{font-size:13px;color:rgba(255,255,255,.75)}
+    #bhuz-receptor-rating-comment{width:100%;resize:vertical;border-radius:14px;padding:11px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:#fff}
+    @media(max-width:560px){.bhuz-receptor-quick-actions{grid-template-columns:1fr}.bhuz-receptor-intro{margin-bottom:0!important}}
+
     @media (max-width: 480px) {
       .envio-receptor-card.bhuz-receptor-compacto {
         padding: 15px !important;
@@ -497,6 +510,9 @@ function inicializarModuloEnvios() {
   if (btnActualizarHistorial) {
     btnActualizarHistorial.addEventListener("click", () => cargarHistorialEnviosCliente(true));
   }
+  document.getElementById("btn-actualizar-receptor")?.addEventListener("click", actualizarReceptorAhora);
+  document.getElementById("btn-toggle-actividad-receptor")?.addEventListener("click", () => alternarBloqueReceptor("bhuz-receptor-actividad", "btn-toggle-actividad-receptor", "Ver actividad del envío", "Ocultar actividad"));
+  document.getElementById("btn-toggle-info-receptor")?.addEventListener("click", () => alternarBloqueReceptor("bhuz-receptor-info", "btn-toggle-info-receptor", "Ver más información", "Ocultar información"));
   cargarHistorialEnviosCliente(false);
 
   console.log("✅ Módulo de envíos inicializado correctamente.");
@@ -750,6 +766,44 @@ async function detectarFlujoReceptorEnvioTemporal() {
   }
 }
 
+
+function alternarBloqueReceptor(blockId, buttonId, closedLabel, openLabel) {
+  const block=document.getElementById(blockId),button=document.getElementById(buttonId);
+  if(!block||!button)return;
+  const opening=block.classList.contains("hidden");
+  block.classList.toggle("hidden",!opening);
+  button.setAttribute("aria-expanded",String(opening));
+  button.textContent=opening?openLabel:closedLabel;
+}
+
+async function actualizarReceptorAhora() {
+  const button=document.getElementById("btn-actualizar-receptor");
+  if(!BHUZ_SERVICES_STATE.serviceId){
+    const note=document.getElementById("envio-receptor-nota");
+    if(note)note.textContent="El envío todavía se está cargando.";
+    return;
+  }
+  if(button){button.disabled=true;button.textContent="Actualizando…";}
+  try {
+    const service=await consultarServicioBackend(BHUZ_SERVICES_STATE.serviceId);
+    procesarServicioReceptor(service,null,{manual:true});
+    mostrarPopupReceptor("Estado actualizado", "La información del paquete está al día.", "info");
+  } catch(error) {
+    mostrarPopupReceptor("No se pudo actualizar", error.message||"Intenta nuevamente.", "error");
+  } finally {
+    if(button){button.disabled=false;button.textContent="↻ Actualizar estado";}
+  }
+}
+
+function mostrarPopupReceptor(title,message,type="info") {
+  let box=document.getElementById("bhuz-receptor-popup");
+  if(!box){box=document.createElement("div");box.id="bhuz-receptor-popup";box.className="bhuz-receptor-popup";document.body.appendChild(box);}
+  box.dataset.type=type;
+  box.innerHTML=`<strong>${bhuzEscapeHtml(title)}</strong><span>${bhuzEscapeHtml(message)}</span>`;
+  box.classList.add("show");
+  clearTimeout(box._timer);box._timer=setTimeout(()=>box.classList.remove("show"),4200);
+}
+
 function confirmarUbicacionReceptorTemporal() {
   const nota = document.getElementById("envio-receptor-nota");
   const boton = document.getElementById("btn-confirmar-ubicacion-receptor");
@@ -977,6 +1031,7 @@ function mostrarCierreReceptorConEncuesta() {
       ${[1, 2, 3, 4, 5].map((n) => `<button class="bhuz-receptor-star" data-bhuz-star="${n}" type="button" aria-label="${n} estrella${n === 1 ? "" : "s"}">★</button>`).join("")}
     </div>
     <div class="bhuz-receptor-rating-actions">
+      <textarea id="bhuz-receptor-rating-comment" rows="3" maxlength="500" placeholder="Comentario opcional sobre la entrega"></textarea>
       <button id="bhuz-receptor-rating-btn" class="bhuz-receptor-rating-btn" data-bhuz-enviar-rating="true" type="button" style="display:none;">Enviar opinión</button>
       <p id="bhuz-receptor-rating-msg">Tu opinión nos ayuda a mejorar.</p>
     </div>
@@ -1041,7 +1096,7 @@ async function enviarEncuestaReceptor() {
     const userEmail = limpiarTexto(service.customerEmail || service.customer_email || service.receiverEmail || service.receiver_email || `receptor-${BHUZ_SERVICES_STATE.serviceId}@bhuz.local`);
     const respuesta = await fetchConTimeout(construirUrlApi('/api/ratings'), {
       method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({sourceType:'PACKAGE',sourceId:BHUZ_SERVICES_STATE.serviceId,userEmail,driverRating:rating,comment:'Evaluación del receptor del paquete'})
+      body: JSON.stringify({sourceType:'PACKAGE',sourceId:BHUZ_SERVICES_STATE.serviceId,userEmail,driverRating:rating,comment:limpiarTexto(document.getElementById('bhuz-receptor-rating-comment')?.value||'')||'Evaluación del receptor del paquete'})
     });
     const data = await respuesta.json().catch(()=>({}));
     if (!respuesta.ok || data.ok === false) throw new Error(data.message || 'No se pudo guardar la opinión.');
@@ -1172,6 +1227,7 @@ function actualizarEstadoReceptorTemporal(estado, opciones = {}) {
 
   if (cambioEstado && !opciones.silencioso) {
     reproducirSonidoReceptor(estado);
+    mostrarPopupReceptor("Actualización de tu envío", mensaje, estado === "cancelado" || estado === "error" ? "error" : "success");
   }
 
   if (texto) texto.textContent = mensaje;

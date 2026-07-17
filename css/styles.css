@@ -2721,3 +2721,9 @@ body.puerta-bhuz-activa .pantalla-inicio-contenido {
 
 
 
+
+/* BHUZ: navegación inferior con acceso a paquetes enviados */
+.bottom-nav{grid-template-columns:repeat(6,minmax(0,1fr))!important}
+.bottom-nav a{min-width:0}
+.bottom-nav a span{font-size:10px}
+@media(max-width:380px){.bottom-nav a{font-size:17px}.bottom-nav a span{font-size:9px}}
