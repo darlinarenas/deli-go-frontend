@@ -1,4 +1,4 @@
-const CACHE='bhuz-shell-v2-20260717';
+const CACHE='bhuz-shell-v3-20260717';
 const SHELL=['/','/index.html','/mis-pedidos.html','/css/styles.css','/js/config.js','/js/pwa.js','/js/tracking.js','/manifest.webmanifest'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL).catch(()=>{})));self.skipWaiting()});
 self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim()});

@@ -56,7 +56,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       return;
     }
     if(!silent) greeting.textContent=`${user.fullName||user.name||'Usuario'}, aquí podrás recuperar y seguir todos tus paquetes.`;
-    try{const r=await fetch(`${API}/api/services/customer/history?email=${encodeURIComponent(String(user.email).trim().toLowerCase())}&_=${Date.now()}`,{credentials:'include',cache:'no-store'});const d=await r.json().catch(()=>({}));if(!r.ok||d.ok===false)throw Error(d.message||'No se pudieron cargar tus envíos.');shipments=Array.isArray(d.services)?d.services:[];shipments.sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));render()}catch(e){if(!silent)list.innerHTML=`<article class="order-card shipment-empty">${esc(e.message)}</article>`}
+    try{
+      const email=String(user.email||'').trim().toLowerCase();
+      const name=String(user.fullName||user.name||user.full_name||'').trim();
+      const phone=String(user.phone||user.telefono||'').trim();
+      const qs=new URLSearchParams({email,name,phone,_:String(Date.now())});
+      const r=await fetch(`${API}/api/services/customer/history?${qs.toString()}`,{credentials:'include',cache:'no-store'});
+      const d=await r.json().catch(()=>({}));
+      if(!r.ok||d.ok===false)throw Error(d.message||'No se pudieron cargar tus envíos.');
+      shipments=Array.isArray(d.services)?d.services:[];
+      try{
+        const ids=JSON.parse(localStorage.getItem(`bhuz_customer_service_ids:${email}`)||'[]');
+        const known=new Set(shipments.map(x=>String(x.id)));
+        const extras=await Promise.all(ids.filter(id=>!known.has(String(id))).map(async id=>{try{const rr=await fetch(`${API}/api/services/${encodeURIComponent(id)}?_=${Date.now()}`,{cache:'no-store'});const dd=await rr.json();return rr.ok&&dd.ok!==false?(dd.service||dd):null}catch{return null}}));
+        shipments.push(...extras.filter(Boolean));
+      }catch(_){}
+      const byId=new Map();shipments.forEach(x=>{if(x?.id)byId.set(String(x.id),x)});shipments=[...byId.values()];
+      shipments.sort((a,b)=>new Date(b.createdAt||b.created_at||0)-new Date(a.createdAt||a.created_at||0));render()
+    }catch(e){if(!silent)list.innerHTML=`<article class="order-card shipment-empty">${esc(e.message)}</article>`}
   }
 
   document.querySelectorAll('[data-filter]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x===btn));filter=btn.dataset.filter;render()}));

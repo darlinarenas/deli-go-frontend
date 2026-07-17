@@ -960,3 +960,6 @@
 .bhuz-receptor-compacto .bhuz-receptor-quick-actions{grid-template-columns:1fr 1fr}
 .bhuz-receptor-compacto #btn-toggle-info-receptor{grid-column:1/-1}
 @media(max-width:560px){.bhuz-receptor-compacto .bhuz-receptor-quick-actions{grid-template-columns:1fr}.bhuz-receptor-compacto #btn-toggle-info-receptor{grid-column:auto}.bhuz-receptor-address-box{padding:12px}}
+
+/* BHUZ cierre UX receptor */
+.envio-receptor-card.is-confirmed{max-width:620px;margin-inline:auto}.envio-receptor-card.is-confirmed .bhuz-receptor-quick-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}.envio-receptor-card.is-confirmed #bhuz-receptor-actividad{order:3}.envio-receptor-card.is-confirmed .envio-codigo-entrega{margin-top:14px}.envio-receptor-card.is-confirmed #bhuz-receptor-info{margin-top:10px}@media(max-width:640px){.envio-receptor-card.is-confirmed .bhuz-receptor-quick-actions{grid-template-columns:1fr}.envio-receptor-card.is-confirmed{padding:18px}}

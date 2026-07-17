@@ -773,6 +773,22 @@ function alternarBloqueReceptor(blockId, buttonId, closedLabel, openLabel) {
   button.textContent=opening?openLabel:closedLabel;
 }
 
+function aplicarVistaReceptorConfirmada() {
+  const addressBox = document.querySelector('.bhuz-receptor-address-box');
+  const confirmButton = document.getElementById('btn-confirmar-ubicacion-receptor');
+  const intro = document.querySelector('.bhuz-receptor-intro');
+  const activity = document.getElementById('bhuz-receptor-actividad');
+  const actions = document.querySelector('.bhuz-receptor-quick-actions');
+  const activityButton = document.getElementById('btn-toggle-actividad-receptor');
+  if (addressBox) addressBox.style.display = 'none';
+  if (confirmButton) confirmButton.style.display = 'none';
+  if (intro) intro.textContent = 'Sigue el estado del paquete y conserva el código hasta recibirlo.';
+  if (activity) activity.classList.remove('hidden');
+  if (actions) actions.classList.add('bhuz-actions-after-confirm');
+  if (activityButton) { activityButton.setAttribute('aria-expanded','true'); activityButton.textContent='Ocultar seguimiento'; }
+  document.querySelector('.envio-receptor-card')?.classList.add('is-confirmed');
+}
+
 function mostrarSeguimientoReceptorTrasConfirmacion() {
   const block = document.getElementById("bhuz-receptor-actividad");
   const button = document.getElementById("btn-toggle-actividad-receptor");
@@ -781,6 +797,7 @@ function mostrarSeguimientoReceptorTrasConfirmacion() {
     button.setAttribute("aria-expanded", "true");
     button.textContent = "Ocultar seguimiento";
   }
+  aplicarVistaReceptorConfirmada();
 }
 
 function renderizarDetallesReceptor(service) {
@@ -1434,6 +1451,12 @@ async function crearServicioEnvioBackend({ datos, distanciaKm, totalEnvio }) {
     throw new Error(data.message || "No se pudo crear el envío en BHUZ.");
   }
 
+  try {
+    const key = `bhuz_customer_service_ids:${customerEmail}`;
+    const ids = JSON.parse(localStorage.getItem(key) || '[]');
+    const next = [data.service?.id, ...ids].filter(Boolean).filter((v,i,a)=>a.indexOf(v)===i).slice(0,100);
+    localStorage.setItem(key, JSON.stringify(next));
+  } catch (_) {}
   return data.service;
 }
 
