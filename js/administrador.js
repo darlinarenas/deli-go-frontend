@@ -8,7 +8,8 @@ const API_URL = window.DELI_API_URL || "https://deligo-backend-i554.onrender.com
 let adminData = {
   users: [],
   restaurants: [],
-  orders: []
+  orders: [],
+  services: []
 };
 
 let adminCurrentUser = null;
@@ -175,6 +176,7 @@ async function cargarDatosAdministrador() {
     adminData.users = Array.isArray(payload.users) ? payload.users : [];
     adminData.restaurants = Array.isArray(payload.restaurants) ? payload.restaurants : [];
     adminData.orders = Array.isArray(payload.orders) ? payload.orders : [];
+    adminData.services = Array.isArray(payload.services) ? payload.services : [];
 
     renderResumen();
     renderUsuarios();
@@ -209,6 +211,7 @@ async function cargarDatosAdministrador() {
     }
 
     renderComisiones();
+    if (window.initAdminServices) window.initAdminServices(adminData.services);
 
     /*
       Restaurar vista después de repintar todas las secciones.
@@ -239,6 +242,8 @@ function renderResumen() {
   setText("ventasBrutas", formatMoney(ventasBrutas));
   setText("comisionDeli", formatMoney(comisionDeli));
   setText("restaurantesPendientes", pendientes);
+  setText("totalEnvios", adminData.services.length);
+  setText("enviosActivos", adminData.services.filter((s) => !["DELIVERED","CANCELLED"].includes(String(s.status || "").toUpperCase())).length);
 
   prepararTarjetasResumen();
 }

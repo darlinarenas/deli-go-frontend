@@ -125,7 +125,8 @@
         <button class="admin-menu-btn" data-section="usuariosSection">Usuarios</button>
         <button class="admin-menu-btn" data-section="restaurantesSection">Restaurantes</button>
         <button class="admin-menu-btn" data-section="repartidoresSection">Repartidores <span id="repartidoresPendientesBadge" class="menu-badge hidden">0</span></button>
-        <button class="admin-menu-btn" data-section="pedidosSection">Pedidos</button>
+        <button class="admin-menu-btn" data-section="pedidosSection">Pedidos de comida</button>
+        <button class="admin-menu-btn" data-section="enviosSection">Paquetes <span id="enviosActivosBadge" class="menu-badge hidden">0</span></button>
         <button class="admin-menu-btn" data-section="comisionesSection">Comisiones</button>
       </nav>
     </aside>
@@ -176,6 +177,16 @@
           <article class="stat-card" id="repartidoresResumenCard">
             <span>Repartidores pendientes</span>
             <strong id="repartidoresPendientes">0</strong>
+          </article>
+
+          <article class="stat-card">
+            <span>Paquetes registrados</span>
+            <strong id="totalEnvios">0</strong>
+          </article>
+
+          <article class="stat-card">
+            <span>Paquetes activos</span>
+            <strong id="enviosActivos">0</strong>
           </article>
         </div>
       </section>
@@ -266,6 +277,36 @@
         </div>
       </section>
 
+
+      <!-- =====================================================
+           PAQUETES / ENVÍOS
+      ====================================================== -->
+      <section id="enviosSection" class="admin-section">
+        <div class="section-title section-title-row">
+          <div><h2>Control de paquetes</h2><p>Historial completo, responsables, estados y operación de cada envío.</p></div>
+          <button type="button" id="refreshAdminServicesBtn" class="admin-primary-btn">Actualizar</button>
+        </div>
+        <div id="adminServicesStats" class="services-stats-grid"></div>
+        <div class="admin-panel services-toolbar">
+          <input id="adminServicesSearch" type="search" placeholder="Buscar por ID, cliente, receptor, dirección o repartidor">
+          <select id="adminServicesStatus">
+            <option value="ALL">Todos los estados</option>
+            <option value="ACTIVE">Activos</option>
+            <option value="SEARCHING_DRIVER">Buscando repartidor</option>
+            <option value="DRIVER_ASSIGNED">Repartidor asignado</option>
+            <option value="GOING_TO_PICKUP">En camino al retiro</option>
+            <option value="PACKAGE_PICKED">Paquete retirado</option>
+            <option value="GOING_TO_DELIVERY">En camino a la entrega</option>
+            <option value="DELIVERED">Entregados</option>
+            <option value="CANCELLED">Cancelados</option>
+          </select>
+        </div>
+        <div class="admin-services-workspace">
+          <div class="admin-panel"><div id="adminServicesList" class="admin-services-list"></div></div>
+          <aside id="adminServiceDetail" class="admin-panel admin-service-detail"><div class="empty-box">Selecciona un envío para ver todos sus datos.</div></aside>
+        </div>
+      </section>
+
       <!-- =====================================================
            COMISIONES
       ====================================================== -->
@@ -298,6 +339,7 @@
 
   <!-- Gestión administrativa de repartidores -->
   <script src="js/admin/admin-drivers.js"></script>
+  <script src="js/admin/admin-services.js"></script>
 
 <!-- =====================================================
      MODAL DETALLE USUARIO

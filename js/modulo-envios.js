@@ -493,6 +493,12 @@ function inicializarModuloEnvios() {
     inputFoto.addEventListener("change", mostrarVistaPreviaFoto);
   }
 
+  const btnActualizarHistorial = document.getElementById("btn-actualizar-historial-envios");
+  if (btnActualizarHistorial) {
+    btnActualizarHistorial.addEventListener("click", () => cargarHistorialEnviosCliente(true));
+  }
+  cargarHistorialEnviosCliente(false);
+
   console.log("✅ Módulo de envíos inicializado correctamente.");
 }
 
@@ -2044,3 +2050,92 @@ document.addEventListener('click',function(event){
   if(btn&&window.BHUZ_TRACKING)window.BHUZ_TRACKING.open('PACKAGE',btn.dataset.bhuzTrackService,{title:'Seguimiento de tu paquete'});
 });
 window.BHUZ_ABRIR_SEGUIMIENTO_ENVIO=function(serviceId){if(window.BHUZ_TRACKING&&serviceId)window.BHUZ_TRACKING.open('PACKAGE',serviceId,{title:'Seguimiento de tu paquete'});};
+
+
+/* ==========================================================
+   HISTORIAL DE PAQUETES DEL CLIENTE
+========================================================== */
+function bhuzEscapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+  }[char]));
+}
+
+function bhuzEstadoEnvio(status) {
+  const key = String(status || "").toUpperCase();
+  return ({
+    PENDING_PAYMENT: "Pendiente de pago", PAID: "Pagado",
+    WAITING_RECEIVER_LOCATION: "Esperando ubicación", SEARCHING_DRIVER: "Buscando repartidor",
+    DRIVER_ASSIGNED: "Repartidor asignado", GOING_TO_PICKUP: "En camino al retiro",
+    PACKAGE_PICKED: "Paquete retirado", GOING_TO_DELIVERY: "En camino a la entrega",
+    DELIVERED: "Entregado", CANCELLED: "Cancelado"
+  })[key] || key.replaceAll("_", " ") || "Pendiente";
+}
+
+function bhuzFechaEnvio(value) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return new Intl.DateTimeFormat("es-VE", { dateStyle: "medium", timeStyle: "short" }).format(date);
+}
+
+async function cargarHistorialEnviosCliente(mostrarError = false) {
+  const box = document.getElementById("bhuz-envios-history-list");
+  if (!box) return;
+  const user = typeof getCurrentUser === "function" ? getCurrentUser() : window.DELI_CURRENT_USER;
+  const email = String(user?.email || "").trim().toLowerCase();
+  if (!email || user?.role === "restaurant") {
+    box.innerHTML = '<div class="bhuz-envios-history-empty">Inicia sesión como cliente para consultar tus envíos.</div>';
+    return;
+  }
+  box.innerHTML = '<div class="bhuz-envios-history-empty">Cargando tus envíos…</div>';
+  try {
+    const response = await fetchConTimeout(construirUrlApi(`/api/services/customer/history?email=${encodeURIComponent(email)}`), { credentials: "include" });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.ok === false) throw new Error(data.message || "No se pudo cargar el historial.");
+    const services = Array.isArray(data.services) ? data.services : [];
+    if (!services.length) {
+      box.innerHTML = '<div class="bhuz-envios-history-empty">Aún no has enviado paquetes.</div>';
+      return;
+    }
+    box.innerHTML = services.map((service) => {
+      const status = String(service.status || "").toUpperCase();
+      const live = ["DRIVER_ASSIGNED","GOING_TO_PICKUP","PACKAGE_PICKED","GOING_TO_DELIVERY"].includes(status);
+      const driver = service.driverName ? `${service.driverName}${service.driverVehiclePlate ? ` · ${service.driverVehiclePlate}` : ""}` : "Sin repartidor asignado";
+      return `<article class="bhuz-envio-history-card">
+        <div class="bhuz-envio-history-top">
+          <div><small>${bhuzEscapeHtml(service.id || "Envío")}</small><strong>${bhuzEscapeHtml(service.packageDescription || "Paquete")}</strong></div>
+          <span class="bhuz-envio-status status-${status.toLowerCase()}">${bhuzEscapeHtml(bhuzEstadoEnvio(status))}</span>
+        </div>
+        <div class="bhuz-envio-route"><span>📍 ${bhuzEscapeHtml(service.pickupAddress || "Retiro")}</span><i>→</i><span>🏁 ${bhuzEscapeHtml(service.deliveryAddress || "Entrega")}</span></div>
+        <div class="bhuz-envio-history-meta">
+          <span><b>Receptor:</b> ${bhuzEscapeHtml(service.receiverName || "—")}</span>
+          <span><b>Repartidor:</b> ${bhuzEscapeHtml(driver)}</span>
+          <span><b>Total:</b> $${Number(service.totalAmount || 0).toFixed(2)}</span>
+          <span><b>Creado:</b> ${bhuzEscapeHtml(bhuzFechaEnvio(service.createdAt))}</span>
+        </div>
+        <div class="bhuz-envio-history-actions">
+          ${live ? `<button type="button" data-bhuz-ver-seguimiento-cliente data-service-id="${bhuzEscapeHtml(service.id)}">Seguir entrega en vivo</button>` : ""}
+          <button type="button" class="bhuz-history-detail" data-bhuz-history-detail="${bhuzEscapeHtml(service.id)}">Ver detalles</button>
+        </div>
+        <div class="bhuz-envio-history-detail hidden" id="history-detail-${bhuzEscapeHtml(service.id)}">
+          <p><b>Contacto receptor:</b> ${bhuzEscapeHtml(service.receiverPhone || "—")}</p>
+          <p><b>Referencia retiro:</b> ${bhuzEscapeHtml(service.pickupReference || "—")}</p>
+          <p><b>Referencia entrega:</b> ${bhuzEscapeHtml(service.deliveryReference || "—")}</p>
+          <p><b>Distancia:</b> ${Number(service.distanceKm || 0).toFixed(2)} km</p>
+        </div>
+      </article>`;
+    }).join("");
+    box.querySelectorAll("[data-bhuz-history-detail]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const detail = document.getElementById(`history-detail-${button.dataset.bhuzHistoryDetail}`);
+        if (!detail) return;
+        detail.classList.toggle("hidden");
+        button.textContent = detail.classList.contains("hidden") ? "Ver detalles" : "Ocultar detalles";
+      });
+    });
+  } catch (error) {
+    box.innerHTML = `<div class="bhuz-envios-history-empty error">${bhuzEscapeHtml(error.message)}</div>`;
+    if (mostrarError) alert(error.message);
+  }
+}
