@@ -1805,7 +1805,6 @@ function mostrarComprobanteEnvioPublicado({ service, distanciaKm, totalEnvio }) 
       <div class="bhuz-envio-publicado-item id-envio">
         <span>ID envío</span>
         <strong>${escapeHtmlCorto(serviceId)}</strong>
-        <button type="button" class="bhuz-track-btn" data-bhuz-track-service="${escapeHtmlCorto(serviceId)}">📍 Ver paquete en tiempo real</button>
       </div>
       <div class="bhuz-envio-publicado-item">
         <span>Total</span>
@@ -1818,7 +1817,7 @@ function mostrarComprobanteEnvioPublicado({ service, distanciaKm, totalEnvio }) 
     </div>
 
     <div class="bhuz-envio-publicado-actions">
-      <button class="bhuz-envio-publicado-primary" data-bhuz-ver-seguimiento-cliente="true" type="button">Ver seguimiento</button>
+      <button class="bhuz-envio-publicado-primary bhuz-live-track-action" data-bhuz-track-service="${escapeHtmlCorto(serviceId)}" type="button"><span class="bhuz-live-track-icon">⌖</span><span><strong>Seguir entrega en vivo</strong><small>Ubicación del repartidor en tiempo real</small></span><b>›</b></button>
       <button class="bhuz-envio-publicado-cancel" data-bhuz-cancelar-envio="true" type="button">Cancelar envío</button>
       <button class="bhuz-envio-publicado-secondary" data-bhuz-crear-otro-envio="true" type="button">Crear otro envío</button>
     </div>
