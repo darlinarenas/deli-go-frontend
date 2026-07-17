@@ -129,7 +129,7 @@
         <button class="admin-menu-btn" data-section="restaurantesSection">Restaurantes <span id="menuRestaurantesCount" class="menu-count">0</span></button>
         <button class="admin-menu-btn" data-section="repartidoresSection">Repartidores <span id="menuRepartidoresCount" class="menu-count">0</span> <span id="repartidoresPendientesBadge" class="menu-badge hidden">0</span></button>
         <button class="admin-menu-btn" data-section="pedidosSection">Pedidos de comida <span id="menuPedidosCount" class="menu-count">0</span></button>
-        <button class="admin-menu-btn" data-section="enviosSection">Paquetes <span id="menuPaquetesCount" class="menu-count">0</span> <span id="enviosActivosBadge" class="menu-badge hidden">0</span></button>
+        <button class="admin-menu-btn" data-section="enviosSection">Paquetes <span id="menuPaquetesCount" class="menu-count">0</span></button>
         <button class="admin-menu-btn" data-section="comisionesSection">Comisiones</button>
       </nav>
     </aside>
@@ -249,11 +249,13 @@
           <button id="refreshDriversBtn" class="admin-primary-btn" type="button">Actualizar</button>
         </div>
 
-        <div class="admin-panel">
-          <div id="driversList" class="table-wrapper"></div>
-        </div>
+        <div class="drivers-workspace">
+          <div class="admin-panel drivers-list-panel">
+            <div id="driversList" class="table-wrapper"></div>
+          </div>
 
-        <div id="driverDetailPanel" class="driver-detail-panel hidden"></div>
+          <div id="driverDetailPanel" class="driver-detail-panel hidden"></div>
+        </div>
       </section>
 
       <!-- =====================================================

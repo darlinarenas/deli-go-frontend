@@ -1958,3 +1958,76 @@ html, body { background: var(--admin-bg) !important; color: var(--admin-text) !i
 
 /* BHUZ cierre administrativo: contadores, ficha completa y contraste */
 .menu-count{margin-left:auto;min-width:24px;height:24px;padding:0 7px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.14);font-size:12px;font-weight:800}.hide-admin-counts .menu-count{display:none}.admin-menu-btn{display:flex;align-items:center;gap:8px}.driver-head-actions{display:flex;gap:8px;flex-wrap:wrap}.driver-section{border:1px solid var(--admin-border,#dfe5e2);border-radius:16px;margin-top:14px;overflow:hidden;background:var(--admin-card,#fff)}.driver-section summary{padding:16px 18px;font-weight:800;cursor:pointer;list-style:none}.driver-section summary::-webkit-details-marker{display:none}.driver-section-body{padding:0 18px 18px}.driver-edit-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.driver-edit-grid label{display:flex;flex-direction:column;gap:6px}.driver-edit-grid label span{font-size:12px;font-weight:700;opacity:.72}.driver-edit-grid input{width:100%;padding:11px 12px;border:1px solid var(--admin-border,#dfe5e2);border-radius:10px;background:var(--admin-card,#fff);color:inherit}.driver-edit-grid input:disabled{opacity:.78;background:rgba(127,127,127,.08)}.driver-edit-actions{grid-column:1/-1;display:flex;gap:10px}.driver-history-list{display:grid;gap:10px}.driver-history-list article,.rating-row{display:flex;justify-content:space-between;gap:14px;padding:12px;border:1px solid var(--admin-border,#e4e8e6);border-radius:12px}.driver-history-list article>div{display:flex;flex-direction:column;gap:4px}.rating-row{flex-direction:column}.services-stats-grid article,.drivers-stats-grid article{background:var(--admin-card,#fff)!important;color:var(--admin-text,#15201b)!important;border:1px solid var(--admin-border,#dde5e0)!important}.services-stats-grid article strong,.drivers-stats-grid article strong{color:inherit!important}@media(max-width:900px){.driver-edit-grid{grid-template-columns:1fr 1fr}}@media(max-width:620px){.driver-edit-grid{grid-template-columns:1fr}.driver-head-actions{width:100%}.driver-history-list article{flex-direction:column}}
+
+/* =====================================================
+   Corrección final: panel de repartidores compacto,
+   tarjetas neutras y modo oscuro legible
+===================================================== */
+.drivers-workspace{
+  display:grid;
+  grid-template-columns:minmax(520px,.95fr) minmax(420px,1.05fr);
+  gap:16px;
+  align-items:start;
+}
+.drivers-list-panel,
+.driver-detail-panel{
+  max-height:68vh;
+  overflow:auto;
+  overscroll-behavior:contain;
+}
+.driver-detail-panel{margin-top:0}
+.driver-profile-card{padding:16px}
+.driver-profile-head{position:sticky;top:-1px;z-index:3;background:var(--admin-card,#fff);padding:4px 0 12px}
+.driver-profile-head h3{font-size:20px}
+.driver-summary-grid{grid-template-columns:repeat(4,minmax(110px,1fr));gap:8px}
+.driver-summary-grid article{padding:11px 12px;border-radius:12px;box-shadow:none}
+.driver-summary-grid strong{font-size:18px!important}
+.driver-section{margin-top:9px;border-radius:12px}
+.driver-section summary{padding:12px 14px}
+.driver-section-body{padding:0 14px 14px}
+.driver-edit-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.driver-admin-controls{display:grid;grid-template-columns:minmax(180px,1fr) auto auto;gap:9px;align-items:end;padding:12px;border:1px solid var(--admin-border,#dde5e0);border-radius:13px;background:var(--admin-soft,#f7faf8);margin-bottom:10px}
+.driver-admin-controls label span{display:block;font-size:11px;font-weight:800;color:var(--color-muted);margin-bottom:5px}
+.driver-admin-controls label>div{display:flex;align-items:center;gap:6px}
+.driver-admin-controls input{width:100%;min-height:40px;border:1px solid var(--admin-border,#dde5e0);border-radius:10px;background:var(--admin-card,#fff);color:inherit;padding:0 10px}
+.driver-admin-controls small{grid-column:1/-1;color:var(--color-muted)}
+.driver-action.reject{background:#fff1f0;color:#b42318;border:1px solid #f3b7b2}
+
+/* Paquetes: tarjetas limpias, sin bloques de colores intensos */
+.services-stats-grid article{
+  background:var(--admin-card,#fff)!important;
+  color:var(--admin-text,#15201b)!important;
+  border:1px solid var(--admin-border,#dde5e0)!important;
+  box-shadow:none!important;
+}
+.services-stats-grid article span{color:var(--color-muted)!important}
+.services-stats-grid article strong{color:var(--admin-text,#15201b)!important;text-shadow:none!important}
+
+/* Modo oscuro: números y textos siempre visibles */
+html[data-admin-theme="dark"] .drivers-stats-grid article,
+html[data-admin-theme="dark"] .driver-summary-grid article,
+html[data-admin-theme="dark"] .services-stats-grid article{
+  background:#10191f!important;
+  border-color:#26343c!important;
+  color:#f2f7f5!important;
+}
+html[data-admin-theme="dark"] .drivers-stats-grid strong,
+html[data-admin-theme="dark"] .driver-summary-grid strong,
+html[data-admin-theme="dark"] .services-stats-grid strong{color:#fff!important}
+html[data-admin-theme="dark"] .drivers-stats-grid span,
+html[data-admin-theme="dark"] .driver-summary-grid span,
+html[data-admin-theme="dark"] .services-stats-grid span{color:#aebbc2!important}
+html[data-admin-theme="dark"] .driver-profile-head{background:#0d151a}
+html[data-admin-theme="dark"] .driver-admin-controls{background:#10191f;border-color:#26343c}
+html[data-admin-theme="dark"] .driver-admin-controls input{background:#0b1216;border-color:#31424c;color:#fff}
+
+@media(max-width:1200px){
+  .drivers-workspace{grid-template-columns:1fr}
+  .drivers-list-panel,.driver-detail-panel{max-height:none}
+}
+@media(max-width:720px){
+  .driver-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .driver-edit-grid{grid-template-columns:1fr}
+  .driver-admin-controls{grid-template-columns:1fr 1fr}
+  .driver-admin-controls label{grid-column:1/-1}
+}
