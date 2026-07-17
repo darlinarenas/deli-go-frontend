@@ -28,6 +28,37 @@ document.addEventListener('DOMContentLoaded',async()=>{
     setTimeout(()=>modal.remove(),180);
     if(typeof resolver==='function')resolver(result);
   }
+  function closeDeliveryCodeModal(result=null){
+    const modal=q('#deliveryCodeModal');
+    if(!modal)return;
+    modal.classList.remove('show');
+    document.body.classList.remove('modal-open');
+    const resolver=modal._resolver;
+    setTimeout(()=>modal.remove(),180);
+    if(typeof resolver==='function')resolver(result);
+  }
+  function requestDeliveryCode(){
+    return new Promise(resolve=>{
+      q('#deliveryCodeModal')?.remove();
+      const modal=document.createElement('div');
+      modal.id='deliveryCodeModal';
+      modal.className='delivery-code-modal';
+      modal.innerHTML=`<div class="delivery-code-backdrop" data-code-close></div><section class="delivery-code-dialog" role="dialog" aria-modal="true" aria-labelledby="deliveryCodeTitle"><div class="delivery-code-icon">✓</div><span class="section-kicker">SEGURIDAD DE ENTREGA</span><h3 id="deliveryCodeTitle">Ingresa el código del receptor</h3><p>Solicita al cliente el código de 6 dígitos para cerrar la entrega.</p><div class="delivery-code-inputs" aria-label="Código de entrega">${Array.from({length:6},(_,i)=>`<input inputmode="numeric" pattern="[0-9]*" maxlength="1" autocomplete="one-time-code" data-code-digit="${i}" aria-label="Dígito ${i+1}">`).join('')}</div><small class="delivery-code-error" hidden></small><div class="delivery-code-actions"><button class="btn btn-dark" type="button" data-code-cancel>Cancelar</button><button class="btn btn-green" type="button" data-code-confirm>Confirmar entrega</button></div></section>`;
+      modal._resolver=resolve;document.body.appendChild(modal);document.body.classList.add('modal-open');requestAnimationFrame(()=>modal.classList.add('show'));
+      const inputs=[...modal.querySelectorAll('[data-code-digit]')];
+      const error=modal.querySelector('.delivery-code-error');
+      const value=()=>inputs.map(x=>x.value.replace(/\D/g,'')).join('');
+      inputs.forEach((input,index)=>{
+        input.addEventListener('input',()=>{input.value=input.value.replace(/\D/g,'').slice(-1);error.hidden=true;if(input.value&&inputs[index+1])inputs[index+1].focus()});
+        input.addEventListener('keydown',ev=>{if(ev.key==='Backspace'&&!input.value&&inputs[index-1])inputs[index-1].focus();if(ev.key==='ArrowLeft'&&inputs[index-1])inputs[index-1].focus();if(ev.key==='ArrowRight'&&inputs[index+1])inputs[index+1].focus()});
+        input.addEventListener('paste',ev=>{const digits=(ev.clipboardData?.getData('text')||'').replace(/\D/g,'').slice(0,6);if(!digits)return;ev.preventDefault();digits.split('').forEach((d,i)=>{if(inputs[i])inputs[i].value=d});inputs[Math.min(digits.length,6)-1]?.focus()});
+      });
+      modal.querySelector('[data-code-cancel]').onclick=()=>closeDeliveryCodeModal(null);
+      modal.querySelector('[data-code-close]').onclick=()=>closeDeliveryCodeModal(null);
+      modal.querySelector('[data-code-confirm]').onclick=()=>{const code=value();if(code.length!==6){error.textContent='Debes completar los 6 dígitos.';error.hidden=false;inputs.find(x=>!x.value)?.focus();return}closeDeliveryCodeModal(code)};
+      inputs[0]?.focus();
+    });
+  }
   function confirmProfileUpdate(){
     return new Promise(resolve=>{
       q('#profileConfirmModal')?.remove();
@@ -125,7 +156,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
     if(e.target.closest('#perfilView'))draftState.perfil=true;
     if(e.target.closest('#cierresView'))draftState.cierres=true;
   });
-  document.addEventListener('click',async e=>{try{if(e.target.id==='retryDashboard'){return load()} const a=e.target.closest('[data-accept-job]');if(a){await api(`/api/drivers/${session.id}/jobs/${a.dataset.acceptJob}/accept`,{method:'POST'});toast('Entrega aceptada');return load()}const st=e.target.closest('[data-job-status]');if(st&&!st.disabled){await api(`/api/drivers/${session.id}/jobs/${st.dataset.jobId}/status`,{method:'PATCH',body:{status:st.dataset.jobStatus}});toast('Estado actualizado');return load()}const mp=e.target.closest('[data-map]');if(mp)return window.open('https://www.google.com/maps/search/?api=1&query='+mp.dataset.map,'_blank');const inc=e.target.closest('[data-incident]');if(inc){const description=prompt('Describe la incidencia:');if(description){await api(`/api/drivers/${session.id}/incidents`,{method:'POST',body:{jobId:inc.dataset.incident,incidentType:'OTHER',description}});toast('Incidencia registrada')}}if(e.target.id==='requestWeeklySettlement'){const note=q('#settlementRequestNote')?.value||'';await api(`/api/drivers/${session.id}/settlement-requests`,{method:'POST',body:{note}});draftState.cierres=false;toast('Solicitud enviada');return load()}if(e.target.id==='editProfile'){profileEditing=true;draftState.perfil=true;renderPerfil();q('#pName')?.focus();return}if(e.target.id==='cancelProfileEdit'){profileEditing=false;draftState.perfil=false;renderPerfil();toast('Edición cancelada');return}if(e.target.id==='saveProfile'){const confirmed=await confirmProfileUpdate();if(!confirmed)return;const payload={fullName:q('#pName').value.trim(),phone:q('#pPhone').value.trim(),address:q('#pAddress').value.trim(),city:q('#pCity').value.trim(),zone:q('#pZone').value.trim(),vehicleType:q('#pVehicle').value.trim(),vehicleBrand:q('#pBrand').value.trim(),vehicleModel:q('#pModel').value.trim(),vehiclePlate:q('#pPlate').value.trim(),vehicleColor:q('#pColor').value.trim()};const d=await api(`/api/drivers/${session.id}/profile`,{method:'PATCH',body:payload});session=d.driver||{...session,...payload};localStorage.setItem('bhuz_driver_session',JSON.stringify(session));profileEditing=false;draftState.perfil=false;renderPerfil();toast('Datos actualizados correctamente');await load()}}catch(x){toast(x.message)}});
+  document.addEventListener('click',async e=>{try{if(e.target.id==='retryDashboard'){return load()} const a=e.target.closest('[data-accept-job]');if(a){await api(`/api/drivers/${session.id}/jobs/${a.dataset.acceptJob}/accept`,{method:'POST'});toast('Entrega aceptada');return load()}const st=e.target.closest('[data-job-status]');if(st&&!st.disabled){const job=(data?.activeJob&&String(data.activeJob.id)===String(st.dataset.jobId))?data.activeJob:null;if(st.dataset.jobStatus==='DELIVERED'&&job?.source_type==='PACKAGE'){const deliveryCode=await requestDeliveryCode();if(!deliveryCode)return;await api(`/api/drivers/${session.id}/jobs/${st.dataset.jobId}/confirm-delivery`,{method:'POST',body:{deliveryCode}});toast('Entrega confirmada con código');return load()}await api(`/api/drivers/${session.id}/jobs/${st.dataset.jobId}/status`,{method:'PATCH',body:{status:st.dataset.jobStatus}});toast('Estado actualizado');return load()}const mp=e.target.closest('[data-map]');if(mp)return window.open('https://www.google.com/maps/search/?api=1&query='+mp.dataset.map,'_blank');const inc=e.target.closest('[data-incident]');if(inc){const description=prompt('Describe la incidencia:');if(description){await api(`/api/drivers/${session.id}/incidents`,{method:'POST',body:{jobId:inc.dataset.incident,incidentType:'OTHER',description}});toast('Incidencia registrada')}}if(e.target.id==='requestWeeklySettlement'){const note=q('#settlementRequestNote')?.value||'';await api(`/api/drivers/${session.id}/settlement-requests`,{method:'POST',body:{note}});draftState.cierres=false;toast('Solicitud enviada');return load()}if(e.target.id==='editProfile'){profileEditing=true;draftState.perfil=true;renderPerfil();q('#pName')?.focus();return}if(e.target.id==='cancelProfileEdit'){profileEditing=false;draftState.perfil=false;renderPerfil();toast('Edición cancelada');return}if(e.target.id==='saveProfile'){const confirmed=await confirmProfileUpdate();if(!confirmed)return;const payload={fullName:q('#pName').value.trim(),phone:q('#pPhone').value.trim(),address:q('#pAddress').value.trim(),city:q('#pCity').value.trim(),zone:q('#pZone').value.trim(),vehicleType:q('#pVehicle').value.trim(),vehicleBrand:q('#pBrand').value.trim(),vehicleModel:q('#pModel').value.trim(),vehiclePlate:q('#pPlate').value.trim(),vehicleColor:q('#pColor').value.trim()};const d=await api(`/api/drivers/${session.id}/profile`,{method:'PATCH',body:payload});session=d.driver||{...session,...payload};localStorage.setItem('bhuz_driver_session',JSON.stringify(session));profileEditing=false;draftState.perfil=false;renderPerfil();toast('Datos actualizados correctamente');await load()}}catch(x){toast(x.message)}});
   q('#availabilityToggle').onclick=async()=>{try{const d=await api(`/api/drivers/${session.id}/availability`,{method:'PATCH',body:{available:!session.isAvailable}});session=d.driver;localStorage.setItem('bhuz_driver_session',JSON.stringify(session));render();if(session.isAvailable)startGps()}catch(e){toast(e.message)}};
   q('#logoutDriver').onclick=()=>{localStorage.removeItem('bhuz_driver_session');location.href='acceso-repartidor.html'};
   await load();setInterval(load,8000);

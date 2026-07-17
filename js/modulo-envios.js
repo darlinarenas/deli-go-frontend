@@ -460,8 +460,16 @@ function inicializarModuloEnvios() {
 
       const verSeguimientoCliente = event.target.closest("[data-bhuz-ver-seguimiento-cliente]");
       if (verSeguimientoCliente) {
-        const objetivo = document.getElementById("bhuz-envio-publicado-box") || document.getElementById("envio-link-receptor") || document.getElementById("envio-resumen-formulario") || document.getElementById("modulo-envios");
-        if (objetivo) objetivo.scrollIntoView({ behavior: "smooth", block: "center" });
+        const serviceId = limpiarTexto(verSeguimientoCliente.dataset.serviceId || BHUZ_SERVICES_STATE.serviceId || "");
+        if (!serviceId) {
+          alert("No pudimos identificar este envío para abrir el seguimiento.");
+          return;
+        }
+        if (!window.BHUZ_TRACKING) {
+          alert("El seguimiento todavía no está disponible. Recarga la página e intenta nuevamente.");
+          return;
+        }
+        window.BHUZ_TRACKING.open("PACKAGE", serviceId, { title: "Seguimiento de tu paquete" });
         return;
       }
 
@@ -1706,8 +1714,7 @@ async function prepararEnvioParaPagoTemporal() {
     const data = await respuesta.json().catch(() => ({}));
 
     if (!respuesta.ok || !data.ok) {
-      const detalle = data.error ? ` (${data.error})` : "";
-      throw new Error(`${data.message || "No se pudo preparar el envío."}${detalle}`);
+      throw new Error(data.message || "No se pudo preparar el envío.");
     }
 
     BHUZ_SERVICES_STATE.envioPublicado = true;
@@ -1806,7 +1813,6 @@ function mostrarComprobanteEnvioPublicado({ service, distanciaKm, totalEnvio }) 
       <div class="bhuz-envio-publicado-item id-envio">
         <span>ID envío</span>
         <strong>${escapeHtmlCorto(serviceId)}</strong>
-        <button type="button" class="bhuz-track-btn" data-bhuz-track-service="${escapeHtmlCorto(serviceId)}">📍 Ver paquete en tiempo real</button>
       </div>
       <div class="bhuz-envio-publicado-item">
         <span>Total</span>
@@ -1819,7 +1825,7 @@ function mostrarComprobanteEnvioPublicado({ service, distanciaKm, totalEnvio }) 
     </div>
 
     <div class="bhuz-envio-publicado-actions">
-      <button class="bhuz-envio-publicado-primary" data-bhuz-ver-seguimiento-cliente="true" type="button">Ver seguimiento</button>
+      <button class="bhuz-envio-publicado-primary bhuz-live-track-action" data-bhuz-ver-seguimiento-cliente="true" data-service-id="${escapeHtmlCorto(serviceId)}" type="button"><span class="bhuz-live-track-icon">⌖</span><span><strong>Seguir entrega en vivo</strong><small>Consulta la ubicación actual del repartidor</small></span><i>→</i></button>
       <button class="bhuz-envio-publicado-cancel" data-bhuz-cancelar-envio="true" type="button">Cancelar envío</button>
       <button class="bhuz-envio-publicado-secondary" data-bhuz-crear-otro-envio="true" type="button">Crear otro envío</button>
     </div>
