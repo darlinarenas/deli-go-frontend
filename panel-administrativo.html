@@ -100,7 +100,7 @@
   ====================================================== -->
   <header class="admin-header">
     <div class="admin-brand">
-      <div class="admin-logo">D</div>
+      <div class="admin-logo">B</div>
       <div>
         <h1>BHUZ.</h1>
         <p>Panel Administrativo</p>
@@ -108,7 +108,9 @@
     </div>
 
     <div class="admin-actions">
+      <span id="adminAutoRefreshStatus" class="admin-refresh-status">Actualización automática activa</span>
       <span id="adminSessionText">Administrador</span>
+      <button type="button" id="adminThemeToggle" class="admin-theme-toggle" aria-label="Cambiar modo de color">🌙 Modo oscuro</button>
       <button type="button" onclick="cerrarSesionAdministrador()">Cerrar sesión</button>
     </div>
   </header>
@@ -343,6 +345,9 @@
 
   <!-- Control administrativo de paquetes: carga independiente para no afectar los módulos existentes -->
   <script src="js/admin/admin-services.js"></script>
+
+  <!-- Mejoras premium: tema y actualización automática no intrusiva -->
+  <script src="js/admin/admin-dashboard-enhancements.js"></script>
 
 <!-- =====================================================
      MODAL DETALLE USUARIO

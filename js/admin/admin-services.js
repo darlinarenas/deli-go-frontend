@@ -140,9 +140,11 @@
     renderDetail();
   }
 
-  async function loadServices() {
+  async function loadServices(options = {}) {
     const list = document.getElementById("adminServicesList");
-    if (list) list.innerHTML = '<div class="empty-box">Cargando paquetes...</div>';
+    const previousScroll = list?.closest(".admin-services-list-panel")?.scrollTop || 0;
+    const silent = options.silent === true;
+    if (list && !silent) list.innerHTML = '<div class="empty-box">Cargando paquetes...</div>';
 
     try {
       const response = await fetch(`${API_URL}/admin/services`, { headers: { Accept: "application/json" } });
@@ -152,6 +154,10 @@
       loadedOnce = true;
       renderStats();
       renderList();
+      requestAnimationFrame(() => {
+        const panel = document.getElementById("adminServicesList")?.closest(".admin-services-list-panel");
+        if (panel) panel.scrollTop = previousScroll;
+      });
     } catch (error) {
       console.error("Error cargando paquetes administrativos:", error);
       if (list) list.innerHTML = `<div class="empty-box error">${esc(error.message || "No se pudieron cargar los paquetes.")}</div>`;
@@ -168,6 +174,8 @@
       if (!loadedOnce) loadServices();
     });
   }
+
+  window.refreshAdminServicesSilently = () => loadServices({ silent: true });
 
   document.addEventListener("DOMContentLoaded", () => {
     bindEvents();

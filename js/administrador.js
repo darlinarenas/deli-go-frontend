@@ -2299,3 +2299,8 @@ window.verDetalleRestaurante = verDetalleRestaurante;
 
 
 
+
+
+// Puentes públicos para actualización automática segura.
+window.cargarDatosAdministrador = cargarDatosAdministrador;
+window.abrirSeccionAdministrador = abrirSeccionAdministrador;

@@ -1890,3 +1890,68 @@ body {
    módulos existentes del panel administrativo.
 ====================================================== */
 .section-title-row{display:flex;align-items:center;justify-content:space-between;gap:16px}.services-stats-grid{display:grid;grid-template-columns:repeat(5,minmax(130px,1fr));gap:12px;margin-bottom:16px}.services-stats-grid article{padding:16px;border:1px solid rgba(0,230,118,.18);border-radius:16px;background:rgba(10,18,23,.86)}.services-stats-grid span{display:block;color:#9ba9b1;font-size:.78rem;margin-bottom:7px}.services-stats-grid strong{font-size:1.35rem}.services-toolbar{display:grid;grid-template-columns:minmax(260px,1fr) 230px;gap:12px;margin-bottom:16px}.services-toolbar input,.services-toolbar select{width:100%;min-height:46px;border:1px solid rgba(255,255,255,.1);border-radius:12px;background:#071015;color:#fff;padding:0 14px}.admin-services-workspace{display:grid;grid-template-columns:minmax(360px,.85fr) minmax(430px,1.15fr);gap:16px;align-items:start}.admin-services-list-panel,.admin-service-detail{max-height:66vh;overflow:auto}.admin-services-list{display:grid;gap:8px}.admin-service-row{width:100%;display:grid;grid-template-columns:42px minmax(0,1fr) auto;align-items:center;gap:12px;text-align:left;border:1px solid rgba(255,255,255,.08);border-radius:14px;background:#081117;color:#fff;padding:12px;cursor:pointer}.admin-service-row:hover,.admin-service-row.active{border-color:rgba(0,230,118,.55);background:rgba(0,230,118,.07)}.service-row-icon{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:rgba(0,230,118,.1)}.service-row-main{min-width:0}.service-row-main b,.service-row-main small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.service-row-main small{color:#8e9ba3;margin-top:4px}.service-row-end{text-align:right}.service-row-end strong{display:block;margin-top:6px}.service-status{display:inline-flex;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,.08);font-size:.7rem;font-style:normal;color:#dce7eb}.service-detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}.service-detail-head h3{margin:5px 0}.mini-label{font-size:.72rem;color:#00e676}.admin-service-detail details{border-top:1px solid rgba(255,255,255,.08);padding:12px 0}.admin-service-detail summary{cursor:pointer;font-weight:700}.service-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.service-detail-grid p{margin:0;padding:12px;border-radius:12px;background:rgba(255,255,255,.035);color:#eef5f6}.service-detail-grid b,.service-detail-grid small{display:block}.service-detail-grid b{color:#8fa0a7;font-size:.72rem;text-transform:uppercase;margin-bottom:6px}.service-detail-grid small{color:#8fa0a7;margin-top:5px}.service-detail-grid .wide{grid-column:1/-1}@media(max-width:1050px){.services-stats-grid{grid-template-columns:repeat(2,1fr)}.admin-services-workspace{grid-template-columns:1fr}.admin-services-list-panel,.admin-service-detail{max-height:none}}@media(max-width:680px){.section-title-row,.services-toolbar{display:grid;grid-template-columns:1fr}.services-stats-grid,.service-detail-grid{grid-template-columns:1fr}.admin-service-row{grid-template-columns:38px minmax(0,1fr)}.service-row-end{grid-column:2;text-align:left}}
+
+
+/* =====================================================
+   BHUZ ADMIN PREMIUM 2026
+   Tema claro/oscuro + contraste + actualización discreta
+===================================================== */
+:root,
+:root[data-admin-theme="light"] {
+  --admin-bg: #f3f6f5;
+  --admin-surface: #ffffff;
+  --admin-surface-2: #f7faf9;
+  --admin-text: #17201d;
+  --admin-muted: #66736e;
+  --admin-border: rgba(21, 45, 36, .12);
+  --admin-accent: #00a85a;
+  --admin-accent-soft: rgba(0, 168, 90, .10);
+  --admin-shadow: 0 12px 34px rgba(17, 42, 32, .08);
+}
+:root[data-admin-theme="dark"] {
+  --admin-bg: #050b09;
+  --admin-surface: #0a1411;
+  --admin-surface-2: #0e1b17;
+  --admin-text: #eef8f3;
+  --admin-muted: #95aaa1;
+  --admin-border: rgba(172, 255, 215, .12);
+  --admin-accent: #00e676;
+  --admin-accent-soft: rgba(0, 230, 118, .10);
+  --admin-shadow: 0 18px 50px rgba(0, 0, 0, .28);
+}
+html, body { background: var(--admin-bg) !important; color: var(--admin-text) !important; }
+.admin-header, .admin-sidebar, .admin-panel, .stat-card, .admin-modal-content,
+.admin-orders-table-panel, .admin-orders-detail-side { background: var(--admin-surface) !important; color: var(--admin-text) !important; border-color: var(--admin-border) !important; box-shadow: var(--admin-shadow) !important; }
+.section-title p, .admin-brand p, .admin-actions span, .stat-card span, .empty-box { color: var(--admin-muted) !important; }
+.admin-menu-btn { color: var(--admin-text) !important; }
+.admin-menu-btn:hover, .admin-menu-btn.active { background: var(--admin-accent-soft) !important; color: var(--admin-accent) !important; }
+.admin-logo { background: var(--admin-accent) !important; color: #03110a !important; }
+.admin-theme-toggle { background: var(--admin-surface-2) !important; color: var(--admin-text) !important; border: 1px solid var(--admin-border) !important; }
+.admin-refresh-status { padding: 7px 10px; border-radius: 999px; background: var(--admin-accent-soft); color: var(--admin-accent) !important; font-size: 12px !important; font-weight: 700; white-space: nowrap; }
+.admin-refresh-status[data-state="loading"] { opacity: .75; }
+.admin-refresh-status[data-state="error"] { background: rgba(239,68,68,.12); color: #ef4444 !important; }
+
+/* Tarjetas de paquetes con contraste correcto */
+.services-stats-grid article { position: relative; overflow: hidden; color: #fff !important; border: 1px solid rgba(255,255,255,.13) !important; box-shadow: 0 12px 28px rgba(0,0,0,.18); }
+.services-stats-grid article:nth-child(1) { background: linear-gradient(135deg,#202a27,#101714) !important; }
+.services-stats-grid article:nth-child(2) { background: linear-gradient(135deg,#087443,#064728) !important; }
+.services-stats-grid article:nth-child(3) { background: linear-gradient(135deg,#a64f09,#6f3104) !important; }
+.services-stats-grid article:nth-child(4) { background: linear-gradient(135deg,#155aa8,#0d3768) !important; }
+.services-stats-grid article:nth-child(5) { background: linear-gradient(135deg,#5a3aa8,#342064) !important; }
+.services-stats-grid article span { color: rgba(255,255,255,.78) !important; font-weight: 700; }
+.services-stats-grid article strong { color: #fff !important; text-shadow: 0 1px 2px rgba(0,0,0,.25); }
+
+/* Listas y detalles conservan organización en ambos temas */
+.admin-service-row { background: var(--admin-surface-2) !important; color: var(--admin-text) !important; border-color: var(--admin-border) !important; }
+.admin-service-row:hover, .admin-service-row.active { background: var(--admin-accent-soft) !important; border-color: var(--admin-accent) !important; }
+.service-detail-grid p, .admin-service-detail details { background: var(--admin-surface-2) !important; color: var(--admin-text) !important; border-color: var(--admin-border) !important; }
+.services-toolbar input, .services-toolbar select, .drivers-toolbar input, .drivers-toolbar select,
+.admin-orders-pro input, .admin-orders-pro select { background: var(--admin-surface-2) !important; color: var(--admin-text) !important; border-color: var(--admin-border) !important; }
+.admin-table th { background: var(--admin-surface-2) !important; color: var(--admin-muted) !important; }
+.admin-table td { color: var(--admin-text) !important; border-color: var(--admin-border) !important; }
+
+@media (max-width: 760px) {
+  .admin-refresh-status { display: none; }
+  .admin-actions { width: 100%; }
+  .admin-theme-toggle { margin-left: auto; }
+}
