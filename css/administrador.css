@@ -2108,3 +2108,28 @@ html[data-admin-theme="dark"] .services-stats-grid article strong{color:#fff!imp
 html[data-admin-theme="dark"] .services-stats-grid article span{color:#afc2b8!important}
 
 @media(max-width:1200px){.drivers-directory-table{min-width:1000px}}
+
+/* BHUZ - control administrativo visible para repartidores */
+.driver-control-center{margin-bottom:12px;padding:14px;border:1px solid var(--admin-border,#dde5e0);border-radius:15px;background:var(--admin-soft,#f7faf8)}
+.driver-control-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+.driver-control-heading h4{margin:3px 0 0;font-size:17px}
+.driver-control-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.driver-control-card{min-height:82px;padding:12px;text-align:left;border-radius:13px;border:1px solid transparent;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease}
+.driver-control-card:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(15,23,42,.08)}
+.driver-control-card strong,.driver-control-card small{display:block}
+.driver-control-card strong{font-size:13px;margin-bottom:6px}.driver-control-card small{font-size:11px;line-height:1.35;opacity:.78}
+.driver-control-card.approve{background:#e8f8ef;border-color:#aee5c5;color:#08753b}
+.driver-control-card.reject{background:#fff5e8;border-color:#f3cf9e;color:#9b4b00}
+.driver-control-card.block{background:#fff0f0;border-color:#f1b6b6;color:#a51d1d}
+.driver-control-card.danger{background:#f5f6f8;border-color:#d8dde5;color:#273142}
+.driver-commission-card{display:grid;grid-template-columns:minmax(0,1fr) 120px auto;align-items:center;gap:10px;margin-top:10px;padding:11px;border-radius:12px;background:var(--admin-card,#fff);border:1px solid var(--admin-border,#dde5e0)}
+.driver-commission-card span,.driver-commission-card strong,.driver-commission-card small{display:block}.driver-commission-card span{font-size:11px;color:var(--color-muted);font-weight:800}.driver-commission-card strong{font-size:13px;margin:3px 0}.driver-commission-card small{font-size:11px;color:var(--color-muted)}
+.driver-commission-input{display:flex;align-items:center;gap:6px}.driver-commission-input input{width:100%;min-height:40px;border:1px solid var(--admin-border,#dde5e0);border-radius:10px;background:var(--admin-card,#fff);color:inherit;padding:0 10px}
+html[data-admin-theme="dark"] .driver-control-center{background:#10191f;border-color:#26343c}
+html[data-admin-theme="dark"] .driver-control-card.approve{background:#102b1e;border-color:#245f3d;color:#83e5ad}
+html[data-admin-theme="dark"] .driver-control-card.reject{background:#2b2114;border-color:#654822;color:#f2c178}
+html[data-admin-theme="dark"] .driver-control-card.block{background:#301919;border-color:#6c3030;color:#ffaaaa}
+html[data-admin-theme="dark"] .driver-control-card.danger{background:#182127;border-color:#34434d;color:#dce5eb}
+html[data-admin-theme="dark"] .driver-commission-card,html[data-admin-theme="dark"] .driver-commission-input input{background:#0b1216;border-color:#31424c;color:#fff}
+@media(max-width:1100px){.driver-control-actions{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.driver-control-actions{grid-template-columns:1fr}.driver-commission-card{grid-template-columns:1fr}.driver-control-heading{align-items:flex-start;flex-direction:column}}
