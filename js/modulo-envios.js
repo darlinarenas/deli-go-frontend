@@ -1381,11 +1381,18 @@ function configurarLineaReceptor(elemento, numero, texto) {
 ========================================================== */
 
 async function crearServicioEnvioBackend({ datos, distanciaKm, totalEnvio }) {
+  const customerEmail = obtenerEmailClienteActual();
+  const customerName = obtenerNombreClienteActual();
+
+  if (!customerEmail) {
+    throw new Error("Tu sesión no está lista. Vuelve a iniciar sesión antes de crear el envío.");
+  }
+
   const payload = {
     serviceType: "PACKAGE",
 
-    customerEmail: obtenerEmailClienteActual(),
-    customerName: obtenerNombreClienteActual(),
+    customerEmail,
+    customerName,
     customerPhone: "",
 
     receiverName: datos.contacto,
@@ -1622,22 +1629,34 @@ function restaurarEnvioTemporalDesdeStorage() {
   */
 }
 
-function obtenerEmailClienteActual() {
+function obtenerUsuarioClienteActual() {
+  // La autenticación real de BHUZ guarda la sesión en memoria/sessionStorage.
+  // Antes se buscaba en localStorage, por eso los paquetes se creaban sin correo
+  // y luego "Mis envíos" no podía encontrarlos.
   try {
-    const user = JSON.parse(localStorage.getItem("bhuz_user") || localStorage.getItem("deli_user") || "{}");
-    return limpiarTexto(user.email || "");
-  } catch {
-    return "";
+    if (typeof getCurrentUser === "function") {
+      const current = getCurrentUser();
+      if (current) return current;
+    }
+
+    if (window.DELI_CURRENT_USER) return window.DELI_CURRENT_USER;
+
+    const saved = sessionStorage.getItem("deliCurrentUserSession");
+    return saved ? JSON.parse(saved) : null;
+  } catch (error) {
+    console.warn("No se pudo obtener el usuario actual para el envío:", error);
+    return null;
   }
 }
 
+function obtenerEmailClienteActual() {
+  const user = obtenerUsuarioClienteActual();
+  return limpiarTexto(user?.email || "").toLowerCase();
+}
+
 function obtenerNombreClienteActual() {
-  try {
-    const user = JSON.parse(localStorage.getItem("bhuz_user") || localStorage.getItem("deli_user") || "{}");
-    return limpiarTexto(user.fullName || user.name || "");
-  } catch {
-    return "";
-  }
+  const user = obtenerUsuarioClienteActual();
+  return limpiarTexto(user?.fullName || user?.name || "");
 }
 
 /* ==========================================================

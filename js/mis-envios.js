@@ -7,7 +7,27 @@ document.addEventListener('DOMContentLoaded', async () => {
   const greeting=document.getElementById('shipmentsUserText');
   let filter='all',shipments=[];
   const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const currentUser=()=>typeof getCurrentUser==='function'?getCurrentUser():window.DELI_CURRENT_USER;
+  const currentUser=()=>{
+    if(typeof getCurrentUser==='function'){
+      const user=getCurrentUser();
+      if(user)return user;
+    }
+    if(window.DELI_CURRENT_USER)return window.DELI_CURRENT_USER;
+    try{
+      const saved=sessionStorage.getItem('deliCurrentUserSession');
+      return saved?JSON.parse(saved):null;
+    }catch{return null;}
+  };
+
+  async function waitForSession(){
+    if(window.DELI_SESSION_READY)return currentUser();
+    return new Promise(resolve=>{
+      let finished=false;
+      const done=()=>{if(finished)return;finished=true;resolve(currentUser());};
+      window.addEventListener('deli:session-ready',done,{once:true});
+      setTimeout(done,1800);
+    });
+  }
   const statusLabel=s=>({PENDING_PAYMENT:'Pendiente de pago',PAID:'Pagado',WAITING_RECEIVER_LOCATION:'Esperando ubicación',SEARCHING_DRIVER:'Buscando repartidor',DRIVER_ASSIGNED:'Repartidor asignado',ASSIGNED:'Repartidor asignado',GOING_TO_PICKUP:'En camino al retiro',PACKAGE_PICKED:'Paquete retirado',PICKED_UP:'Paquete retirado',GOING_TO_DELIVERY:'En camino a la entrega',ARRIVED_AT_DELIVERY:'Llegó al destino',DELIVERED:'Entregado',CANCELLED:'Cancelado'})[String(s||'').toUpperCase()]||String(s||'Pendiente').replaceAll('_',' ');
   const fmtDate=v=>{if(!v)return '—';const d=new Date(v);return Number.isNaN(d.getTime())?'—':d.toLocaleString('es-VE',{dateStyle:'medium',timeStyle:'short'})};
   const isActive=s=>!['DELIVERED','CANCELLED'].includes(String(s||'').toUpperCase());
@@ -28,10 +48,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   async function load(silent=false){
-    const user=currentUser();
-    if(!user?.email){list.innerHTML='<article class="order-card shipment-empty">Debes iniciar sesión para ver tus envíos.</article>';return;}
+    let user=currentUser();
+    if(!user?.email)user=await waitForSession();
+    if(!user?.email){
+      total.textContent='0';active.textContent='0';last.textContent='-';
+      list.innerHTML='<article class="order-card shipment-empty">No se encontró una sesión de cliente. Inicia sesión nuevamente para consultar tus envíos.</article>';
+      return;
+    }
     if(!silent) greeting.textContent=`${user.fullName||user.name||'Usuario'}, aquí podrás recuperar y seguir todos tus paquetes.`;
-    try{const r=await fetch(`${API}/api/services/customer/history?email=${encodeURIComponent(user.email)}`,{credentials:'include'});const d=await r.json().catch(()=>({}));if(!r.ok||d.ok===false)throw Error(d.message||'No se pudieron cargar tus envíos.');shipments=Array.isArray(d.services)?d.services:[];shipments.sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));render()}catch(e){if(!silent)list.innerHTML=`<article class="order-card shipment-empty">${esc(e.message)}</article>`}
+    try{const r=await fetch(`${API}/api/services/customer/history?email=${encodeURIComponent(String(user.email).trim().toLowerCase())}&_=${Date.now()}`,{credentials:'include',cache:'no-store'});const d=await r.json().catch(()=>({}));if(!r.ok||d.ok===false)throw Error(d.message||'No se pudieron cargar tus envíos.');shipments=Array.isArray(d.services)?d.services:[];shipments.sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));render()}catch(e){if(!silent)list.innerHTML=`<article class="order-card shipment-empty">${esc(e.message)}</article>`}
   }
 
   document.querySelectorAll('[data-filter]').forEach(btn=>btn.addEventListener('click',()=>{document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('active',x===btn));filter=btn.dataset.filter;render()}));
@@ -40,5 +65,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const track=e.target.closest('[data-track]');if(track){if(window.BHUZ_TRACKING)window.BHUZ_TRACKING.open('PACKAGE',track.dataset.track,{title:'Seguimiento de tu paquete'});else alert('El seguimiento todavía no está disponible.');return;}
     const cancel=e.target.closest('[data-cancel]');if(cancel){if(!confirm('¿Seguro que deseas cancelar este envío?'))return;cancel.disabled=true;try{const r=await fetch(`${API}/api/services/${encodeURIComponent(cancel.dataset.cancel)}/status`,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({status:'CANCELLED',changedBy:`customer:${currentUser()?.email||''}`,notes:'Cliente canceló el envío desde Mis envíos.'})});const d=await r.json().catch(()=>({}));if(!r.ok||d.ok===false)throw Error(d.message||'No se pudo cancelar el envío.');await load(true)}catch(err){alert(err.message)}finally{cancel.disabled=false}}
   });
-  await load();setInterval(()=>{if(document.visibilityState==='visible')load(true)},12000);
+  await waitForSession();
+  await load();
+  window.addEventListener('focus',()=>load(true));
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')load(true)});
+  setInterval(()=>{if(document.visibilityState==='visible')load(true)},20000);
 });
