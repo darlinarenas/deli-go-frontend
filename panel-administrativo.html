@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DELI - Panel Administrativo</title>
+  <title>BHUZ - Panel Administrativo</title>
 
   <!-- Estilos del panel administrativo -->
   <link rel="stylesheet" href="css/administrador.css">
@@ -102,7 +102,7 @@
     <div class="admin-brand">
       <div class="admin-logo">D</div>
       <div>
-        <h1>DELI GO.</h1>
+        <h1>BHUZ.</h1>
         <p>Panel Administrativo</p>
       </div>
     </div>
@@ -165,7 +165,7 @@
           </article>
 
           <article class="stat-card">
-            <span>Comisión estimada DELI</span>
+            <span>Comisión estimada BHUZ</span>
             <strong id="comisionDeli">$0</strong>
           </article>
 
@@ -178,16 +178,6 @@
             <span>Repartidores pendientes</span>
             <strong id="repartidoresPendientes">0</strong>
           </article>
-
-          <article class="stat-card">
-            <span>Paquetes registrados</span>
-            <strong id="totalEnvios">0</strong>
-          </article>
-
-          <article class="stat-card">
-            <span>Paquetes activos</span>
-            <strong id="enviosActivos">0</strong>
-          </article>
         </div>
       </section>
 
@@ -197,7 +187,7 @@
       <section id="usuariosSection" class="admin-section">
         <div class="section-title">
           <h2>Usuarios</h2>
-          <p>Clientes registrados en DELI.</p>
+          <p>Clientes registrados en BHUZ.</p>
         </div>
 
         <div class="admin-panel">
@@ -277,18 +267,22 @@
         </div>
       </section>
 
-
       <!-- =====================================================
-           PAQUETES / ENVÍOS
+           PAQUETES
       ====================================================== -->
       <section id="enviosSection" class="admin-section">
         <div class="section-title section-title-row">
-          <div><h2>Control de paquetes</h2><p>Historial completo, responsables, estados y operación de cada envío.</p></div>
+          <div>
+            <h2>Paquetes</h2>
+            <p>Control de envíos, responsables, repartidores y estados.</p>
+          </div>
           <button type="button" id="refreshAdminServicesBtn" class="admin-primary-btn">Actualizar</button>
         </div>
+
         <div id="adminServicesStats" class="services-stats-grid"></div>
+
         <div class="admin-panel services-toolbar">
-          <input id="adminServicesSearch" type="search" placeholder="Buscar por ID, cliente, receptor, dirección o repartidor">
+          <input id="adminServicesSearch" type="search" placeholder="Buscar por código, emisor, receptor, dirección o repartidor">
           <select id="adminServicesStatus">
             <option value="ALL">Todos los estados</option>
             <option value="ACTIVE">Activos</option>
@@ -301,9 +295,16 @@
             <option value="CANCELLED">Cancelados</option>
           </select>
         </div>
+
         <div class="admin-services-workspace">
-          <div class="admin-panel"><div id="adminServicesList" class="admin-services-list"></div></div>
-          <aside id="adminServiceDetail" class="admin-panel admin-service-detail"><div class="empty-box">Selecciona un envío para ver todos sus datos.</div></aside>
+          <div class="admin-panel admin-services-list-panel">
+            <div id="adminServicesList" class="admin-services-list">
+              <div class="empty-box">Cargando paquetes...</div>
+            </div>
+          </div>
+          <aside id="adminServiceDetail" class="admin-panel admin-service-detail">
+            <div class="empty-box">Selecciona un paquete para ver sus detalles.</div>
+          </aside>
         </div>
       </section>
 
@@ -339,6 +340,8 @@
 
   <!-- Gestión administrativa de repartidores -->
   <script src="js/admin/admin-drivers.js"></script>
+
+  <!-- Control administrativo de paquetes: carga independiente para no afectar los módulos existentes -->
   <script src="js/admin/admin-services.js"></script>
 
 <!-- =====================================================
