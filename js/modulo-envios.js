@@ -1805,6 +1805,7 @@ function mostrarComprobanteEnvioPublicado({ service, distanciaKm, totalEnvio }) 
       <div class="bhuz-envio-publicado-item id-envio">
         <span>ID envío</span>
         <strong>${escapeHtmlCorto(serviceId)}</strong>
+        <button type="button" class="bhuz-track-btn" data-bhuz-track-service="${escapeHtmlCorto(serviceId)}">📍 Ver paquete en tiempo real</button>
       </div>
       <div class="bhuz-envio-publicado-item">
         <span>Total</span>
@@ -2027,3 +2028,11 @@ window.addEventListener("beforeunload", () => {
 
 
 
+
+
+/* BHUZ seguimiento + push para envíos */
+document.addEventListener('click',function(event){
+  const btn=event.target.closest('[data-bhuz-track-service]');
+  if(btn&&window.BHUZ_TRACKING)window.BHUZ_TRACKING.open('PACKAGE',btn.dataset.bhuzTrackService,{title:'Seguimiento de tu paquete'});
+});
+window.BHUZ_ABRIR_SEGUIMIENTO_ENVIO=function(serviceId){if(window.BHUZ_TRACKING&&serviceId)window.BHUZ_TRACKING.open('PACKAGE',serviceId,{title:'Seguimiento de tu paquete'});};

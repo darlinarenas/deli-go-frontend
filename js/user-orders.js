@@ -105,6 +105,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             ${itemsHtml}
           </div>
 
+          ${!["entregado","cancelado"].includes(order.status)?`<button class="bhuz-track-btn" data-track-order="${order.id||''}">📍 Ver repartidor en tiempo real</button>`:''}
+
           <div class="order-footer">
             <div class="order-total">
               ${formatPriceSafe(order.total || 0)}
@@ -150,6 +152,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       renderOrders();
     });
   });
+
+  document.addEventListener("click",event=>{const btn=event.target.closest("[data-track-order]");if(btn&&window.BHUZ_TRACKING)window.BHUZ_TRACKING.open("FOOD_ORDER",btn.dataset.trackOrder,{title:"Seguimiento de tu pedido"});});
 
   await loadOrders();
 
