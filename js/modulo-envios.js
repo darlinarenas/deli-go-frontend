@@ -1009,7 +1009,7 @@ function manejarEncuestaReceptor(valor) {
   }
 }
 
-function enviarEncuestaReceptor() {
+async function enviarEncuestaReceptor() {
   const rating = Number(BHUZ_SERVICES_STATE.receptorRating || 0);
   const botones = document.querySelectorAll("[data-bhuz-star]");
   const mensaje = document.getElementById("bhuz-receptor-rating-msg");
@@ -1036,11 +1036,20 @@ function enviarEncuestaReceptor() {
       : "Gracias. Tomaremos en cuenta tu experiencia.";
   }
 
-  /*
-    Preparado para siguiente fase:
-    aquí podremos enviar la calificación al backend/PostgreSQL
-    sin cambiar la experiencia visual del receptor.
-  */
+  try {
+    const service = BHUZ_SERVICES_STATE.ultimoServicio || {};
+    const userEmail = limpiarTexto(service.customerEmail || service.customer_email || service.receiverEmail || service.receiver_email || `receptor-${BHUZ_SERVICES_STATE.serviceId}@bhuz.local`);
+    const respuesta = await fetchConTimeout(construirUrlApi('/api/ratings'), {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({sourceType:'PACKAGE',sourceId:BHUZ_SERVICES_STATE.serviceId,userEmail,driverRating:rating,comment:'Evaluación del receptor del paquete'})
+    });
+    const data = await respuesta.json().catch(()=>({}));
+    if (!respuesta.ok || data.ok === false) throw new Error(data.message || 'No se pudo guardar la opinión.');
+  } catch (error) {
+    console.error('BHUZ calificación receptor:', error);
+    if (mensaje) mensaje.textContent = 'La opinión quedó en pantalla, pero no se pudo guardar. Intenta nuevamente.';
+    if (botonEnviar) { botonEnviar.disabled = false; botonEnviar.textContent = 'Reintentar opinión'; }
+  }
 }
 
 function obtenerSrcSonidoReceptor(estado) {

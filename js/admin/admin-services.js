@@ -95,7 +95,7 @@
       <details open><summary>Ruta y entrega</summary><div class="service-detail-grid">
         <p><b>Retiro</b>${esc(service.pickupAddress || "—")}<small>${esc(service.pickupReference || "Sin referencia")}</small></p>
         <p><b>Entrega</b>${esc(service.deliveryAddress || "—")}<small>${esc(service.deliveryReference || "Sin referencia")}</small></p>
-        <p><b>Distancia</b>${Number(service.distanceKm || 0).toFixed(2)} km</p><p><b>Total</b>${money(service.totalAmount)}</p>
+        <p><b>Retiro → entrega</b>${Number(service.routeDistanceKm ?? service.distanceKm ?? 0).toFixed(2)} km</p><p><b>Distancia recorrida</b>${Number(service.actualDistanceKm || 0).toFixed(2)} km</p><p><b>Total</b>${money(service.totalAmount)}</p>
       </div></details>
       <details><summary>Personas responsables</summary><div class="service-detail-grid">
         <p><b>Quién envía</b>${esc(service.customerName || "—")}<small>${esc(service.customerEmail || "—")} · ${esc(service.customerPhone || "—")}</small></p>

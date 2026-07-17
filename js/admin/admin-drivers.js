@@ -1,117 +1,33 @@
 (() => {
-  const API = window.DELI_API_URL || "https://deligo-backend-i554.onrender.com";
-  let drivers = [];
-  let initialized = false;
-
-  const esc = (v) => String(v ?? "").replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
-  const fmtDate = (v) => v ? new Intl.DateTimeFormat('es-VE',{dateStyle:'medium',timeStyle:'short'}).format(new Date(v)) : '—';
-  const authHeaders = () => {
-    const token = sessionStorage.getItem('deliAdminSessionToken') || '';
-    return {'Content-Type':'application/json', ...(token ? {'Authorization':`Bearer ${token}`} : {})};
-  };
-
-  const statusText = {PENDING:'Pendiente',APPROVED:'Aprobado',SUSPENDED:'Suspendido',BLOCKED:'Bloqueado',REJECTED:'Rechazado'};
-  const opText = {OFFLINE:'Desconectado',AVAILABLE:'Disponible',ASSIGNED:'Asignado',ON_DELIVERY:'En entrega',BREAK:'En pausa'};
-
-  async function request(path, options={}) {
-    const response = await fetch(`${API}${path}`, {credentials:'include', ...options, headers:{...authHeaders(), ...(options.headers||{})}});
-    let data={}; try { data=await response.json(); } catch {}
-    if (!response.ok || data.ok===false) throw new Error(data.message || 'No se pudo completar la operación.');
-    return data;
-  }
-
-  async function loadDrivers(showError=true) {
-    const box=document.getElementById('driversList');
-    if(box) box.innerHTML='<div class="empty-box">Cargando repartidores…</div>';
-    try {
-      const data=await request('/admin/drivers');
-      drivers=Array.isArray(data.drivers)?data.drivers:[];
-      renderStats(); renderList();
-    } catch(err) {
-      if(box) box.innerHTML=`<div class="empty-box error">${esc(err.message)}</div>`;
-      if(showError) alert(err.message);
-    }
-  }
-
-  function renderStats() {
-    const counts={ALL:drivers.length,PENDING:0,APPROVED:0,SUSPENDED:0,BLOCKED:0,REJECTED:0,AVAILABLE:0,ON_DELIVERY:0};
-    drivers.forEach(d=>{ counts[d.administrativeStatus]=(counts[d.administrativeStatus]||0)+1; if(d.isAvailable) counts.AVAILABLE++; if(d.operationalStatus==='ON_DELIVERY') counts.ON_DELIVERY++; });
-    const stats=document.getElementById('driversStats');
-    if(stats) stats.innerHTML=`
-      <article><span>Total</span><strong>${counts.ALL}</strong></article>
-      <article><span>Pendientes</span><strong>${counts.PENDING}</strong></article>
-      <article><span>Aprobados</span><strong>${counts.APPROVED}</strong></article>
-      <article><span>Disponibles</span><strong>${counts.AVAILABLE}</strong></article>
-      <article><span>En entrega</span><strong>${counts.ON_DELIVERY}</strong></article>
-      <article><span>Bloqueados</span><strong>${counts.BLOCKED}</strong></article>`;
-    const pending=document.getElementById('repartidoresPendientes'); if(pending) pending.textContent=counts.PENDING;
-    const badge=document.getElementById('repartidoresPendientesBadge'); if(badge){badge.textContent=counts.PENDING; badge.classList.toggle('hidden',counts.PENDING===0);}
-  }
-
-  function filtered() {
-    const q=(document.getElementById('driversSearch')?.value||'').trim().toLowerCase();
-    const st=document.getElementById('driversStatusFilter')?.value||'ALL';
-    return drivers.filter(d => (st==='ALL'||d.administrativeStatus===st) && (!q || [d.fullName,d.email,d.phone,d.identityDocument,d.vehiclePlate,d.city,d.zone].some(v=>String(v||'').toLowerCase().includes(q))));
-  }
-
-  function actions(d) {
-    if(d.administrativeStatus==='PENDING') return `<button class="driver-action approve" data-action="APPROVED" data-id="${esc(d.id)}">Aprobar</button><button class="driver-action reject" data-action="REJECTED" data-id="${esc(d.id)}">Rechazar</button>`;
-    if(d.administrativeStatus==='APPROVED') return `<button class="driver-action warn" data-action="SUSPENDED" data-id="${esc(d.id)}">Suspender</button><button class="driver-action danger" data-action="BLOCKED" data-id="${esc(d.id)}">Bloquear</button>`;
-    return `<button class="driver-action approve" data-action="APPROVED" data-id="${esc(d.id)}">Reactivar</button>`;
-  }
-
-  function renderList() {
-    const box=document.getElementById('driversList'); if(!box)return;
-    const list=filtered();
-    if(!list.length){box.innerHTML='<div class="empty-box">No hay repartidores con esos filtros.</div>';return;}
-    box.innerHTML=`<table class="admin-table drivers-table"><thead><tr><th>Repartidor</th><th>Contacto</th><th>Vehículo</th><th>Zona</th><th>Estado</th><th>Operación</th><th>Registro</th><th>Acciones</th></tr></thead><tbody>${list.map(d=>`<tr>
-      <td><strong>${esc(d.fullName)}</strong><small>${esc(d.identityDocument||'Sin cédula')}</small></td>
-      <td>${esc(d.phone||'—')}<small>${esc(d.email)}</small></td>
-      <td>${esc(d.vehicleType||'—')}<small>${esc(d.vehiclePlate||'Sin placa')}</small></td>
-      <td>${esc(d.city||'—')}<small>${esc(d.zone||'Sin zona')}</small></td>
-      <td><span class="status-pill status-${esc(d.administrativeStatus.toLowerCase())}">${esc(statusText[d.administrativeStatus]||d.administrativeStatus)}</span></td>
-      <td><span class="operation-dot ${d.isAvailable?'online':'offline'}"></span>${esc(opText[d.operationalStatus]||d.operationalStatus||'—')}</td>
-      <td>${esc(fmtDate(d.createdAt))}</td>
-      <td><div class="driver-actions"><button class="driver-action view" data-view="${esc(d.id)}">Ver</button>${actions(d)}</div></td>
-    </tr>`).join('')}</tbody></table>`;
-    bindRows();
-  }
-
-  function bindRows() {
-    document.querySelectorAll('[data-action][data-id]').forEach(btn=>btn.addEventListener('click',()=>changeStatus(btn.dataset.id,btn.dataset.action)));
-    document.querySelectorAll('[data-view]').forEach(btn=>btn.addEventListener('click',()=>showDetail(btn.dataset.view)));
-  }
-
-  async function changeStatus(id,status) {
-    const d=drivers.find(x=>x.id===id); if(!d)return;
-    const labels={APPROVED:'aprobar/reactivar',REJECTED:'rechazar',SUSPENDED:'suspender',BLOCKED:'bloquear'};
-    if(!confirm(`¿Confirmas ${labels[status]||'cambiar el estado de'} a ${d.fullName}?`))return;
-    try { await request(`/admin/drivers/${encodeURIComponent(id)}/status`,{method:'PATCH',body:JSON.stringify({status})}); await loadDrivers(false); alert('Estado del repartidor actualizado.'); }
-    catch(err){alert(err.message);}
-  }
-
-  async function showDetail(id) {
-    const panel=document.getElementById('driverDetailPanel'); if(!panel)return;
-    panel.classList.remove('hidden'); panel.innerHTML='<div class="admin-panel">Cargando ficha…</div>';
-    try {
-      const {driver,summary}=await request(`/admin/drivers/${encodeURIComponent(id)}`);
-      panel.innerHTML=`<div class="admin-panel driver-profile-card"><div class="driver-profile-head"><div><span class="eyebrow">Ficha del repartidor</span><h3>${esc(driver.fullName)}</h3><p>${esc(driver.email)}</p></div><button id="closeDriverDetail" class="driver-action view">Cerrar</button></div>
-      <div class="driver-detail-grid">
-       <div><span>Teléfono</span><strong>${esc(driver.phone||'—')}</strong></div><div><span>Cédula</span><strong>${esc(driver.identityDocument||'—')}</strong></div><div><span>País / ciudad</span><strong>${esc(driver.countryCode||'—')} · ${esc(driver.city||'—')}</strong></div><div><span>Zona</span><strong>${esc(driver.zone||'—')}</strong></div><div><span>Vehículo</span><strong>${esc([driver.vehicleType,driver.vehicleBrand,driver.vehicleModel].filter(Boolean).join(' · ')||'—')}</strong></div><div><span>Placa</span><strong>${esc(driver.vehiclePlate||'—')}</strong></div><div><span>Estado</span><strong>${esc(statusText[driver.administrativeStatus]||driver.administrativeStatus)}</strong></div><div><span>Última conexión</span><strong>${esc(fmtDate(driver.lastSeenAt))}</strong></div>
-      </div><div class="driver-summary-grid"><article><span>Entregas completadas</span><strong>${Number(summary?.completedJobs||0)}</strong></article><article><span>Ganancia acumulada</span><strong>${Number(summary?.totalEarnings||0).toFixed(2)} ${esc(driver.baseCurrency||'USD')}</strong></article><article><span>Incidencias abiertas</span><strong>${Number(summary?.openIncidents||0)}</strong></article><article><span>Liquidaciones pendientes</span><strong>${Number(summary?.pendingSettlements||0)}</strong></article></div></div>`;
-      document.getElementById('closeDriverDetail')?.addEventListener('click',()=>panel.classList.add('hidden'));
-      panel.scrollIntoView({behavior:'smooth',block:'start'});
-    } catch(err){panel.innerHTML=`<div class="empty-box error">${esc(err.message)}</div>`;}
-  }
-
-  function init() {
-    if(initialized)return; initialized=true;
-    document.getElementById('driversSearch')?.addEventListener('input',renderList);
-    document.getElementById('driversStatusFilter')?.addEventListener('change',renderList);
-    document.getElementById('refreshDriversBtn')?.addEventListener('click',()=>loadDrivers());
-    document.querySelector('[data-section="repartidoresSection"]')?.addEventListener('click',()=>loadDrivers(false));
-    loadDrivers(false);
-  }
-
-  window.initAdminDrivers=init;
+  const API=window.DELI_API_URL||"https://deligo-backend-i554.onrender.com";let drivers=[],initialized=false,selectedId='';
+  const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  const date=v=>{if(!v)return'—';const d=new Date(v);return isNaN(d)?'—':new Intl.DateTimeFormat('es-VE',{dateStyle:'medium',timeStyle:'short'}).format(d)};
+  const money=(v,c='USD')=>`${Number(v||0).toFixed(2)} ${c}`;
+  const auth=()=>{const t=sessionStorage.getItem('deliAdminSessionToken')||'';return{'Content-Type':'application/json',...(t?{'Authorization':`Bearer ${t}`}:{})}};
+  async function req(path,opt={}){const r=await fetch(`${API}${path}`,{credentials:'include',...opt,headers:{...auth(),...(opt.headers||{})}});let d={};try{d=await r.json()}catch{}if(!r.ok||d.ok===false)throw new Error(d.message||'No se pudo completar la operación.');return d}
+  const st={PENDING:'Pendiente',APPROVED:'Aprobado',SUSPENDED:'Suspendido',BLOCKED:'Bloqueado',REJECTED:'Rechazado'};
+  async function load(silent=false){const box=document.getElementById('driversList');if(box&&!silent)box.innerHTML='<div class="empty-box">Cargando repartidores…</div>';try{const d=await req('/admin/drivers');drivers=d.drivers||[];stats();list();if(selectedId&&document.getElementById('driverDetailPanel')&&!document.getElementById('driverDetailPanel').classList.contains('hidden'))show(selectedId,true)}catch(e){if(box&&!silent)box.innerHTML=`<div class="empty-box error">${esc(e.message)}</div>`}}
+  function stats(){const c={ALL:drivers.length,PENDING:0,APPROVED:0,AVAILABLE:0,ON_DELIVERY:0,BLOCKED:0};drivers.forEach(d=>{c[d.administrativeStatus]=(c[d.administrativeStatus]||0)+1;if(d.isAvailable)c.AVAILABLE++;if(d.operationalStatus==='ON_DELIVERY')c.ON_DELIVERY++});const b=document.getElementById('driversStats');if(b)b.innerHTML=`<article><span>Total</span><strong>${c.ALL}</strong></article><article><span>Pendientes</span><strong>${c.PENDING}</strong></article><article><span>Aprobados</span><strong>${c.APPROVED}</strong></article><article><span>Disponibles</span><strong>${c.AVAILABLE}</strong></article><article><span>En entrega</span><strong>${c.ON_DELIVERY}</strong></article><article><span>Bloqueados</span><strong>${c.BLOCKED}</strong></article>`;document.getElementById('repartidoresPendientes')&&(document.getElementById('repartidoresPendientes').textContent=c.PENDING)}
+  function filtered(){const q=(document.getElementById('driversSearch')?.value||'').toLowerCase(),f=document.getElementById('driversStatusFilter')?.value||'ALL';return drivers.filter(d=>(f==='ALL'||d.administrativeStatus===f)&&(!q||[d.fullName,d.email,d.phone,d.identityDocument,d.vehiclePlate].some(v=>String(v||'').toLowerCase().includes(q))))}
+  function list(){const b=document.getElementById('driversList');if(!b)return;const x=filtered();if(!x.length){b.innerHTML='<div class="empty-box">No hay repartidores.</div>';return}b.innerHTML=`<table class="admin-table"><thead><tr><th>Repartidor</th><th>Contacto</th><th>Vehículo</th><th>Estado</th><th>Calificación</th><th>Acciones</th></tr></thead><tbody>${x.map(d=>`<tr><td><strong>${esc(d.fullName)}</strong><small>${esc(d.identityDocument||'Sin cédula')}</small></td><td>${esc(d.phone||'—')}<small>${esc(d.email)}</small></td><td>${esc(d.vehicleType||'—')}<small>${esc(d.vehiclePlate||'Sin placa')}</small></td><td><span class="status-pill status-${String(d.administrativeStatus).toLowerCase()}">${esc(st[d.administrativeStatus]||d.administrativeStatus)}</span></td><td>⭐ ${Number(d.rating||0).toFixed(2)}</td><td><button class="driver-action view" data-view="${esc(d.id)}">Ver datos</button></td></tr>`).join('')}</tbody></table>`;b.querySelectorAll('[data-view]').forEach(e=>e.onclick=()=>show(e.dataset.view))}
+  const section=(title,body,open=false)=>`<details class="driver-section" ${open?'open':''}><summary>${title}</summary><div class="driver-section-body">${body}</div></details>`;
+  async function show(id,silent=false){selectedId=id;const p=document.getElementById('driverDetailPanel');if(!p)return;p.classList.remove('hidden');if(!silent)p.innerHTML='<div class="admin-panel">Cargando ficha completa…</div>';try{const d=await req(`/admin/drivers/${encodeURIComponent(id)}`),x=d.driver,s=d.summary||{},jobs=d.jobs||[],ratings=d.ratings||[],sett=d.settlements||[],requests=d.settlementRequests||[];
+    const fields=['fullName','phone','identityDocument','birthDate','address','countryCode','city','zone','vehicleType','vehicleBrand','vehicleModel','vehiclePlate','vehicleColor','emergencyContact'];
+    const form=fields.map(k=>`<label><span>${({fullName:'Nombre completo',phone:'Teléfono',identityDocument:'Cédula',birthDate:'Nacimiento',address:'Dirección',countryCode:'País',city:'Ciudad',zone:'Zona',vehicleType:'Tipo de vehículo',vehicleBrand:'Marca',vehicleModel:'Modelo',vehiclePlate:'Placa',vehicleColor:'Color',emergencyContact:'Contacto de emergencia'})[k]}</span><input data-driver-field="${k}" value="${esc(x[k]||'')}" disabled></label>`).join('');
+    const jobRows=jobs.length?`<div class="driver-history-list">${jobs.map(j=>`<article><div><b>${j.source_type==='PACKAGE'?'📦 Paquete':'🍽️ Pedido'} ${esc(j.source_id)}</b><small>${esc(j.restaurant_name||j.customer_name||j.receiver_name||'Servicio')}</small></div><div><span>${esc(j.status)}</span><small>${Number(j.distance_km||0).toFixed(2)} km plan · ${Number(j.actual_distance_km||0).toFixed(2)} km real</small><small>${date(j.delivered_at||j.created_at)}</small></div></article>`).join('')}</div>`:'<div class="empty-box">Sin servicios registrados.</div>';
+    const ratingRows=ratings.length?ratings.map(r=>`<article class="rating-row"><b>${'★'.repeat(Number(r.driver_rating||0))}${'☆'.repeat(5-Number(r.driver_rating||0))}</b><span>${esc(r.driver_comment||r.general_comment||'Sin comentario')}</span><small>${esc(r.source_type)} ${esc(r.source_id)} · ${date(r.created_at)}</small></article>`).join(''):'<div class="empty-box">Todavía no tiene evaluaciones.</div>';
+    p.innerHTML=`<div class="admin-panel driver-profile-card"><div class="driver-profile-head"><div><span class="eyebrow">Ficha administrativa completa</span><h3>${esc(x.fullName)}</h3><p>${esc(x.email)}</p></div><div class="driver-head-actions"><button id="editDriver" class="driver-action view">Editar datos</button><button id="pdfDriver" class="driver-action approve">Descargar PDF</button><button id="closeDriverDetail" class="driver-action view">Cerrar</button></div></div>
+    <div class="driver-summary-grid"><article><span>Servicios</span><strong>${s.totalJobs||0}</strong></article><article><span>Entregados</span><strong>${s.completedJobs||0}</strong></article><article><span>Activos</span><strong>${s.activeJobs||0}</strong></article><article><span>Ganancias</span><strong>${money(s.totalEarnings,x.baseCurrency)}</strong></article><article><span>Distancia planificada</span><strong>${Number(s.plannedDistanceKm||0).toFixed(2)} km</strong></article><article><span>Distancia recorrida</span><strong>${Number(s.actualDistanceKm||0).toFixed(2)} km</strong></article><article><span>Calificación</span><strong>⭐ ${Number(s.ratingAverage||0).toFixed(2)}</strong><small>${s.ratingCount||0} evaluaciones</small></article></div>
+    ${section('Datos personales y de contacto',`<form id="driverEditForm" class="driver-edit-grid">${form}<div class="driver-edit-actions hidden" id="driverEditActions"><button type="submit" class="admin-primary-btn">Guardar cambios</button><button type="button" id="cancelDriverEdit" class="driver-action view">Cancelar</button></div></form>`,true)}
+    ${section('Estado, conexión y ubicación',`<div class="driver-detail-grid"><div><span>Estado administrativo</span><strong>${esc(st[x.administrativeStatus]||x.administrativeStatus)}</strong></div><div><span>Disponibilidad</span><strong>${x.isAvailable?'Disponible':'No disponible'}</strong></div><div><span>Estado operativo</span><strong>${esc(x.operationalStatus||'—')}</strong></div><div><span>Última conexión</span><strong>${date(x.lastSeenAt)}</strong></div><div><span>Última posición</span><strong>${x.lastLatitude&&x.lastLongitude?`${x.lastLatitude}, ${x.lastLongitude}`:'—'}</strong></div><div><span>Fecha de posición</span><strong>${date(x.lastLocationAt)}</strong></div></div>`)}
+    ${section('Pedidos, paquetes y actividad',jobRows)}
+    ${section('Ganancias y cierres',`<div class="driver-summary-grid"><article><span>Cierres</span><strong>${sett.length}</strong></article><article><span>Solicitudes</span><strong>${requests.length}</strong></article><article><span>Pendientes</span><strong>${requests.filter(r=>r.status==='PENDING').length}</strong></article><article><span>Pagados</span><strong>${sett.filter(r=>['PAID','CLOSED'].includes(r.status)).length}</strong></article></div>`)}
+    ${section('Calificaciones y comentarios',ratingRows)}</div>`;
+    document.getElementById('closeDriverDetail').onclick=()=>p.classList.add('hidden');document.getElementById('editDriver').onclick=()=>toggleEdit(true);document.getElementById('cancelDriverEdit').onclick=()=>show(id,true);document.getElementById('driverEditForm').onsubmit=e=>save(e,id);document.getElementById('pdfDriver').onclick=()=>pdf(x,s,jobs,ratings);if(!silent)p.scrollIntoView({behavior:'smooth',block:'start'});
+    }catch(e){p.innerHTML=`<div class="empty-box error">${esc(e.message)}</div>`}}
+  function toggleEdit(on){document.querySelectorAll('[data-driver-field]').forEach(i=>i.disabled=!on);document.getElementById('driverEditActions')?.classList.toggle('hidden',!on);document.getElementById('editDriver')&&(document.getElementById('editDriver').disabled=on)}
+  async function save(e,id){e.preventDefault();if(!confirm('¿Seguro que deseas actualizar los datos del repartidor?'))return;const b={};document.querySelectorAll('[data-driver-field]').forEach(i=>b[i.dataset.driverField]=i.value.trim());try{await req(`/admin/drivers/${encodeURIComponent(id)}`,{method:'PATCH',body:JSON.stringify(b)});await load(true);await show(id,true);alert('Datos actualizados correctamente.')}catch(e){alert(e.message)}}
+  function pdf(x,s,jobs,ratings){const J=window.jspdf?.jsPDF;if(!J)return alert('No se pudo cargar el generador PDF.');const d=new J(),lines=[`BHUZ - Ficha del repartidor`,x.fullName,x.email,`Teléfono: ${x.phone||'—'}`,`Cédula: ${x.identityDocument||'—'}`,`Vehículo: ${[x.vehicleType,x.vehicleBrand,x.vehicleModel,x.vehiclePlate].filter(Boolean).join(' · ')}`,`Estado: ${x.administrativeStatus} / ${x.operationalStatus}`,`Servicios: ${s.totalJobs||0} | Entregados: ${s.completedJobs||0}`,`Ganancias: ${money(s.totalEarnings,x.baseCurrency)}`,`Distancia planificada: ${Number(s.plannedDistanceKm||0).toFixed(2)} km`,`Distancia recorrida: ${Number(s.actualDistanceKm||0).toFixed(2)} km`,`Calificación: ${Number(s.ratingAverage||0).toFixed(2)} (${s.ratingCount||0})`,`Historial reciente: ${jobs.length} servicios`,`Evaluaciones: ${ratings.length}`];d.setFontSize(16);d.text(lines[0],14,18);d.setFontSize(10);lines.slice(1).forEach((l,i)=>d.text(String(l),14,30+i*8));d.save(`repartidor-${x.fullName.replace(/\s+/g,'-').toLowerCase()}.pdf`)}
+  function init(){if(initialized)return;initialized=true;document.getElementById('driversSearch')?.addEventListener('input',list);document.getElementById('driversStatusFilter')?.addEventListener('change',list);document.getElementById('refreshDriversBtn')?.addEventListener('click',()=>load());document.querySelector('[data-section="repartidoresSection"]')?.addEventListener('click',()=>load(true));load(true)}
+  window.initAdminDrivers=init;window.refreshAdminDriversSilently=()=>load(true);
 })();

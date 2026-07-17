@@ -110,6 +110,7 @@
     <div class="admin-actions">
       <span id="adminAutoRefreshStatus" class="admin-refresh-status">Actualización automática activa</span>
       <span id="adminSessionText">Administrador</span>
+      <button type="button" id="adminIndicatorsToggle" class="admin-theme-toggle">Ocultar cantidades</button>
       <button type="button" id="adminThemeToggle" class="admin-theme-toggle" aria-label="Cambiar modo de color">🌙 Modo oscuro</button>
       <button type="button" onclick="cerrarSesionAdministrador()">Cerrar sesión</button>
     </div>
@@ -124,11 +125,11 @@
     <aside class="admin-sidebar">
       <nav>
         <button class="admin-menu-btn active" data-section="resumenSection">Resumen</button>
-        <button class="admin-menu-btn" data-section="usuariosSection">Usuarios</button>
-        <button class="admin-menu-btn" data-section="restaurantesSection">Restaurantes</button>
-        <button class="admin-menu-btn" data-section="repartidoresSection">Repartidores <span id="repartidoresPendientesBadge" class="menu-badge hidden">0</span></button>
-        <button class="admin-menu-btn" data-section="pedidosSection">Pedidos de comida</button>
-        <button class="admin-menu-btn" data-section="enviosSection">Paquetes <span id="enviosActivosBadge" class="menu-badge hidden">0</span></button>
+        <button class="admin-menu-btn" data-section="usuariosSection">Usuarios <span id="menuUsuariosCount" class="menu-count">0</span></button>
+        <button class="admin-menu-btn" data-section="restaurantesSection">Restaurantes <span id="menuRestaurantesCount" class="menu-count">0</span></button>
+        <button class="admin-menu-btn" data-section="repartidoresSection">Repartidores <span id="menuRepartidoresCount" class="menu-count">0</span> <span id="repartidoresPendientesBadge" class="menu-badge hidden">0</span></button>
+        <button class="admin-menu-btn" data-section="pedidosSection">Pedidos de comida <span id="menuPedidosCount" class="menu-count">0</span></button>
+        <button class="admin-menu-btn" data-section="enviosSection">Paquetes <span id="menuPaquetesCount" class="menu-count">0</span> <span id="enviosActivosBadge" class="menu-badge hidden">0</span></button>
         <button class="admin-menu-btn" data-section="comisionesSection">Comisiones</button>
       </nav>
     </aside>
