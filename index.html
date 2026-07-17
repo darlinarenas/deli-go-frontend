@@ -835,7 +835,7 @@
     <a href="index.html" class="active">🏠<span>Inicio</span></a>
     <a href="#" id="bottomSearchBtn">🔎<span>Buscar</span></a>
     <a href="mis-pedidos.html">🛍️<span>Pedidos</span></a>
-    <a href="index.html#mis-envios" id="bottomShipmentsBtn">📦<span>Paquetes</span></a>
+    <a href="mis-envios.html" id="bottomShipmentsBtn">📦<span>Paquetes</span></a>
     <a href="#" id="bottomFavoritesBtn">♡<span>Favoritos</span></a>
     <a href="#" id="bottomProfileBtn">👤<span>Perfil</span></a>
   </nav>
@@ -859,7 +859,7 @@
       <a href="#restaurantList">🍽️ Restaurantes</a>
       <a href="#topDishesSection">🔥 Platos populares</a>
       <a href="mis-pedidos.html">🛍️ Mis pedidos</a>
-      <a href="index.html#mis-envios">📦 Paquetes enviados</a>
+      <a href="mis-envios.html">📦 Mis envíos</a>
       <a href="#" id="drawerFavoritesBtn">♡ Favoritos</a>
       <a href="#" id="drawerLoginBtn">👤 Iniciar sesión</a>
       <a href="#" id="drawerRegisterBtn">✨ Registrarme</a>
@@ -1203,9 +1203,8 @@
 
       if (window.location.hash === "#comida") {
         mostrarModuloComida();
-      } else if (["#envios", "#mis-envios"].includes(window.location.hash)) {
+      } else if (window.location.hash === "#envios") {
         mostrarModuloEnvios();
-        if(window.location.hash === "#mis-envios") setTimeout(()=>document.getElementById("bhuz-envios-history")?.scrollIntoView({behavior:"smooth",block:"start"}),700);
       } else {
         mostrarPantallaInicio();
       }

@@ -506,14 +506,9 @@ function inicializarModuloEnvios() {
     inputFoto.addEventListener("change", mostrarVistaPreviaFoto);
   }
 
-  const btnActualizarHistorial = document.getElementById("btn-actualizar-historial-envios");
-  if (btnActualizarHistorial) {
-    btnActualizarHistorial.addEventListener("click", () => cargarHistorialEnviosCliente(true));
-  }
   document.getElementById("btn-actualizar-receptor")?.addEventListener("click", actualizarReceptorAhora);
   document.getElementById("btn-toggle-actividad-receptor")?.addEventListener("click", () => alternarBloqueReceptor("bhuz-receptor-actividad", "btn-toggle-actividad-receptor", "Ver seguimiento y código", "Ocultar seguimiento"));
   document.getElementById("btn-toggle-info-receptor")?.addEventListener("click", () => alternarBloqueReceptor("bhuz-receptor-info", "btn-toggle-info-receptor", "Ver detalles del envío", "Ocultar detalles"));
-  cargarHistorialEnviosCliente(false);
 
   console.log("✅ Módulo de envíos inicializado correctamente.");
 }
