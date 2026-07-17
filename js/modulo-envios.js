@@ -1867,6 +1867,7 @@ function actualizarComprobanteEnvioPublicado(service) {
     if (["DRIVER_ASSIGNED", "GOING_TO_PICKUP"].includes(estado)) reproducirSonidoReceptor("repartidor_retiro");
     if (estado === "PACKAGE_PICKED") reproducirSonidoReceptor("paquete_retirado");
     if (estado === "GOING_TO_DELIVERY") reproducirSonidoReceptor("en_camino");
+    if (estado === "DELIVERED") reproducirSonidoReceptor("recibido");
     if (estado === "CANCELLED") reproducirSonidoReceptor("cancelado");
   } else if (estado && !anterior) {
     BHUZ_SERVICES_STATE.comprobanteUltimoEstado = estado;
