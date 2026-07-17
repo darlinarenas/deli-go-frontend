@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', async () => {
-  const API=String(window.BHUZ_API_URL||window.API_BASE_URL||'https://deligo-backend-i554.onrender.com').replace(/\/+$/,'');
+  const API=String(window.BHUZ_API_URL||window.DELI_API_URL||window.API_BASE_URL||'https://deligo-backend-i554.onrender.com').replace(/\/+$/,'');
   const list=document.getElementById('shipmentsList');
   const total=document.getElementById('totalShipments');
   const active=document.getElementById('activeShipments');
@@ -60,13 +60,22 @@ document.addEventListener('DOMContentLoaded', async () => {
       const email=String(user.email||'').trim().toLowerCase();
       const name=String(user.fullName||user.name||user.full_name||'').trim();
       const phone=String(user.phone||user.telefono||'').trim();
-      const qs=new URLSearchParams({email,name,phone,_:String(Date.now())});
+      let storedIds=[];
+      try{
+        const keys=[`bhuz_customer_service_ids:${email}`,'bhuz_customer_service_ids'];
+        for(const key of keys){
+          const values=JSON.parse(localStorage.getItem(key)||'[]');
+          if(Array.isArray(values))storedIds.push(...values);
+        }
+      }catch(_){}
+      storedIds=[...new Set(storedIds.map(String).filter(Boolean))].slice(0,100);
+      const qs=new URLSearchParams({email,name,phone,ids:storedIds.join(','),_:String(Date.now())});
       const r=await fetch(`${API}/api/services/customer/history?${qs.toString()}`,{credentials:'include',cache:'no-store'});
       const d=await r.json().catch(()=>({}));
       if(!r.ok||d.ok===false)throw Error(d.message||'No se pudieron cargar tus envíos.');
       shipments=Array.isArray(d.services)?d.services:[];
       try{
-        const ids=JSON.parse(localStorage.getItem(`bhuz_customer_service_ids:${email}`)||'[]');
+        const ids=storedIds;
         const known=new Set(shipments.map(x=>String(x.id)));
         const extras=await Promise.all(ids.filter(id=>!known.has(String(id))).map(async id=>{try{const rr=await fetch(`${API}/api/services/${encodeURIComponent(id)}?_=${Date.now()}`,{cache:'no-store'});const dd=await rr.json();return rr.ok&&dd.ok!==false?(dd.service||dd):null}catch{return null}}));
         shipments.push(...extras.filter(Boolean));
