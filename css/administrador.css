@@ -2031,3 +2031,80 @@ html[data-admin-theme="dark"] .driver-admin-controls input{background:#0b1216;bo
   .driver-admin-controls{grid-template-columns:1fr 1fr}
   .driver-admin-controls label{grid-column:1/-1}
 }
+
+
+/* =====================================================
+   BHUZ ajuste visual final: directorio de repartidores,
+   paquetes legibles, modo oscuro y refresco no invasivo
+===================================================== */
+.drivers-directory-table{min-width:1080px;table-layout:fixed}
+.drivers-directory-table th:nth-child(1){width:180px}
+.drivers-directory-table th:nth-child(2){width:145px}
+.drivers-directory-table th:nth-child(3){width:230px}
+.drivers-directory-table th:nth-child(4){width:165px}
+.drivers-directory-table th:nth-child(5){width:105px}
+.drivers-directory-table th:nth-child(6){width:120px}
+.drivers-directory-table th:nth-child(7){width:105px}
+.drivers-directory-table th:nth-child(8){width:105px}
+.drivers-directory-table td{vertical-align:middle;line-height:1.25}
+.drivers-directory-table .driver-name-cell strong,
+.drivers-directory-table .driver-vehicle-cell strong{display:block}
+.drivers-directory-table .driver-email-cell span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drivers-directory-table .driver-phone-cell,
+.drivers-directory-table .driver-plate-cell,
+.drivers-directory-table .driver-rating-cell{white-space:nowrap}
+.drivers-list-panel{overflow:auto}
+
+/* Paquetes: tarjetas sobrias y números con contraste en ambos temas */
+.services-stats-grid article,
+html[data-admin-theme="light"] .services-stats-grid article{
+  background:#fff!important;
+  color:#13201b!important;
+  border:1px solid #dfe8e3!important;
+  box-shadow:0 8px 22px rgba(18,48,36,.06)!important;
+}
+.services-stats-grid article span,
+html[data-admin-theme="light"] .services-stats-grid article span{color:#607069!important}
+.services-stats-grid article strong,
+html[data-admin-theme="light"] .services-stats-grid article strong{color:#101b17!important;text-shadow:none!important}
+.service-person-label{display:block;font-size:9px;line-height:1;letter-spacing:.11em;font-weight:900;color:var(--admin-accent);margin-bottom:5px}
+.service-customer-name{font-size:14px!important;color:var(--admin-text)!important}
+.service-receiver-label{font-weight:800;color:var(--admin-muted)}
+
+/* Pedidos: el CSS del módulo se inyecta después, por eso usamos selectores
+   más específicos e !important para respetar el tema oscuro. */
+html[data-admin-theme="dark"] body .admin-orders-filters-reference,
+html[data-admin-theme="dark"] body .admin-orders-table-panel,
+html[data-admin-theme="dark"] body .admin-orders-detail-side,
+html[data-admin-theme="dark"] body .admin-orders-clean-table thead,
+html[data-admin-theme="dark"] body .admin-orders-footer{
+  background:#0a1411!important;
+  color:#eef8f3!important;
+  border-color:#24362f!important;
+  box-shadow:none!important;
+}
+html[data-admin-theme="dark"] body .admin-orders-search-wrap input,
+html[data-admin-theme="dark"] body .admin-orders-field.clean select,
+html[data-admin-theme="dark"] body .admin-orders-date-group{
+  background:#0e1b17!important;color:#eef8f3!important;border-color:#2c4138!important;
+}
+html[data-admin-theme="dark"] body .admin-orders-date-group input{color:#d9e7e0!important;color-scheme:dark}
+html[data-admin-theme="dark"] body .admin-orders-clean-table th{color:#9fb2a9!important;border-color:#24362f!important}
+html[data-admin-theme="dark"] body .admin-orders-clean-table td{color:#edf7f2!important;border-color:#1d3028!important}
+html[data-admin-theme="dark"] body .admin-order-row{background:#0a1411!important}
+html[data-admin-theme="dark"] body .admin-order-row:hover{background:#10221b!important}
+html[data-admin-theme="dark"] body .admin-order-row.active{
+  background:linear-gradient(90deg,rgba(0,230,118,.14),#0d1915 62%)!important;
+  box-shadow:inset 4px 0 0 #00e676!important;
+}
+html[data-admin-theme="dark"] body .admin-order-side-head h3,
+html[data-admin-theme="dark"] body .admin-order-detail-title h3,
+html[data-admin-theme="dark"] body .admin-order-info-block h4{color:#f3faf6!important}
+html[data-admin-theme="dark"] body .admin-orders-search-icon{color:#b7c9c0!important}
+html[data-admin-theme="dark"] body .admin-orders-btn.outline{background:#0e1b17!important}
+
+html[data-admin-theme="dark"] .services-stats-grid article{background:#101b17!important;color:#f4fbf7!important;border-color:#294038!important}
+html[data-admin-theme="dark"] .services-stats-grid article strong{color:#fff!important}
+html[data-admin-theme="dark"] .services-stats-grid article span{color:#afc2b8!important}
+
+@media(max-width:1200px){.drivers-directory-table{min-width:1000px}}

@@ -3,6 +3,8 @@
   const REFRESH_MS = 30000;
   let refreshing = false;
   let timer = null;
+  let lastInteractionAt = Date.now();
+  const IDLE_BEFORE_REFRESH_MS = 75000;
   const badgeMap = {
     usuariosSection: ["menuUsuariosCount", "totalUsuarios"],
     restaurantesSection: ["menuRestaurantesCount", "totalRestaurantes"],
@@ -49,13 +51,23 @@
     if (a && ["INPUT", "TEXTAREA", "SELECT", "BUTTON"].includes(a.tagName)) return true;
     if (document.querySelector("form:focus-within")) return true;
     if (document.querySelector(".modal:not(.hidden), [role='dialog']:not(.hidden)")) return true;
+    if (Date.now() - lastInteractionAt < IDLE_BEFORE_REFRESH_MS) return true;
+    const section = activeSection();
+    if (section === "repartidoresSection" && !document.getElementById("driverDetailPanel")?.classList.contains("hidden")) return true;
+    if (section === "enviosSection" && document.querySelector("#adminServicesList .admin-service-row.active")) return true;
+    if (section === "pedidosSection" && document.querySelector(".admin-order-row.active")) return true;
     return false;
   }
   function activeSection() {
     return document.querySelector(".admin-section.active")?.id || "resumenSection";
   }
   async function refresh() {
-    if (refreshing || userIsBusy() || document.hidden) return;
+    if (refreshing || document.hidden) return;
+    if (userIsBusy()) {
+      const st = document.getElementById("adminAutoRefreshStatus");
+      if (st) st.textContent = "Actualización pausada mientras trabajas";
+      return;
+    }
     const section = activeSection();
     // No se llama cargarDatosAdministrador(): esa función repinta todo el panel
     // y podía devolver al administrador al inicio. Solo se refresca el módulo activo.
@@ -81,6 +93,9 @@
     }
   }
   document.addEventListener("DOMContentLoaded", () => {
+    ["pointerdown", "keydown", "input", "change", "scroll"].forEach((eventName) => {
+      document.addEventListener(eventName, () => { lastInteractionAt = Date.now(); }, { passive: true, capture: true });
+    });
     initTheme();
     setIndicators(indicatorsVisible());
     document.getElementById("adminIndicatorsToggle")?.addEventListener("click", () => setIndicators(!indicatorsVisible()));

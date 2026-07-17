@@ -126,7 +126,7 @@
     box.innerHTML = list.map((service) => `
       <button type="button" class="admin-service-row ${service.id === selectedId ? "active" : ""}" data-service-id="${esc(service.id)}">
         <span class="service-row-icon">📦</span>
-        <span class="service-row-main"><b>${esc(service.customerName || service.customerEmail || "Cliente")}</b><small>${esc(service.receiverName || "Receptor")} · ${esc(formatDate(service.createdAt))}</small></span>
+        <span class="service-row-main"><span class="service-person-label">ENVÍA</span><b class="service-customer-name">${esc(service.customerName || service.customerEmail || "Usuario sin nombre")}</b><small><span class="service-receiver-label">Recibe:</span> ${esc(service.receiverName || "Sin receptor")} · ${esc(formatDate(service.createdAt))}</small></span>
         <span class="service-row-end"><em class="service-status status-${esc(String(service.status || "").toLowerCase())}">${esc(statusLabel(service.status))}</em><strong>${money(service.totalAmount)}</strong></span>
       </button>`).join("");
 
