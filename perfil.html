@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi perfil | BHUZ</title>
+  <link rel="icon" type="image/jpeg" href="assets/image/logo-bhuz.jpeg">
+  <link rel="apple-touch-icon" href="assets/image/logo-bhuz.jpeg">
+  <link rel="stylesheet" href="css/perfil.css">
+
+  <!-- =========================================================
+       BHUZ - PERFIL DEL USUARIO
+       Archivo: perfil.html
+
+       OBJETIVO DE ESTE PASO:
+       - Crear pantalla visual de perfil y direcciones.
+       - Preparar ids para conectar luego con js/perfil.js.
+       - NO toca backend.
+       - NO toca pedidos.
+       - NO toca checkout.
+       - NO usa localStorage como fuente de negocio.
+  ========================================================== -->
+
+  <style>
+    :root {
+      --bhuz-bg: #020708;
+      --bhuz-card: #ffffff;
+      --bhuz-card-soft: #f5f7f6;
+      --bhuz-text: #07120d;
+      --bhuz-muted: #6a746f;
+      --bhuz-green: #10e981;
+      --bhuz-green-dark: #08b85f;
+      --bhuz-border: rgba(7, 18, 13, 0.10);
+      --bhuz-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(16, 233, 129, 0.18), transparent 30%),
+        radial-gradient(circle at bottom left, rgba(16, 233, 129, 0.10), transparent 32%),
+        var(--bhuz-bg);
+      color: #ffffff;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    .profile-page {
+      width: min(1120px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 18px 0 96px;
+    }
+
+    .profile-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 14px 0;
+      background: linear-gradient(180deg, rgba(2, 7, 8, 0.98), rgba(2, 7, 8, 0.80));
+      backdrop-filter: blur(14px);
+    }
+
+    .profile-brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .profile-brand img {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      object-fit: cover;
+      box-shadow: 0 0 22px rgba(16, 233, 129, 0.22);
+    }
+
+    .profile-brand-text {
+      display: grid;
+      gap: 1px;
+      min-width: 0;
+    }
+
+    .profile-brand-text strong {
+      font-size: 17px;
+      letter-spacing: -0.03em;
+    }
+
+    .profile-brand-text span {
+      color: rgba(255, 255, 255, 0.62);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .profile-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .profile-header-actions a,
+    .profile-header-actions button {
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 999px;
+      padding: 10px 14px;
+      cursor: pointer;
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.07);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .profile-header-actions .primary-link {
+      color: #00140c;
+      background: linear-gradient(135deg, var(--bhuz-green), #7cff9e);
+      border-color: rgba(16, 233, 129, 0.50);
+      box-shadow: 0 0 22px rgba(16, 233, 129, 0.20);
+    }
+
+    .profile-hero {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 18px;
+      align-items: stretch;
+      margin-top: 18px;
+    }
+
+    .profile-hero-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 34px;
+      padding: clamp(24px, 4vw, 38px);
+      background:
+        radial-gradient(circle at 80% 0%, rgba(16, 233, 129, 0.28), transparent 36%),
+        linear-gradient(145deg, rgba(6, 20, 17, 0.98), rgba(2, 8, 9, 0.98));
+      border: 1px solid rgba(16, 233, 129, 0.26);
+      box-shadow: var(--bhuz-shadow), 0 0 48px rgba(16, 233, 129, 0.10);
+    }
+
+    .profile-hero-card h1 {
+      margin: 0;
+      max-width: 620px;
+      font-size: clamp(32px, 6vw, 56px);
+      line-height: 0.95;
+      letter-spacing: -0.065em;
+    }
+
+    .profile-hero-card p {
+      margin: 14px 0 0;
+      max-width: 620px;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 16px;
+      line-height: 1.55;
+    }
+
+    .profile-hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .profile-btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 13px 17px;
+      cursor: pointer;
+      font-weight: 950;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .profile-btn:hover {
+      transform: translateY(-1px);
+    }
+
+    .profile-btn.primary {
+      color: #00140c;
+      background: linear-gradient(135deg, var(--bhuz-green), #7cff9e);
+      box-shadow: 0 0 25px rgba(16, 233, 129, 0.28);
+    }
+
+    .profile-btn.secondary {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.10);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .profile-status-card {
+      display: grid;
+      gap: 14px;
+      border-radius: 34px;
+      padding: 24px;
+      background: var(--bhuz-card);
+      color: var(--bhuz-text);
+      box-shadow: var(--bhuz-shadow);
+    }
+
+    .profile-status-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .profile-status-title h2 {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: -0.04em;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: rgba(16, 233, 129, 0.14);
+      color: #05733e;
+      font-size: 12px;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .profile-status-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .status-mini-card {
+      border: 1px solid var(--bhuz-border);
+      border-radius: 20px;
+      padding: 14px;
+      background: var(--bhuz-card-soft);
+    }
+
+    .status-mini-card strong {
+      display: block;
+      font-size: 20px;
+      letter-spacing: -0.04em;
+    }
+
+    .status-mini-card span {
+      color: var(--bhuz-muted);
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 18px;
+      margin-top: 18px;
+    }
+
+    .profile-card {
+      border-radius: 30px;
+      padding: 22px;
+      background: var(--bhuz-card);
+      color: var(--bhuz-text);
+      box-shadow: var(--bhuz-shadow);
+    }
+
+    .profile-card.dark {
+      background:
+        radial-gradient(circle at top right, rgba(16, 233, 129, 0.16), transparent 36%),
+        linear-gradient(145deg, rgba(6, 18, 18, 0.98), rgba(2, 8, 9, 0.98));
+      color: #ffffff;
+      border: 1px solid rgba(16, 233, 129, 0.22);
+    }
+
+    .card-head {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .card-head h2 {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: -0.045em;
+    }
+
+    .card-head p {
+      margin: 5px 0 0;
+      color: var(--bhuz-muted);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .profile-card.dark .card-head p {
+      color: rgba(255, 255, 255, 0.66);
+    }
+
+    .mini-label {
+      display: inline-flex;
+      width: fit-content;
+      margin-bottom: 8px;
+      border-radius: 999px;
+      padding: 6px 9px;
+      background: rgba(16, 233, 129, 0.13);
+      color: #05733e;
+      font-size: 11px;
+      font-weight: 950;
+      text-transform: uppercase;
+      letter-spacing: 0.055em;
+    }
+
+    .profile-card.dark .mini-label {
+      color: var(--bhuz-green);
+      background: rgba(16, 233, 129, 0.13);
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .form-row {
+      display: grid;
+      gap: 7px;
+    }
+
+    .form-row label {
+      color: var(--bhuz-muted);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .form-row input,
+    .form-row textarea,
+    .form-row select {
+      width: 100%;
+      border: 1px solid var(--bhuz-border);
+      border-radius: 18px;
+      padding: 13px 14px;
+      outline: none;
+      background: #ffffff;
+      color: var(--bhuz-text);
+      font-weight: 800;
+    }
+
+    .form-row textarea {
+      min-height: 86px;
+      resize: vertical;
+    }
+
+    .form-row input:focus,
+    .form-row textarea:focus,
+    .form-row select:focus {
+      border-color: rgba(16, 233, 129, 0.85);
+      box-shadow: 0 0 0 4px rgba(16, 233, 129, 0.13);
+    }
+
+    .readonly-note {
+      margin: 8px 0 0;
+      color: var(--bhuz-muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .addresses-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .address-empty {
+      border: 1px dashed rgba(16, 233, 129, 0.35);
+      border-radius: 22px;
+      padding: 18px;
+      background: rgba(16, 233, 129, 0.08);
+      color: rgba(255, 255, 255, 0.78);
+      line-height: 1.45;
+    }
+
+    .address-card {
+      display: grid;
+      gap: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: 24px;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.07);
+    }
+
+    .address-card-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .address-card h3 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: -0.035em;
+    }
+
+    .address-card p {
+      margin: 4px 0 0;
+      color: rgba(255, 255, 255, 0.68);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .address-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .address-actions button {
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 999px;
+      padding: 9px 11px;
+      cursor: pointer;
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.08);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .address-actions button.primary {
+      color: #00140c;
+      background: linear-gradient(135deg, var(--bhuz-green), #7cff9e);
+      border-color: rgba(16, 233, 129, 0.42);
+    }
+
+    .gps-box {
+      display: grid;
+      gap: 10px;
+      border: 1px solid var(--bhuz-border);
+      border-radius: 22px;
+      padding: 14px;
+      background: var(--bhuz-card-soft);
+    }
+
+    .gps-status {
+      margin: 0;
+      color: var(--bhuz-muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .message-box {
+      display: none;
+      margin-top: 12px;
+      border-radius: 18px;
+      padding: 12px 14px;
+      font-size: 13px;
+      font-weight: 850;
+      line-height: 1.4;
+    }
+
+    .message-box.show {
+      display: block;
+    }
+
+    .message-box.success {
+      color: #07512f;
+      background: rgba(16, 233, 129, 0.16);
+      border: 1px solid rgba(16, 233, 129, 0.28);
+    }
+
+    .message-box.error {
+      color: #7a1d1d;
+      background: rgba(255, 76, 76, 0.12);
+      border: 1px solid rgba(255, 76, 76, 0.24);
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 50%;
+      bottom: 14px;
+      z-index: 30;
+      width: min(520px, calc(100% - 28px));
+      transform: translateX(-50%);
+      display: none;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px;
+      background: rgba(2, 7, 8, 0.90);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 18px 60px rgba(0, 0, 0, 0.42);
+    }
+
+    .bottom-nav a {
+      display: grid;
+      justify-items: center;
+      gap: 2px;
+      border-radius: 18px;
+      padding: 9px 6px;
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .bottom-nav a span {
+      font-size: 11px;
+    }
+
+    .bottom-nav a.active {
+      color: #00140c;
+      background: linear-gradient(135deg, var(--bhuz-green), #7cff9e);
+    }
+
+    @media (max-width: 860px) {
+      .profile-hero,
+      .profile-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .profile-status-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .profile-page {
+        width: min(100% - 22px, 520px);
+        padding-bottom: 108px;
+      }
+
+      .profile-header-actions a:not(.primary-link) {
+        display: none;
+      }
+
+      .profile-hero-card,
+      .profile-status-card,
+      .profile-card {
+        border-radius: 26px;
+        padding: 18px;
+      }
+
+      .profile-status-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .card-head {
+        display: grid;
+      }
+
+      .bottom-nav {
+        display: grid;
+      }
+    }
+
+
+    /* =========================================================
+       CAMBIO BHUZ PERFIL - EDICIÓN SEGURA
+       - Nombre y teléfono editables.
+       - Correo bloqueado.
+       - Contraseña editable con validación.
+       - Formulario de dirección oculto hasta presionar botón.
+    ========================================================== */
+    .profile-account-readonly input:disabled {
+      color: #526059;
+      background: #eef3f0;
+      cursor: not-allowed;
+      opacity: 1;
+      -webkit-text-fill-color: #526059;
+    }
+
+    .profile-form-toggle-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .profile-hidden-section {
+      display: none;
+    }
+
+    .profile-hidden-section.is-visible {
+      display: block;
+    }
+
+    .profile-btn.danger {
+      color: #ffffff;
+      background: #cf2f2f;
+      box-shadow: 0 0 22px rgba(207, 47, 47, 0.18);
+    }
+
+    .address-card-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-top: 6px;
+    }
+
+    .default-badge,
+    .gps-mini-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 6px 9px;
+      font-size: 11px;
+      font-weight: 950;
+    }
+
+    .default-badge {
+      margin-left: 8px;
+      color: #00140c;
+      background: linear-gradient(135deg, var(--bhuz-green), #7cff9e);
+    }
+
+    .gps-mini-badge {
+      color: var(--bhuz-green);
+      background: rgba(16, 233, 129, 0.12);
+      border: 1px solid rgba(16, 233, 129, 0.24);
+    }
+
+    .address-gps-line {
+      display: none;
+    }
+
+    .message-box.is-ok,
+    .message-box.is-info,
+    .message-box.is-error {
+      display: block;
+    }
+
+    .message-box.is-ok {
+      color: #07512f;
+      background: rgba(16, 233, 129, 0.16);
+      border: 1px solid rgba(16, 233, 129, 0.28);
+    }
+
+    .message-box.is-info {
+      color: #26443a;
+      background: rgba(16, 233, 129, 0.08);
+      border: 1px solid rgba(16, 233, 129, 0.18);
+    }
+
+    .message-box.is-error {
+      color: #7a1d1d;
+      background: rgba(255, 76, 76, 0.12);
+      border: 1px solid rgba(255, 76, 76, 0.24);
+    }
+
+    /* =========================================================
+       CAMBIO BHUZ - BOTÓN EDITAR PERFIL INTEGRADO
+       - El formulario inicia bloqueado por defecto.
+       - Botón limpio, corto y alineado al estilo premium BHUZ.
+       - Guardar y Cancelar aparecen únicamente en modo edición.
+    ========================================================== */
+    .profile-edit-note {
+      margin: 2px 0 0;
+      color: #66736d;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .profile-edit-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding-inline: 18px;
+      color: #00140c;
+      background: linear-gradient(135deg, var(--bhuz-green), #7cff9e);
+      border: 1px solid rgba(16, 233, 129, 0.48);
+      box-shadow: 0 0 22px rgba(16, 233, 129, 0.22);
+    }
+
+    .profile-edit-btn:hover {
+      box-shadow: 0 0 28px rgba(16, 233, 129, 0.34);
+    }
+
+    #saveProfileBtn,
+    #cancelProfileEditBtn {
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+    }
+
+    #profileForm:not(.is-editing) #editProfileBtn {
+      display: inline-flex;
+    }
+
+    #profileForm:not(.is-editing) #saveProfileBtn,
+    #profileForm:not(.is-editing) #cancelProfileEditBtn {
+      display: none;
+    }
+
+    #profileForm.is-editing #editProfileBtn,
+    #profileForm.is-editing .profile-edit-note {
+      display: none;
+    }
+
+    #profileForm.is-editing #saveProfileBtn,
+    #profileForm.is-editing #cancelProfileEditBtn {
+      display: inline-flex;
+    }
+
+
+  </style>
+</head>
+
+<body>
+  <main class="profile-page">
+
+    <!-- =========================================================
+         HEADER PERFIL
+    ========================================================== -->
+    <header class="profile-header">
+      <a href="index.html" class="profile-brand" aria-label="Volver al inicio BHUZ">
+        <img src="assets/image/logo-bhuz.jpeg" alt="BHUZ">
+        <span class="profile-brand-text">
+          <strong>BHUZ</strong>
+          <span>Mi perfil</span>
+        </span>
+      </a>
+
+      <nav class="profile-header-actions" aria-label="Navegación del perfil">
+        <a href="index.html">Inicio</a>
+        <a href="mis-pedidos.html">Mis pedidos</a>
+        <a href="#misDirecciones" class="primary-link">Mis direcciones</a>
+      </nav>
+    </header>
+
+    <!-- =========================================================
+         HERO PERFIL
+    ========================================================== -->
+    <section class="profile-hero">
+      <article class="profile-hero-card">
+        <span class="mini-label">Cuenta BHUZ</span>
+        <h1>Tu perfil y tus direcciones en un solo lugar.</h1>
+        <p>
+          Aquí podrás mantener tus datos actualizados y guardar direcciones con referencia y GPS obligatorio para pedir más rápido.
+        </p>
+
+        <div class="profile-hero-actions">
+          <a class="profile-btn primary" href="#misDirecciones">📍 Administrar direcciones</a>
+          <a class="profile-btn secondary" href="mis-pedidos.html">🛍️ Ver mis pedidos</a>
+        </div>
+      </article>
+
+      <aside class="profile-status-card" aria-label="Resumen del perfil">
+        <div class="profile-status-title">
+          <div>
+            <span class="mini-label">Estado</span>
+            <h2 id="profileGreeting">Hola 👋</h2>
+          </div>
+          <span class="status-pill" id="profileStatusPill">GPS requerido</span>
+        </div>
+
+        <div class="profile-status-grid">
+          <div class="status-mini-card">
+            <strong id="profileAddressCount">0</strong>
+            <span>Direcciones guardadas</span>
+          </div>
+          <div class="status-mini-card">
+            <strong id="profileDefaultAddress">—</strong>
+            <span>Dirección principal</span>
+          </div>
+        </div>
+
+        <p class="readonly-note">
+          Las direcciones se guardan en PostgreSQL mediante el backend. Esta pantalla queda preparada para conectarse en el siguiente paso con <strong>js/perfil.js</strong>.
+        </p>
+      </aside>
+    </section>
+
+    <!-- =========================================================
+         DATOS PERSONALES + DIRECCIONES
+    ========================================================== -->
+    <section class="profile-grid">
+
+      <!-- =======================================================
+           DATOS PERSONALES
+      ======================================================== -->
+      <article class="profile-card" id="datosPersonales">
+        <div class="card-head">
+          <div>
+            <span class="mini-label">Datos personales</span>
+            <h2>Información de la cuenta</h2>
+            <p>Estos datos se usarán para identificar tus pedidos y contacto.</p>
+          </div>
+        </div>
+
+        <form class="form-grid profile-account-readonly" id="profileForm">
+          <div class="form-row">
+            <label for="profileName">Nombre completo</label>
+            <input id="profileName" name="profileName" type="text" placeholder="Nombre del usuario" autocomplete="name" required disabled>
+          </div>
+
+          <div class="form-row">
+            <label for="profilePhone">Teléfono</label>
+            <input id="profilePhone" name="profilePhone" type="tel" placeholder="Teléfono" autocomplete="tel" required disabled>
+          </div>
+
+          <div class="form-row">
+            <label for="profileEmail">Correo</label>
+            <input id="profileEmail" name="profileEmail" type="email" placeholder="correo@ejemplo.com" autocomplete="email" disabled>
+          </div>
+
+          <div class="form-row">
+            <label for="profileCurrentPassword">Contraseña actual</label>
+            <input id="profileCurrentPassword" name="profileCurrentPassword" type="password" placeholder="Solo si vas a cambiar la contraseña" autocomplete="current-password" disabled>
+          </div>
+
+          <div class="form-row">
+            <label for="profileNewPassword">Nueva contraseña</label>
+            <input id="profileNewPassword" name="profileNewPassword" type="password" placeholder="Nueva contraseña" autocomplete="new-password" disabled>
+          </div>
+
+          <div class="form-row">
+            <label for="profileConfirmPassword">Confirmar nueva contraseña</label>
+            <input id="profileConfirmPassword" name="profileConfirmPassword" type="password" placeholder="Repite la nueva contraseña" autocomplete="new-password" disabled>
+          </div>
+
+          <p class="readonly-note profile-edit-note">
+            Para cambiar tus datos, presiona <strong>Editar perfil</strong>.
+          </p>
+
+          <div class="profile-form-toggle-row">
+            <button class="profile-btn profile-edit-btn" id="editProfileBtn" type="button">Editar perfil</button>
+            <button class="profile-btn primary" id="saveProfileBtn" type="submit" style="display:none;">Guardar cambios</button>
+            <button class="profile-btn secondary" id="cancelProfileEditBtn" type="button" style="display:none;">Cancelar</button>
+          </div>
+
+          <div class="message-box" id="profileMessage"></div>
+        </form>
+      </article>
+
+      <!-- =======================================================
+           MIS DIRECCIONES
+      ======================================================== -->
+      <article class="profile-card dark" id="misDirecciones">
+        <div class="card-head">
+          <div>
+            <span class="mini-label">GPS obligatorio</span>
+            <h2>Mis direcciones</h2>
+            <p>Guarda casa, trabajo o direcciones frecuentes con referencia y ubicación exacta.</p>
+          </div>
+          <button class="profile-btn primary" id="openAddressFormBtn" type="button">＋ Agregar nueva dirección</button>
+        </div>
+
+        <div class="addresses-list" id="addressesList">
+          <div class="address-empty" id="addressesEmptyState">
+            Todavía no hay direcciones cargadas en esta vista. En el siguiente paso conectaremos esta sección con <strong>user_addresses</strong> mediante el backend actual.
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <!-- =========================================================
+         FORMULARIO NUEVA DIRECCIÓN
+    ========================================================== -->
+    <section class="profile-card profile-hidden-section" id="nuevaDireccion" style="margin-top: 18px;">
+      <div class="card-head">
+        <div>
+          <span class="mini-label">Nueva dirección</span>
+          <h2 id="addressFormTitle">Agregar dirección guardada</h2>
+          <p>La dirección debe tener texto, referencia y GPS para evitar errores de entrega.</p>
+        </div>
+      </div>
+
+      <form class="form-grid" id="addressForm">
+        <div class="form-row">
+          <label for="addressLabel">Alias</label>
+          <input id="addressLabel" name="addressLabel" type="text" placeholder="Ej: Casa, Trabajo, Mamá, Oficina..." autocomplete="off">
+        </div>
+
+        <div class="form-row">
+          <label for="addressText">Dirección escrita</label>
+          <input id="addressText" name="addressText" type="text" placeholder="Ej: Sector, calle, casa, edificio..." autocomplete="street-address">
+        </div>
+
+        <div class="form-row">
+          <label for="addressReference">Referencia obligatoria</label>
+          <textarea id="addressReference" name="addressReference" placeholder="Ej: Frente a la panadería, portón azul, al lado de..." autocomplete="off"></textarea>
+        </div>
+
+        <div class="gps-box">
+          <button class="profile-btn primary" id="captureGpsBtn" type="button">📍 Usar mi ubicación actual</button>
+          <p class="gps-status" id="gpsStatus">GPS pendiente. Debes capturar ubicación antes de guardar.</p>
+
+          <!-- Campos técnicos preparados para js/perfil.js -->
+          <input id="addressLatitude" name="addressLatitude" type="hidden">
+          <input id="addressLongitude" name="addressLongitude" type="hidden">
+        </div>
+
+        <label style="display:flex; gap:10px; align-items:center; color:#4e5b55; font-weight:900; font-size:14px;">
+          <input id="addressDefault" name="addressDefault" type="checkbox" style="width:auto;">
+          Marcar como dirección principal
+        </label>
+
+        <button class="profile-btn primary" id="saveAddressBtn" type="submit">Guardar dirección</button>
+
+        <div class="message-box" id="addressMessage"></div>
+      </form>
+    </section>
+  </main>
+
+  <!-- =========================================================
+       NAV INFERIOR MÓVIL
+  ========================================================== -->
+  <nav class="bottom-nav">
+    <a href="index.html">🏠<span>Inicio</span></a>
+    <a href="mis-pedidos.html">🛍️<span>Pedidos</span></a>
+    <a href="perfil.html" class="active">👤<span>Perfil</span></a>
+  </nav>
+
+  <!-- =========================================================
+       SCRIPT DEL PERFIL
+       - Se conecta en el siguiente paso.
+       - Si el archivo aún no existe, la página visual igual carga.
+  ========================================================== -->
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/perfil.js"></script>
+</body>
+
+</html>
