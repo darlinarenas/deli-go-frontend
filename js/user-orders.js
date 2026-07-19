@@ -46,7 +46,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         try {
           const response = await fetch(`${window.DELI_API_URL || "https://deligo-backend-i554.onrender.com"}/orders/${encodeURIComponent(order.id)}/delivery-code`, {
             credentials: "include",
-            cache: "no-store"
+            cache: "no-store",
+            headers: typeof window.getAuthHeaders === "function" ? window.getAuthHeaders() : {}
           });
           const data = await response.json().catch(() => ({}));
           const repairedCode = String(data.deliveryCode || "").trim();

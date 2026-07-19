@@ -228,7 +228,8 @@ document.addEventListener("DOMContentLoaded", () => {
       method: "POST",
       credentials: "include",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        ...(typeof window.getAuthHeaders === "function" ? window.getAuthHeaders() : {})
       },
       body: JSON.stringify({
         recipientName,
@@ -328,7 +329,8 @@ document.addEventListener("DOMContentLoaded", () => {
       method: "POST",
       credentials: "include",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        ...(typeof window.getAuthHeaders === "function" ? window.getAuthHeaders() : {})
       },
       body: JSON.stringify({
         recipientName,
@@ -421,7 +423,8 @@ document.addEventListener("DOMContentLoaded", () => {
       method: "POST",
       credentials: "include",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        ...(typeof window.getAuthHeaders === "function" ? window.getAuthHeaders() : {})
       }
     });
 
@@ -664,40 +667,26 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function getCurrentUserSafe() {
-    const currentUser =
+    const user =
       typeof window.getCurrentUser === "function"
         ? window.getCurrentUser()
         : (window.DELI_CURRENT_USER || null);
 
-    if (!currentUser) return null;
+    if (!user) return null;
 
-    const role = String(currentUser.role || "").trim().toLowerCase();
-
-    // La página pública del restaurante solo puede usar una sesión de cliente.
-    // Evita mezclar nombre, correo, teléfono o dirección del restaurante en el checkout.
-    if (!["customer", "cliente"].includes(role)) {
-      return null;
-    }
-
-    return currentUser;
+    const role = String(user.role || "").trim().toLowerCase();
+    return ["customer", "cliente"].includes(role) ? user : null;
   }
 
   async function waitForCustomerSessionReady() {
-    if (window.DELI_SESSION_READY) {
-      return getCurrentUserSafe();
-    }
+    if (window.DELI_SESSION_READY) return getCurrentUserSafe();
 
     await new Promise((resolve) => {
       const timeout = window.setTimeout(resolve, 2500);
-
-      window.addEventListener(
-        "deli:session-ready",
-        () => {
-          window.clearTimeout(timeout);
-          resolve();
-        },
-        { once: true }
-      );
+      window.addEventListener("deli:session-ready", () => {
+        window.clearTimeout(timeout);
+        resolve();
+      }, { once: true });
     });
 
     return getCurrentUserSafe();
@@ -707,7 +696,6 @@ document.addEventListener("DOMContentLoaded", () => {
     [checkoutName, checkoutPhone, checkoutAddress, checkoutEmail, getCheckoutReferenceEl()].forEach((field) => {
       if (field) field.value = "";
     });
-
     checkoutAddresses = [];
     selectedCheckoutAddress = null;
     checkoutGpsLocation = null;
@@ -778,7 +766,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const listResponse = await fetch(`${API_URL}/restaurants?t=${Date.now()}`, {
         method: "GET",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          ...(typeof window.getAuthHeaders === "function" ? window.getAuthHeaders() : {})
         }
       });
 
@@ -1642,7 +1631,8 @@ document.addEventListener("DOMContentLoaded", () => {
         method: "GET",
         credentials: "include",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          ...(typeof window.getAuthHeaders === "function" ? window.getAuthHeaders() : {})
         }
       });
 
@@ -1725,7 +1715,6 @@ document.addEventListener("DOMContentLoaded", () => {
     lockCheckoutIdentityFields();
 
     const currentUser = await waitForCustomerSessionReady();
-
     if (!currentUser) {
       clearCheckoutCustomerFields();
       renderCheckoutAddresses();
@@ -1772,11 +1761,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!customerReady || !currentUser) {
       alert("Debes iniciar sesión como cliente para realizar un pedido.");
-
-      if (typeof window.showLogin === "function") {
-        window.showLogin("customer");
-      }
-
+      if (typeof window.showLogin === "function") window.showLogin("customer");
       return;
     }
     if (currentUser && !checkoutAddresses.length && !String(currentUser.address || "").trim()) {
@@ -1854,11 +1839,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!currentUser) {
       alert("Debes iniciar sesión como cliente para confirmar el pedido.");
-
-      if (typeof window.showLogin === "function") {
-        window.showLogin("customer");
-      }
-
+      if (typeof window.showLogin === "function") window.showLogin("customer");
       return;
     }
 
