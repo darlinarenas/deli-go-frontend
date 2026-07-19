@@ -4,7 +4,7 @@ let deferred=null;
 const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
 const isStandalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
 function b64(value){const s=String(value||'').trim().replace(/^[\'\"]|[\'\"]$/g,'');const pad='='.repeat((4-s.length%4)%4),base=(s+pad).replace(/-/g,'+').replace(/_/g,'/');let raw='';try{raw=atob(base)}catch(_){throw Error('La clave pública de notificaciones no tiene un formato válido.')}const key=Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));if(key.length!==65||key[0]!==4)throw Error('La clave pública VAPID no es válida.');return key}
-async function sw(){if(!('serviceWorker'in navigator))throw Error('Este navegador no admite la instalación de BHUZ.');const reg=await navigator.serviceWorker.register('/service-worker.js?v=20260719-9',{updateViaCache:'none'});await reg.update().catch(()=>{});return navigator.serviceWorker.ready}
+async function sw(){if(!('serviceWorker'in navigator))throw Error('Este navegador no admite la instalación de BHUZ.');const reg=await navigator.serviceWorker.register('/service-worker.js?v=20260719-10',{updateViaCache:'none'});await reg.update().catch(()=>{});return navigator.serviceWorker.ready}
 function permissionError(){const e=new Error('Las notificaciones están bloqueadas para BHUZ. Debes habilitarlas manualmente en la configuración del sitio.');e.code='NOTIFICATION_BLOCKED';return e}
 async function subscribe(meta={}){
   if(isIOS&&!isStandalone())throw Error('En iPhone, primero agrega BHUZ a la pantalla de inicio y abre la aplicación instalada. Safari no permite activar notificaciones push desde esta pestaña.');

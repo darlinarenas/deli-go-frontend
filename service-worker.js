@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bhuz-pwa-v9-20260719';
+const CACHE_NAME = 'bhuz-pwa-v10-20260719';
 const APP_SHELL = [
   '/',
   '/index.html',
