@@ -37,8 +37,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       try {
         const response = await fetch(`${window.DELI_ORDERS_API_URL || window.BHUZ_API_URL || "https://deligo-backend-i554.onrender.com"}/orders/${encodeURIComponent(order.id)}/delivery-code`, { credentials:"include", cache:"no-store" });
         const data = await response.json().catch(()=>({}));
-        if (response.ok && /^\d{6}$/.test(String(data.deliveryCode||""))) order.deliveryCode = String(data.deliveryCode);
+        if (response.ok && /^\d{6}$/.test(String(data.deliveryCode||""))) {
+          order.deliveryCode = String(data.deliveryCode);
+          order.deliveryCodeError = "";
+        } else {
+          order.deliveryCodeError = data.message || `No se pudo generar la clave (HTTP ${response.status}).`;
+        }
       } catch (error) {
+        order.deliveryCodeError = error.message || "No se pudo conectar con el servidor.";
         console.warn("No se pudo recuperar la clave de entrega:", error.message);
       }
     }));
@@ -123,7 +129,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           ${!["entregado","cancelado"].includes(order.status) ? `
             <section class="bhuz-delivery-code ${order.deliveryCode ? '' : 'is-loading'}" aria-label="Clave de entrega del pedido">
               <span class="bhuz-code-kicker">🔐 CLAVE DE ENTREGA DEL PEDIDO</span>
-              ${order.deliveryCode ? `<strong class="bhuz-delivery-code-value">${order.deliveryCode}</strong>` : `<strong class="bhuz-delivery-code-pending">Generando clave…</strong>`}
+              ${order.deliveryCode ? `<strong class="bhuz-delivery-code-value">${order.deliveryCode}</strong>` : order.deliveryCodeError ? `<strong class="bhuz-delivery-code-pending">No se pudo generar</strong><small class="bhuz-code-error">${order.deliveryCodeError}</small><button type="button" class="bhuz-code-retry" data-retry-code="${order.id||''}">Reintentar</button>` : `<strong class="bhuz-delivery-code-pending">Generando clave…</strong>`}
               <p><b>Esta es la clave de 6 dígitos que debes darle al repartidor.</b><br>Entrégala únicamente cuando tengas la comida en tus manos. No es el número del pedido.</p>
             </section>` : ''}
           ${!["entregado","cancelado"].includes(order.status)?`
@@ -179,6 +185,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   document.addEventListener("click",event=>{const btn=event.target.closest("[data-track-order]");if(btn&&window.BHUZ_TRACKING)window.BHUZ_TRACKING.open("FOOD_ORDER",btn.dataset.trackOrder,{title:"Seguimiento de tu pedido"});});
+  document.addEventListener("click",async event=>{const btn=event.target.closest("[data-retry-code]");if(!btn)return;btn.disabled=true;btn.textContent="Generando…";await loadOrders(true);});
 
 
   function ensureCustomerPushButton(){
