@@ -246,6 +246,9 @@ function normalizeOrder(order) {
 
   return {
     id: order.id || `order_${Date.now()}`,
+    orderNumber: order.orderNumber || String(order.id || "").replace(/\D/g, "").slice(-6).padStart(6, "0"),
+    deliveryCode: order.deliveryCode || "",
+    deliveryCodeVerifiedAt: order.deliveryCodeVerifiedAt || null,
     restaurantEmail: normalizeText(
       order.restaurantEmail || restaurantObject.email || ""
     ),
@@ -316,6 +319,7 @@ async function createOrder(order) {
       headers: {
         "Content-Type": "application/json"
       },
+      credentials: "include",
       body: JSON.stringify(normalizedOrder)
     });
 
@@ -375,7 +379,8 @@ async function getOrdersByRestaurant(email) {
 
   try {
     const response = await fetch(
-      `${DELI_ORDERS_API_URL}/orders/restaurant/${encodeURIComponent(normalizedEmail)}`
+      `${DELI_ORDERS_API_URL}/orders/restaurant/${encodeURIComponent(normalizedEmail)}`,
+      { credentials: "include", cache: "no-store" }
     );
 
     const data = await response.json();
@@ -416,7 +421,8 @@ async function getOrdersByCustomer(email) {
 
   try {
     const response = await fetch(
-      `${DELI_ORDERS_API_URL}/orders/customer/${encodeURIComponent(normalizedEmail)}`
+      `${DELI_ORDERS_API_URL}/orders/customer/${encodeURIComponent(normalizedEmail)}`,
+      { credentials: "include", cache: "no-store" }
     );
 
     const data = await response.json();
@@ -459,6 +465,7 @@ async function updateOrderStatus(orderId, status) {
         headers: {
           "Content-Type": "application/json"
         },
+        credentials: "include",
         body: JSON.stringify({ status: normalizedStatus })
       }
     );

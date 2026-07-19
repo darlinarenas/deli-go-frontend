@@ -93,7 +93,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           <div class="order-top">
             <div>
               <div class="order-title">${order.restaurantName || "Restaurante"}</div>
-              <div class="order-sub">Pedido #${order.id || "-"}</div>
+              <div class="order-sub">Pedido #${order.orderNumber || order.id || "-"}</div>
             </div>
 
             <div class="order-status ${getStatusClassSafe(order.status)}">
@@ -105,6 +105,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             ${itemsHtml}
           </div>
 
+          ${order.deliveryCode && !order.deliveryCodeVerifiedAt && !["entregado","cancelado"].includes(order.status) ? `
+            <div class="bhuz-delivery-code">
+              <small>Código secreto de entrega</small>
+              <strong>${order.deliveryCode}</strong>
+              <p>Entrégalo al repartidor solo cuando tengas el pedido en tus manos.</p>
+            </div>` : ''}
           ${!["entregado","cancelado"].includes(order.status)?`<button class="bhuz-track-btn" data-track-order="${order.id||''}">📍 Ver repartidor en tiempo real</button>`:''}
 
           <div class="order-footer">
@@ -155,6 +161,27 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   document.addEventListener("click",event=>{const btn=event.target.closest("[data-track-order]");if(btn&&window.BHUZ_TRACKING)window.BHUZ_TRACKING.open("FOOD_ORDER",btn.dataset.trackOrder,{title:"Seguimiento de tu pedido"});});
 
+
+  function ensureCustomerPushButton(){
+    if(document.getElementById("bhuzCustomerPushBtn")) return;
+    const btn=document.createElement("button");
+    btn.id="bhuzCustomerPushBtn";
+    btn.className="bhuz-track-btn";
+    btn.type="button";
+    btn.textContent=localStorage.getItem("bhuz_push_enabled")==="1" ? "✓ Notificaciones activadas" : "🔔 Activar avisos en el teléfono";
+    btn.disabled=localStorage.getItem("bhuz_push_enabled")==="1";
+    btn.addEventListener("click",async()=>{
+      try{
+        const u=getCurrentUserSafe();
+        await window.BHUZ_PWA.subscribe({userEmail:u?.email||""});
+        btn.textContent="✓ Notificaciones activadas";btn.disabled=true;
+        if(navigator.vibrate) navigator.vibrate([120,60,120]);
+      }catch(error){alert(error.message||"No se pudieron activar las notificaciones.");}
+    });
+    ordersList.parentElement?.insertBefore(btn,ordersList);
+  }
+
+  ensureCustomerPushButton();
   await loadOrders();
 
   setInterval(()=>{
