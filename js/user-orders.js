@@ -31,6 +31,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     return window.DELI_ORDERS.getStatusClass(status);
   }
 
+  async function ensureVisibleDeliveryCodes(orders = []) {
+    const pending = orders.filter(order => !["entregado","cancelado"].includes(String(order.status||"").toLowerCase()) && !/^\d{6}$/.test(String(order.deliveryCode||"")));
+    await Promise.all(pending.map(async order => {
+      try {
+        const response = await fetch(`${window.DELI_ORDERS_API_URL || window.BHUZ_API_URL || "https://deligo-backend-i554.onrender.com"}/orders/${encodeURIComponent(order.id)}/delivery-code`, { credentials:"include", cache:"no-store" });
+        const data = await response.json().catch(()=>({}));
+        if (response.ok && /^\d{6}$/.test(String(data.deliveryCode||""))) order.deliveryCode = String(data.deliveryCode);
+      } catch (error) {
+        console.warn("No se pudo recuperar la clave de entrega:", error.message);
+      }
+    }));
+    return orders;
+  }
+
   async function loadOrders(silent = false){
 
     const currentUser = getCurrentUserSafe();
@@ -43,6 +57,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const orders = await window.DELI_ORDERS.getOrdersByCustomer(currentUser.email);
 
     currentOrders = Array.isArray(orders) ? orders : [];
+    await ensureVisibleDeliveryCodes(currentOrders);
 
     currentOrders.sort((a,b)=>{
       return new Date(b.createdAt||0) - new Date(a.createdAt||0);

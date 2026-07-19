@@ -1548,7 +1548,7 @@ function detectNewOrders(orders) {
       return status === "aceptado" || status === "preparando";
     }).length;
     const readyCount = orders.filter((order) => normalizeStatus(order.status) === "listo").length;
-    const enRouteCount = orders.filter((order) => ["retirado","en_camino"].includes(normalizeStatus(order.status))).length;
+    const enRouteCount = orders.filter((order) => normalizeStatus(order.status) === "retirado").length;
     const deliveredCount = orders.filter((order) => normalizeStatus(order.status) === "entregado").length;
 
     if (els.pendingOrdersCount) els.pendingOrdersCount.textContent = pendingCount;
