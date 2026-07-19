@@ -1635,7 +1635,6 @@ function detectNewOrders(orders) {
       { key: "preparando", label: "En preparación" },
       { key: "listo", label: "Listos" },
       { key: "retirado", label: "Retirados del local" },
-      { key: "entregado", label: "Entregados" }
     ];
 
     tabsContainer.innerHTML = tabs.map((tab) => `
@@ -1773,16 +1772,13 @@ function detectNewOrders(orders) {
             ` : ""}
 
             ${normalizeStatus(order.status) === "listo" ? `
-              <button class="mini-btn secondary" type="button" onclick="window.updateRestaurantOrderStatus('${escapeHtml(order.id)}', 'retirado')">Entregado al repartidor</button>
+              <button class="mini-btn secondary" type="button" onclick="window.updateRestaurantOrderStatus('${escapeHtml(order.id)}', 'retirado')">Confirmar retiro del repartidor</button>
             ` : ""}
 
             ${normalizeStatus(order.status) === "retirado" ? `
               <button class="mini-btn secondary" type="button" disabled>Retirado del local · continúa el repartidor</button>
             ` : ""}
 
-            ${normalizeStatus(order.status) === "entregado" ? `
-              <button class="mini-btn secondary" type="button" disabled>Pedido entregado</button>
-            ` : ""}
           </div>
         </article>
       `;

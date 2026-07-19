@@ -105,11 +105,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             ${itemsHtml}
           </div>
 
-          ${order.deliveryCode && !order.deliveryCodeVerifiedAt && !["entregado","cancelado"].includes(order.status) ? `
-            <section class="bhuz-delivery-code" aria-label="Código de entrega">
-              <span class="bhuz-code-kicker">CÓDIGO PARA CONFIRMAR LA ENTREGA</span>
-              <strong>${order.deliveryCode}</strong>
-              <p>Dáselo al repartidor <b>solo cuando tengas el pedido en tus manos</b>. No es el número del pedido.</p>
+          ${!["entregado","cancelado"].includes(order.status) ? `
+            <section class="bhuz-delivery-code ${order.deliveryCode ? '' : 'is-loading'}" aria-label="Clave de entrega del pedido">
+              <span class="bhuz-code-kicker">🔐 CLAVE DE ENTREGA DEL PEDIDO</span>
+              ${order.deliveryCode ? `<strong class="bhuz-delivery-code-value">${order.deliveryCode}</strong>` : `<strong class="bhuz-delivery-code-pending">Generando clave…</strong>`}
+              <p><b>Esta es la clave de 6 dígitos que debes darle al repartidor.</b><br>Entrégala únicamente cuando tengas la comida en tus manos. No es el número del pedido.</p>
             </section>` : ''}
           ${!["entregado","cancelado"].includes(order.status)?`
             <section class="bhuz-live-card">
