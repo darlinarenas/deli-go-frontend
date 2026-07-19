@@ -32,22 +32,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   async function ensureVisibleDeliveryCodes(orders = []) {
-    const pending = orders.filter(order => !["entregado","cancelado"].includes(String(order.status||"").toLowerCase()) && !/^\d{6}$/.test(String(order.deliveryCode||"")));
-    await Promise.all(pending.map(async order => {
-      try {
-        const response = await fetch(`${window.DELI_ORDERS_API_URL || window.BHUZ_API_URL || "https://deligo-backend-i554.onrender.com"}/orders/${encodeURIComponent(order.id)}/delivery-code`, { credentials:"include", cache:"no-store" });
-        const data = await response.json().catch(()=>({}));
-        if (response.ok && /^\d{6}$/.test(String(data.deliveryCode||""))) {
-          order.deliveryCode = String(data.deliveryCode);
-          order.deliveryCodeError = "";
-        } else {
-          order.deliveryCodeError = data.message || `No se pudo generar la clave (HTTP ${response.status}).`;
-        }
-      } catch (error) {
-        order.deliveryCodeError = error.message || "No se pudo conectar con el servidor.";
-        console.warn("No se pudo recuperar la clave de entrega:", error.message);
+    // La ruta principal /orders/customer/:email ya genera y devuelve la clave.
+    // No hacemos una segunda petición por pedido: evitamos 404, duplicidad y carreras.
+    for (const order of orders) {
+      const status = String(order.status || "").toLowerCase();
+      if (["entregado", "cancelado"].includes(status)) continue;
+      const code = String(order.deliveryCode || order.delivery_code || "").trim();
+      if (/^\d{6}$/.test(code)) {
+        order.deliveryCode = code;
+        order.deliveryCodeError = "";
+      } else {
+        order.deliveryCode = "";
+        order.deliveryCodeError = "La clave no llegó en la respuesta del pedido. Actualiza después de desplegar también el backend.";
       }
-    }));
+    }
     return orders;
   }
 
@@ -56,14 +54,21 @@ document.addEventListener("DOMContentLoaded", async () => {
     const currentUser = getCurrentUserSafe();
 
     if(!currentUser || !currentUser.email){
-      ordersList.innerHTML = '<div class="order-card">Debes iniciar sesión.</div>';
+      userNameText.textContent = "No encontramos una sesión activa en este navegador.";
+      ordersList.innerHTML = '<div class="order-card">Debes iniciar sesión nuevamente para ver tus pedidos.</div>';
       return;
     }
 
-    const orders = await window.DELI_ORDERS.getOrdersByCustomer(currentUser.email);
-
-    currentOrders = Array.isArray(orders) ? orders : [];
-    await ensureVisibleDeliveryCodes(currentOrders);
+    try {
+      const orders = await window.DELI_ORDERS.getOrdersByCustomer(currentUser.email);
+      currentOrders = Array.isArray(orders) ? orders : [];
+      await ensureVisibleDeliveryCodes(currentOrders);
+    } catch (error) {
+      console.error("Error cargando Mis pedidos:", error);
+      userNameText.textContent = `${currentUser.fullName || 'Usuario'}, no pudimos cargar tus pedidos.`;
+      ordersList.innerHTML = `<div class="order-card">${error.message || 'No se pudo conectar con el servidor.'}</div>`;
+      return;
+    }
 
     currentOrders.sort((a,b)=>{
       return new Date(b.createdAt||0) - new Date(a.createdAt||0);
@@ -185,7 +190,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   document.addEventListener("click",event=>{const btn=event.target.closest("[data-track-order]");if(btn&&window.BHUZ_TRACKING)window.BHUZ_TRACKING.open("FOOD_ORDER",btn.dataset.trackOrder,{title:"Seguimiento de tu pedido"});});
-  document.addEventListener("click",async event=>{const btn=event.target.closest("[data-retry-code]");if(!btn)return;btn.disabled=true;btn.textContent="Generando…";await loadOrders(true);});
+  document.addEventListener("click",async event=>{const btn=event.target.closest("[data-retry-code]");if(!btn)return;btn.disabled=true;btn.textContent="Actualizando…";await loadOrders(true);btn.disabled=false;btn.textContent="Reintentar";});
 
 
   function ensureCustomerPushButton(){
@@ -193,7 +198,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const card=document.createElement("section");
     card.id="bhuzCustomerPushCard";
     card.className="bhuz-push-card";
-    const enabled=Notification.permission==="granted" && localStorage.getItem("bhuz_push_enabled")==="1";
+    const enabled=("Notification" in window) && Notification.permission==="granted" && localStorage.getItem("bhuz_push_enabled")==="1";
     card.innerHTML=`<div class="bhuz-push-icon">🔔</div><div class="bhuz-push-copy"><span>AVISOS DE TUS PEDIDOS</span><strong>${enabled?"Notificaciones activadas":"Recibe alertas aunque BHUZ esté cerrada"}</strong><small>${enabled?"Este dispositivo está vinculado a tu cuenta.":"Te avisaremos cuando acepten, preparen, retiren o entreguen tu pedido."}</small></div><button id="bhuzCustomerPushBtn" type="button" ${enabled?"disabled":""}>${enabled?"✓ Activadas":"Activar avisos"}</button>`;
     const anchor=document.querySelector(".user-summary")||ordersList.parentElement;
     anchor?.insertAdjacentElement("afterend",card);
@@ -212,10 +217,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   async function refreshCustomerPushBinding(){
-    if(Notification.permission!=="granted" || localStorage.getItem("bhuz_push_enabled")!=="1") return;
+    if(!("Notification" in window) || Notification.permission!=="granted" || localStorage.getItem("bhuz_push_enabled")!=="1") return;
     try{const u=getCurrentUserSafe();await window.BHUZ_PWA?.subscribe?.({userEmail:u?.email||""});}catch(error){console.warn("No se pudo renovar la suscripción push:",error.message);}
   }
 
+
+  if (!window.DELI_SESSION_READY) {
+    await new Promise(resolve => {
+      const timeout = setTimeout(resolve, 2500);
+      window.addEventListener("deli:session-ready", () => { clearTimeout(timeout); resolve(); }, { once:true });
+    });
+  }
 
   ensureCustomerPushButton();
   await refreshCustomerPushBinding();

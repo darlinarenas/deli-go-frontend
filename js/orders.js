@@ -429,36 +429,33 @@ async function getOrdersByRestaurant(email) {
 ====================================================== */
 async function getOrdersByCustomer(email) {
   const normalizedEmail = normalizeText(email);
+  const endpoints = [
+    `${DELI_ORDERS_API_URL}/orders/me`,
+    `${DELI_ORDERS_API_URL}/orders/customer/${encodeURIComponent(normalizedEmail)}`
+  ];
+  let lastError = null;
 
-  try {
-    const response = await fetch(
-      `${DELI_ORDERS_API_URL}/orders/customer/${encodeURIComponent(normalizedEmail)}`,
-      { credentials: "include", cache: "no-store" }
-    );
-
-    const data = await response.json();
-
-    if (response.ok && data.ok) {
+  for (const endpoint of endpoints) {
+    try {
+      const response = await fetch(endpoint, { credentials: "include", cache: "no-store" });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.ok) {
+        lastError = new Error(data.message || `No se pudieron cargar los pedidos (HTTP ${response.status}).`);
+        // Si la sesión no es válida, no ocultar el error probando rutas antiguas.
+        if ([401, 403].includes(response.status)) throw lastError;
+        continue;
+      }
       const normalizedOrders = normalizeOrdersList(data.orders);
-
-      // CAMBIO BHUZ LIVE:
-      // La vista de cliente usa getOrdersByCustomer().
-      // Aquí se detectan cambios de estado para mostrar:
-      // - popup premium
-      // - glow neón
-      // - sonidos
       if (window.BHUZ_LIVE_NOTIFICATIONS) {
         window.BHUZ_LIVE_NOTIFICATIONS.processCustomerOrders(normalizedOrders);
       }
-
       return normalizedOrders;
+    } catch (error) {
+      lastError = error;
+      if (/sesión|autoriz|401|403/i.test(String(error.message || ""))) break;
     }
-  } catch (error) {
-    console.warn("No se pudo leer pedidos del cliente desde backend:", error);
   }
-
-  // CAMBIO: conectar frontend con backend Render - no usar backend como fuente principal si falla el backend
-  return [];
+  throw lastError || new Error("No se pudo conectar con el servidor de pedidos.");
 }
 
 /* ======================================================
