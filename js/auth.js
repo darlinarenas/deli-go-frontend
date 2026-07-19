@@ -79,14 +79,17 @@ function setCurrentUser(user) {
 
   /*
     CACHÉ TEMPORAL DE SESIÓN:
-    - No guarda restaurantes, pedidos ni datos principales.
-    - Solo conserva el usuario autenticado durante la sesión del navegador.
-    - Permite que al recargar o entrar al panel no se pierda el login.
+    - No guarda pedidos, restaurantes ni información operativa.
+    - Solo conserva el usuario autenticado para restaurar la sesión.
+    - Usa localStorage porque Safari y la PWA instalada en iPhone
+      pueden abrirse en ventanas distintas y no compartir sessionStorage.
   */
   try {
     if (user) {
-      sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(user));
+      localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(user));
+      sessionStorage.removeItem(AUTH_SESSION_KEY);
     } else {
+      localStorage.removeItem(AUTH_SESSION_KEY);
       sessionStorage.removeItem(AUTH_SESSION_KEY);
     }
   } catch (error) {
@@ -101,6 +104,7 @@ function clearCurrentUser() {
   window.DELI_CURRENT_USER = null;
 
   try {
+    localStorage.removeItem(AUTH_SESSION_KEY);
     sessionStorage.removeItem(AUTH_SESSION_KEY);
   } catch (error) {
     console.warn("No se pudo limpiar la sesión temporal:", error);
@@ -114,19 +118,40 @@ async function loadCurrentSession() {
   /*
     PRODUCCIÓN ACTUAL:
     El backend real todavía no tiene ruta /session.
-    Mientras se implementa sesión 100% backend, se restaura SOLO la sesión
-    temporal del usuario para no expulsarlo al recargar o entrar al panel.
+    Mientras se implementa una sesión 100% backend, se restaura únicamente
+    la identidad temporal del usuario.
+
+    Compatibilidad:
+    - Primero busca en localStorage, que funciona mejor entre Safari y la PWA.
+    - Si encuentra una sesión antigua en sessionStorage, la migra automáticamente.
   */
   try {
-    const saved = sessionStorage.getItem(AUTH_SESSION_KEY);
+    let saved = localStorage.getItem(AUTH_SESSION_KEY);
+
+    if (!saved) {
+      const legacySaved = sessionStorage.getItem(AUTH_SESSION_KEY);
+
+      if (legacySaved) {
+        saved = legacySaved;
+        localStorage.setItem(AUTH_SESSION_KEY, legacySaved);
+        sessionStorage.removeItem(AUTH_SESSION_KEY);
+      }
+    }
 
     if (saved) {
       const user = JSON.parse(saved);
       window.DELI_CURRENT_USER = user || null;
+    } else {
+      window.DELI_CURRENT_USER = null;
     }
   } catch (error) {
     console.warn("No se pudo restaurar la sesión temporal:", error);
     window.DELI_CURRENT_USER = null;
+
+    try {
+      localStorage.removeItem(AUTH_SESSION_KEY);
+      sessionStorage.removeItem(AUTH_SESSION_KEY);
+    } catch (_) {}
   }
 
   window.DELI_SESSION_READY = true;
@@ -770,32 +795,4 @@ window.loadUser = loadUser;
 window.loadCurrentSession = loadCurrentSession;
 
 initAuth();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
