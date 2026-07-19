@@ -352,42 +352,29 @@ async function fetchRestaurantsFromBackend() {
 }
 
 async function fetchOrdersFromBackend() {
-  try {
-    const response = await fetch(`${ORDERS_API_URL}?t=${Date.now()}`, {
-      method: "GET",
-      cache: "no-store",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json"
-      }
-    });
-
-    /*
-      La lista pública de restaurantes no puede depender de /orders.
-      Esa ruta ahora está protegida para administradores; un 401/403 no debe
-      vaciar restaurantes ni platos del inicio. Los pedidos solo se usan como
-      apoyo opcional para rankings antiguos.
-    */
-    if (!response.ok) {
-      console.warn(`Ranking local de pedidos omitido (HTTP ${response.status}).`);
-      return [];
+  const response = await fetch(`${ORDERS_API_URL}?t=${Date.now()}`, {
+    method: "GET",
+    cache: "no-store",
+    headers: {
+      "Content-Type": "application/json"
     }
+  });
 
-    const data = await response.json();
-
-    if (Array.isArray(data)) {
-      return data;
-    }
-
-    if (data && Array.isArray(data.orders)) {
-      return data.orders;
-    }
-
-    return [];
-  } catch (error) {
-    console.warn("Ranking local de pedidos omitido:", error);
-    return [];
+  if (!response.ok) {
+    throw new Error(`Error HTTP ${response.status}`);
   }
+
+  const data = await response.json();
+
+  if (Array.isArray(data)) {
+    return data;
+  }
+
+  if (data && Array.isArray(data.orders)) {
+    return data.orders;
+  }
+
+  return [];
 }
 
 async function fetchTopRestaurantsFromBackend() {

@@ -42,26 +42,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         order.deliveryCode = code;
         order.deliveryCodeError = "";
       } else {
-        // Respaldo directo: el mismo backend genera y guarda una sola clave en BD.
-        try {
-          const response = await fetch(`${window.DELI_API_URL || "https://deligo-backend-i554.onrender.com"}/orders/${encodeURIComponent(order.id)}/delivery-code`, {
-            credentials: "include",
-            cache: "no-store",
-            headers: typeof window.getAuthHeaders === "function" ? window.getAuthHeaders() : {}
-          });
-          const data = await response.json().catch(() => ({}));
-          const repairedCode = String(data.deliveryCode || "").trim();
-          if (response.ok && /^\d{6}$/.test(repairedCode)) {
-            order.deliveryCode = repairedCode;
-            order.delivery_code = repairedCode;
-            order.deliveryCodeError = "";
-            continue;
-          }
-          throw new Error(data.message || `HTTP ${response.status}`);
-        } catch (error) {
-          order.deliveryCode = "";
-          order.deliveryCodeError = `No se pudo obtener la clave (${error.message || "sin conexión"}).`;
-        }
+        order.deliveryCode = "";
+        order.deliveryCodeError = "La clave no llegó en la respuesta del pedido. Actualiza después de desplegar también el backend.";
       }
     }
     return orders;

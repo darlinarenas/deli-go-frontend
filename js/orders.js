@@ -328,8 +328,7 @@ async function createOrder(order) {
     const response = await fetch(`${DELI_ORDERS_API_URL}/orders`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        ...(typeof window.getAuthHeaders === "function" ? window.getAuthHeaders() : {})
+        "Content-Type": "application/json"
       },
       credentials: "include",
       body: JSON.stringify(normalizedOrder)
@@ -438,7 +437,7 @@ async function getOrdersByCustomer(email) {
 
   for (const endpoint of endpoints) {
     try {
-      const response = await fetch(endpoint, { credentials: "include", cache: "no-store", headers: typeof window.getAuthHeaders === "function" ? window.getAuthHeaders() : {} });
+      const response = await fetch(endpoint, { credentials: "include", cache: "no-store" });
       const data = await response.json().catch(() => ({}));
       if (!response.ok || !data.ok) {
         lastError = new Error(data.message || `No se pudieron cargar los pedidos (HTTP ${response.status}).`);
@@ -472,8 +471,7 @@ async function updateOrderStatus(orderId, status) {
       {
         method: "PATCH",
         headers: {
-          "Content-Type": "application/json",
-          ...(typeof window.getAuthHeaders === "function" ? window.getAuthHeaders() : {})
+          "Content-Type": "application/json"
         },
         credentials: "include",
         body: JSON.stringify({ status: normalizedStatus })

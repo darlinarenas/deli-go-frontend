@@ -1,9 +1,9 @@
 {
-  "name": "BHUZ",
+  "name": "BHUZ · Mis pedidos",
   "short_name": "BHUZ",
   "description": "Pedidos de comida y envíos con seguimiento en tiempo real.",
-  "id": "/",
-  "start_url": "/?source=pwa",
+  "id": "/mis-pedidos.html",
+  "start_url": "/mis-pedidos.html?source=pwa",
   "scope": "/",
   "display": "standalone",
   "background_color": "#070b09",

@@ -15,8 +15,6 @@
 ========================================================= */
 const AUTH_API_URL = window.DELI_API_URL || "https://deligo-backend-i554.onrender.com";
 const AUTH_SESSION_KEY = "deliCurrentUserSession";
-const AUTH_TOKEN_KEY = "deliSessionToken";
-window.DELI_SESSION_TOKEN = null;
 
 /* =========================================================
    ELEMENTOS DOM
@@ -76,34 +74,20 @@ function getCurrentUser() {
   return window.DELI_CURRENT_USER || null;
 }
 
-function setCurrentUser(user, sessionToken = null) {
+function setCurrentUser(user) {
   window.DELI_CURRENT_USER = user || null;
-
-  if (sessionToken) {
-    window.DELI_SESSION_TOKEN = String(sessionToken);
-  }
 
   /*
     CACHÉ TEMPORAL DE SESIÓN:
-    - No guarda pedidos, restaurantes ni información operativa.
-    - Solo conserva el usuario autenticado para restaurar la sesión.
-    - Usa localStorage porque Safari y la PWA instalada en iPhone
-      pueden abrirse en ventanas distintas y no compartir sessionStorage.
+    - No guarda restaurantes, pedidos ni datos principales.
+    - Solo conserva el usuario autenticado durante la sesión del navegador.
+    - Permite que al recargar o entrar al panel no se pierda el login.
   */
   try {
     if (user) {
-      localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(user));
-      sessionStorage.removeItem(AUTH_SESSION_KEY);
-
-      if (window.DELI_SESSION_TOKEN) {
-        localStorage.setItem(AUTH_TOKEN_KEY, window.DELI_SESSION_TOKEN);
-      }
+      sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(user));
     } else {
-      localStorage.removeItem(AUTH_SESSION_KEY);
       sessionStorage.removeItem(AUTH_SESSION_KEY);
-      localStorage.removeItem(AUTH_TOKEN_KEY);
-      sessionStorage.removeItem(AUTH_TOKEN_KEY);
-      window.DELI_SESSION_TOKEN = null;
     }
   } catch (error) {
     console.warn("No se pudo guardar la sesión temporal:", error);
@@ -117,11 +101,7 @@ function clearCurrentUser() {
   window.DELI_CURRENT_USER = null;
 
   try {
-    localStorage.removeItem(AUTH_SESSION_KEY);
     sessionStorage.removeItem(AUTH_SESSION_KEY);
-    localStorage.removeItem(AUTH_TOKEN_KEY);
-    sessionStorage.removeItem(AUTH_TOKEN_KEY);
-    window.DELI_SESSION_TOKEN = null;
   } catch (error) {
     console.warn("No se pudo limpiar la sesión temporal:", error);
   }
@@ -131,48 +111,22 @@ function clearCurrentUser() {
 }
 
 async function loadCurrentSession() {
+  /*
+    PRODUCCIÓN ACTUAL:
+    El backend real todavía no tiene ruta /session.
+    Mientras se implementa sesión 100% backend, se restaura SOLO la sesión
+    temporal del usuario para no expulsarlo al recargar o entrar al panel.
+  */
   try {
-    const savedUser = localStorage.getItem(AUTH_SESSION_KEY) || sessionStorage.getItem(AUTH_SESSION_KEY);
-    const savedToken = localStorage.getItem(AUTH_TOKEN_KEY) || sessionStorage.getItem(AUTH_TOKEN_KEY);
+    const saved = sessionStorage.getItem(AUTH_SESSION_KEY);
 
-    window.DELI_SESSION_TOKEN = savedToken || null;
-
-    const headers = {};
-    if (savedToken) headers.Authorization = `Bearer ${savedToken}`;
-
-    const response = await fetch(`${AUTH_API_URL}/session`, {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store",
-      headers
-    });
-
-    const data = await response.json().catch(() => ({}));
-
-    if (response.ok && data.ok && data.user) {
-      window.DELI_CURRENT_USER = data.user;
-      localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(data.user));
-    } else {
-      // No conservar una identidad local si el backend ya no reconoce la sesión.
-      window.DELI_CURRENT_USER = null;
-      window.DELI_SESSION_TOKEN = null;
-      localStorage.removeItem(AUTH_SESSION_KEY);
-      sessionStorage.removeItem(AUTH_SESSION_KEY);
-      localStorage.removeItem(AUTH_TOKEN_KEY);
-      sessionStorage.removeItem(AUTH_TOKEN_KEY);
+    if (saved) {
+      const user = JSON.parse(saved);
+      window.DELI_CURRENT_USER = user || null;
     }
   } catch (error) {
-    console.warn("No se pudo validar la sesión con el backend:", error);
-
-    // Solo como respaldo de conectividad temporal, conserva el usuario local.
-    try {
-      const saved = localStorage.getItem(AUTH_SESSION_KEY) || sessionStorage.getItem(AUTH_SESSION_KEY);
-      window.DELI_CURRENT_USER = saved ? JSON.parse(saved) : null;
-      window.DELI_SESSION_TOKEN = localStorage.getItem(AUTH_TOKEN_KEY) || sessionStorage.getItem(AUTH_TOKEN_KEY) || null;
-    } catch (_) {
-      window.DELI_CURRENT_USER = null;
-      window.DELI_SESSION_TOKEN = null;
-    }
+    console.warn("No se pudo restaurar la sesión temporal:", error);
+    window.DELI_CURRENT_USER = null;
   }
 
   window.DELI_SESSION_READY = true;
@@ -382,22 +336,12 @@ function isRestaurantPanelPage() {
   return page === "panel-restaurant.html" || page === "panel-restaurante.html";
 }
 
-function getAuthHeaders() {
-  const token = window.DELI_SESSION_TOKEN ||
-    localStorage.getItem(AUTH_TOKEN_KEY) ||
-    sessionStorage.getItem(AUTH_TOKEN_KEY) ||
-    "";
-
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
 async function postToBackend(endpoint, payload) {
   const res = await fetch(`${AUTH_API_URL}${endpoint}`, {
     method: "POST",
     credentials: "include",
     headers: {
-      "Content-Type": "application/json",
-      ...getAuthHeaders()
+      "Content-Type": "application/json"
     },
     body: JSON.stringify(payload)
   });
@@ -579,7 +523,7 @@ async function registerUser() {
         ...loginResult.data.user,
         role: "customer"
       };
-      setCurrentUser(user, loginResult.data.sessionToken);
+      setCurrentUser(user);
     }
 
     closeRegister();
@@ -703,7 +647,7 @@ async function loginUser() {
       user.status = approvalStatus;
     }
 
-    setCurrentUser(user, data.sessionToken);
+    setCurrentUser(user);
     closeLogin();
 
     if (role === "restaurant") {
@@ -824,7 +768,34 @@ window.isCustomerLoggedIn = isCustomerLoggedIn;
 window.isRestaurantLoggedIn = isRestaurantLoggedIn;
 window.loadUser = loadUser;
 window.loadCurrentSession = loadCurrentSession;
-window.getAuthHeaders = getAuthHeaders;
 
 initAuth();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
