@@ -1,0 +1,59 @@
+BHUZ 247 - ACTUALIZACIÓN CLIENTE, REPARTIDOR Y RESTAURANTE
+Fecha: 2026-07-18
+
+CAMBIOS PRINCIPALES
+
+1. PANEL DEL CLIENTE
+- El botón suelto de notificaciones fue reemplazado por una tarjeta visible y coherente con el diseño BHUZ.
+- La tarjeta explica que los avisos pueden llegar aunque BHUZ esté cerrada.
+- Si el permiso ya fue concedido, la suscripción push se vuelve a vincular automáticamente con la cuenta al entrar en Mis pedidos.
+- El código de entrega se muestra en un bloque mucho más visible.
+- Se aclara que el código de entrega NO es el número del pedido.
+- Se indica expresamente que solo debe entregarse al repartidor cuando el pedido esté en manos del cliente.
+- El seguimiento ahora aparece como una tarjeta premium: “Ver recorrido en vivo”.
+- Cuando aún no hay repartidor asignado, el seguimiento informa que está esperando asignación en lugar de aparentar un fallo.
+
+2. NOTIFICACIONES WEB PUSH
+- Se actualizó el Service Worker y se cambió la versión de caché para forzar la instalación de la versión nueva.
+- Se añadió actualización explícita del Service Worker evitando caché antigua.
+- La suscripción guarda nuevamente el endpoint activo.
+- Se aumentó el patrón de vibración compatible.
+- Se añadió renotify para cambios consecutivos del mismo pedido.
+- El sonido final depende del sistema operativo, volumen, modo silencio y permisos del navegador. La web no puede forzar sonido si el teléfono lo bloquea.
+
+3. PANEL DEL REPARTIDOR
+- Se corrigió el error que solicitaba el código solo para paquetes.
+- Ahora tanto PACKAGE como FOOD_ORDER solicitan obligatoriamente el código de seis dígitos antes de cerrar la entrega.
+- El botón “Confirmar entrega” abre el modal de seis dígitos también en pedidos de restaurante.
+
+4. PANEL DEL RESTAURANTE
+Flujo operativo del restaurante:
+Pendiente → Aceptado → En preparación → Listo para entregar → Retirado del local.
+
+- Se eliminó del restaurante la posibilidad de marcar “En camino” y “Entregado”.
+- Después de “Listo para entregar”, aparece “Entregado al repartidor”.
+- Ese botón registra internamente el estado “retirado”.
+- Desde “Retirado del local” continúa el flujo operativo del repartidor.
+- El restaurante puede consultar pedidos entregados como historial, pero no cerrarlos.
+
+5. SEGUIMIENTO
+- La consulta de seguimiento ahora envía las credenciales de sesión.
+- Un pedido sin repartidor muestra “Todavía no hay un repartidor asignado” y continúa consultando.
+- La ubicación solo podrá mostrarse cuando exista una tarea FOOD_ORDER vinculada, un repartidor asignado y el teléfono del repartidor esté enviando GPS.
+
+PRUEBA RECOMENDADA
+1. Publicar frontend y backend.
+2. En el teléfono del cliente, cerrar completamente BHUZ y volver a abrirla una vez para que se actualice el Service Worker.
+3. Entrar en Mis pedidos y pulsar “Activar avisos”.
+4. Verificar en los ajustes del teléfono que BHUZ tenga permitidas las notificaciones.
+5. Crear un pedido nuevo.
+6. Restaurante: Aceptar → En preparación → Listo para entregar → Entregado al repartidor.
+7. Repartidor: aceptar tarea, activar GPS, retirar, iniciar ruta, llegar al destino y pulsar Confirmar entrega.
+8. Debe aparecer el modal de seis dígitos.
+9. Introducir el código visible en Mis pedidos del cliente.
+10. Confirmar que el estado final sea Entregado.
+
+IMPORTANTE SOBRE IPHONE
+- Las notificaciones web requieren que BHUZ esté agregada a la pantalla de inicio.
+- Deben activarse desde una acción del usuario.
+- El modo silencio, concentración o restricciones de iOS pueden impedir sonido o vibración aunque la notificación llegue.

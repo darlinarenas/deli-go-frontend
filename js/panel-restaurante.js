@@ -1509,6 +1509,8 @@ function detectNewOrders(orders) {
         return "tag tag-prep";
       case "listo":
         return "tag tag-ready";
+      case "retirado":
+        return "tag tag-ready";
       case "en_camino":
         return "tag tag-ready";
       case "entregado":
@@ -1527,7 +1529,9 @@ function detectNewOrders(orders) {
       case "preparando":
         return "Preparando";
       case "listo":
-        return "Listo para entrega";
+        return "Listo para entregar";
+      case "retirado":
+        return "Retirado del local";
       case "en_camino":
         return "En camino";
       case "entregado":
@@ -1544,7 +1548,7 @@ function detectNewOrders(orders) {
       return status === "aceptado" || status === "preparando";
     }).length;
     const readyCount = orders.filter((order) => normalizeStatus(order.status) === "listo").length;
-    const enRouteCount = orders.filter((order) => normalizeStatus(order.status) === "en_camino").length;
+    const enRouteCount = orders.filter((order) => ["retirado","en_camino"].includes(normalizeStatus(order.status))).length;
     const deliveredCount = orders.filter((order) => normalizeStatus(order.status) === "entregado").length;
 
     if (els.pendingOrdersCount) els.pendingOrdersCount.textContent = pendingCount;
@@ -1561,6 +1565,7 @@ function detectNewOrders(orders) {
       aceptado: orders.filter((o) => normalizeStatus(o.status) === "aceptado").length,
       preparando: orders.filter((o) => normalizeStatus(o.status) === "preparando").length,
       listo: orders.filter((o) => normalizeStatus(o.status) === "listo").length,
+      retirado: orders.filter((o) => normalizeStatus(o.status) === "retirado").length,
       en_camino: orders.filter((o) => normalizeStatus(o.status) === "en_camino").length,
       entregado: orders.filter((o) => normalizeStatus(o.status) === "entregado").length
     };
@@ -1629,7 +1634,7 @@ function detectNewOrders(orders) {
       { key: "aceptado", label: "Aceptados" },
       { key: "preparando", label: "En preparación" },
       { key: "listo", label: "Listos" },
-      { key: "en_camino", label: "En camino" },
+      { key: "retirado", label: "Retirados del local" },
       { key: "entregado", label: "Entregados" }
     ];
 
@@ -1768,11 +1773,11 @@ function detectNewOrders(orders) {
             ` : ""}
 
             ${normalizeStatus(order.status) === "listo" ? `
-              <button class="mini-btn secondary" type="button" onclick="window.updateRestaurantOrderStatus('${escapeHtml(order.id)}', 'en_camino')">En camino</button>
+              <button class="mini-btn secondary" type="button" onclick="window.updateRestaurantOrderStatus('${escapeHtml(order.id)}', 'retirado')">Entregado al repartidor</button>
             ` : ""}
 
-            ${normalizeStatus(order.status) === "en_camino" ? `
-              <button class="mini-btn secondary" type="button" onclick="window.updateRestaurantOrderStatus('${escapeHtml(order.id)}', 'entregado')">Marcar entregado</button>
+            ${normalizeStatus(order.status) === "retirado" ? `
+              <button class="mini-btn secondary" type="button" disabled>Retirado del local · continúa el repartidor</button>
             ` : ""}
 
             ${normalizeStatus(order.status) === "entregado" ? `

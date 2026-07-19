@@ -106,12 +106,16 @@ document.addEventListener("DOMContentLoaded", async () => {
           </div>
 
           ${order.deliveryCode && !order.deliveryCodeVerifiedAt && !["entregado","cancelado"].includes(order.status) ? `
-            <div class="bhuz-delivery-code">
-              <small>Código secreto de entrega</small>
+            <section class="bhuz-delivery-code" aria-label="Código de entrega">
+              <span class="bhuz-code-kicker">CÓDIGO PARA CONFIRMAR LA ENTREGA</span>
               <strong>${order.deliveryCode}</strong>
-              <p>Entrégalo al repartidor solo cuando tengas el pedido en tus manos.</p>
-            </div>` : ''}
-          ${!["entregado","cancelado"].includes(order.status)?`<button class="bhuz-track-btn" data-track-order="${order.id||''}">📍 Ver repartidor en tiempo real</button>`:''}
+              <p>Dáselo al repartidor <b>solo cuando tengas el pedido en tus manos</b>. No es el número del pedido.</p>
+            </section>` : ''}
+          ${!["entregado","cancelado"].includes(order.status)?`
+            <section class="bhuz-live-card">
+              <div><span>SEGUIMIENTO DEL PEDIDO</span><strong>${["retirado","en_camino"].includes(order.status)?"Tu repartidor va en camino":"Consulta cuándo se asigne el repartidor"}</strong><small>Ubicación actualizada desde el teléfono del repartidor.</small></div>
+              <button class="bhuz-track-btn" data-track-order="${order.id||''}">Ver recorrido en vivo <b>→</b></button>
+            </section>`:''}
 
           <div class="order-footer">
             <div class="order-total">
@@ -163,25 +167,36 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
   function ensureCustomerPushButton(){
-    if(document.getElementById("bhuzCustomerPushBtn")) return;
-    const btn=document.createElement("button");
-    btn.id="bhuzCustomerPushBtn";
-    btn.className="bhuz-track-btn";
-    btn.type="button";
-    btn.textContent=localStorage.getItem("bhuz_push_enabled")==="1" ? "✓ Notificaciones activadas" : "🔔 Activar avisos en el teléfono";
-    btn.disabled=localStorage.getItem("bhuz_push_enabled")==="1";
-    btn.addEventListener("click",async()=>{
+    if(document.getElementById("bhuzCustomerPushCard")) return;
+    const card=document.createElement("section");
+    card.id="bhuzCustomerPushCard";
+    card.className="bhuz-push-card";
+    const enabled=Notification.permission==="granted" && localStorage.getItem("bhuz_push_enabled")==="1";
+    card.innerHTML=`<div class="bhuz-push-icon">🔔</div><div class="bhuz-push-copy"><span>AVISOS DE TUS PEDIDOS</span><strong>${enabled?"Notificaciones activadas":"Recibe alertas aunque BHUZ esté cerrada"}</strong><small>${enabled?"Este dispositivo está vinculado a tu cuenta.":"Te avisaremos cuando acepten, preparen, retiren o entreguen tu pedido."}</small></div><button id="bhuzCustomerPushBtn" type="button" ${enabled?"disabled":""}>${enabled?"✓ Activadas":"Activar avisos"}</button>`;
+    const anchor=document.querySelector(".user-summary")||ordersList.parentElement;
+    anchor?.insertAdjacentElement("afterend",card);
+    const btn=card.querySelector("#bhuzCustomerPushBtn");
+    btn?.addEventListener("click",async()=>{
       try{
         const u=getCurrentUserSafe();
+        btn.disabled=true;btn.textContent="Activando…";
         await window.BHUZ_PWA.subscribe({userEmail:u?.email||""});
-        btn.textContent="✓ Notificaciones activadas";btn.disabled=true;
+        card.querySelector(".bhuz-push-copy strong").textContent="Notificaciones activadas";
+        card.querySelector(".bhuz-push-copy small").textContent="Este dispositivo está vinculado a tu cuenta.";
+        btn.textContent="✓ Activadas";
         if(navigator.vibrate) navigator.vibrate([120,60,120]);
-      }catch(error){alert(error.message||"No se pudieron activar las notificaciones.");}
+      }catch(error){btn.disabled=false;btn.textContent="Activar avisos";alert(error.message||"No se pudieron activar las notificaciones.");}
     });
-    ordersList.parentElement?.insertBefore(btn,ordersList);
   }
 
+  async function refreshCustomerPushBinding(){
+    if(Notification.permission!=="granted" || localStorage.getItem("bhuz_push_enabled")!=="1") return;
+    try{const u=getCurrentUserSafe();await window.BHUZ_PWA?.subscribe?.({userEmail:u?.email||""});}catch(error){console.warn("No se pudo renovar la suscripción push:",error.message);}
+  }
+
+
   ensureCustomerPushButton();
+  await refreshCustomerPushBinding();
   await loadOrders();
 
   setInterval(()=>{

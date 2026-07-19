@@ -47,9 +47,9 @@
     async function refresh(){
       if(closed||!document.body.contains(modal))return;
       try{
-        const r=await fetch(`${API}/api/tracking/live/${encodeURIComponent(type)}/${encodeURIComponent(id)}`,{cache:'no-store'});
+        const r=await fetch(`${API}/api/tracking/live/${encodeURIComponent(type)}/${encodeURIComponent(id)}`,{cache:'no-store',credentials:'include'});
         const d=await r.json().catch(()=>({}));
-        if(!r.ok||d.ok===false)throw Error(d.message||'Seguimiento no disponible');
+        if(r.status===404){modal.querySelector('.bhuz-tracking-status strong').textContent=d.message||'Esperando asignación del repartidor…';return;}if(!r.ok||d.ok===false)throw Error(d.message||'Seguimiento no disponible');
         const t=d.tracking||{},p=t.position;
         modal.querySelector('.bhuz-tracking-status strong').textContent=statusLabel(t.status)+(p?.created_at?` · ${new Date(p.created_at).toLocaleTimeString('es-VE',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`:'');
         modal.querySelector('#bhuzDriverInfo').innerHTML=`<strong>${t.driver?.name||'Repartidor BHUZ'}</strong><small>${[t.driver?.vehicleType,t.driver?.vehicleColor,t.driver?.vehiclePlate].filter(Boolean).join(' · ')||'Vehículo BHUZ'}</small>`;

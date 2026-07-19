@@ -90,6 +90,10 @@ function normalizeOrderStatus(status) {
     case "ready":
       return "listo";
 
+    case "picked_up":
+    case "retirado":
+      return "retirado";
+
     case "on_the_way":
     case "on-the-way":
     case "en camino":
@@ -104,6 +108,7 @@ function normalizeOrderStatus(status) {
     case "aceptado":
     case "preparando":
     case "listo":
+    case "retirado":
     case "en_camino":
     case "entregado":
       return normalized;
@@ -125,7 +130,10 @@ function getStatusLabel(status) {
       return "Preparando";
 
     case "listo":
-      return "Listo";
+      return "Listo para entregar";
+
+    case "retirado":
+      return "En camino";
 
     case "en_camino":
       return "En camino";
@@ -149,6 +157,9 @@ function getStatusClass(status) {
 
     case "listo":
       return "status-listo";
+
+    case "retirado":
+      return "status-camino";
 
     case "en_camino":
       return "status-camino";
