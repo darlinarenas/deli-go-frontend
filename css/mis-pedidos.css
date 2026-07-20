@@ -412,31 +412,3 @@ body{
   }
 }
 
-
-.bhuz-delivery-code{margin:14px 0;padding:14px;border:1px solid rgba(83,255,142,.35);border-radius:16px;background:rgba(83,255,142,.07);text-align:center}.bhuz-delivery-code small{display:block;opacity:.75}.bhuz-delivery-code strong{display:block;font-size:2rem;letter-spacing:.24em;margin:6px 0;color:#53ff8e}.bhuz-delivery-code p{margin:0;font-size:.82rem;opacity:.8}
-
-
-/* BHUZ 2026-07-18 · avisos, código y seguimiento premium */
-.bhuz-push-card{margin:0 16px 18px;padding:16px;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;border:1px solid rgba(0,210,106,.24);border-radius:20px;background:linear-gradient(135deg,rgba(0,210,106,.10),rgba(12,17,25,.96));box-shadow:0 16px 38px rgba(0,0,0,.22)}
-.bhuz-push-icon{width:46px;height:46px;border-radius:15px;display:grid;place-items:center;background:rgba(0,210,106,.14);font-size:1.3rem}.bhuz-push-copy span,.bhuz-live-card span,.bhuz-code-kicker{display:block;color:var(--green);font-size:.68rem;font-weight:900;letter-spacing:.12em}.bhuz-push-copy strong,.bhuz-live-card strong{display:block;margin:4px 0;font-size:.98rem}.bhuz-push-copy small,.bhuz-live-card small{display:block;color:var(--muted);line-height:1.35}.bhuz-push-card button{border:0;border-radius:14px;padding:12px 14px;background:var(--green);color:#031008;font-weight:900;cursor:pointer}.bhuz-push-card button:disabled{background:#16251f;color:#86d7aa;cursor:default}
-.bhuz-delivery-code{position:relative;overflow:hidden;margin:16px 0;padding:18px;border:1px solid rgba(83,255,142,.42);border-radius:20px;background:radial-gradient(circle at top right,rgba(83,255,142,.14),transparent 42%),rgba(83,255,142,.06);text-align:center}.bhuz-delivery-code strong{display:block;margin:8px 0 10px;color:#53ff8e;font-size:clamp(2.05rem,10vw,3rem);letter-spacing:.18em;text-shadow:0 0 20px rgba(83,255,142,.28)}.bhuz-delivery-code p{max-width:470px;margin:0 auto;color:#d7dfdb;font-size:.88rem;line-height:1.45}
-.bhuz-live-card{margin:14px 0;padding:15px;display:grid;grid-template-columns:1fr auto;gap:14px;align-items:center;border:1px solid rgba(255,255,255,.08);border-radius:18px;background:#090f17}.bhuz-track-btn{border:1px solid rgba(0,210,106,.28);border-radius:14px;padding:12px 14px;background:rgba(0,210,106,.10);color:#fff;font-weight:900;cursor:pointer;white-space:nowrap}.bhuz-track-btn b{color:var(--green);margin-left:6px}
-@media(max-width:680px){.bhuz-push-card{grid-template-columns:auto 1fr}.bhuz-push-card button{grid-column:1/-1;width:100%}.bhuz-live-card{grid-template-columns:1fr}.bhuz-track-btn{width:100%;white-space:normal}}
-
-
-/* BHUZ PATCH 2026-07-18: clave de entrega claramente visible */
-.bhuz-delivery-code{
-  margin:18px 0 14px;
-  padding:20px 16px;
-  border-radius:20px;
-  border:2px solid var(--green);
-  background:linear-gradient(180deg,rgba(0,210,106,.14),rgba(0,210,106,.05));
-  text-align:center;
-  box-shadow:0 0 0 4px rgba(0,210,106,.05);
-}
-.bhuz-code-kicker{display:block;font-size:12px;letter-spacing:1.1px;font-weight:900;color:var(--green);margin-bottom:10px}
-.bhuz-delivery-code-value{display:block;font-size:42px;line-height:1;letter-spacing:9px;color:#fff;margin:8px 0 12px;font-variant-numeric:tabular-nums}
-.bhuz-delivery-code-pending{display:block;font-size:18px;color:#fff;margin:8px 0 12px}
-.bhuz-delivery-code p{margin:0;color:#d1d5db;line-height:1.5;font-size:14px}
-.bhuz-delivery-code p b{color:#fff}
-@media(max-width:520px){.bhuz-delivery-code-value{font-size:36px;letter-spacing:7px}}

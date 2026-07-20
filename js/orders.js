@@ -90,10 +90,6 @@ function normalizeOrderStatus(status) {
     case "ready":
       return "listo";
 
-    case "picked_up":
-    case "retirado":
-      return "retirado";
-
     case "on_the_way":
     case "on-the-way":
     case "en camino":
@@ -108,7 +104,6 @@ function normalizeOrderStatus(status) {
     case "aceptado":
     case "preparando":
     case "listo":
-    case "retirado":
     case "en_camino":
     case "entregado":
       return normalized;
@@ -130,10 +125,7 @@ function getStatusLabel(status) {
       return "Preparando";
 
     case "listo":
-      return "Listo para entregar";
-
-    case "retirado":
-      return "En camino";
+      return "Listo";
 
     case "en_camino":
       return "En camino";
@@ -157,9 +149,6 @@ function getStatusClass(status) {
 
     case "listo":
       return "status-listo";
-
-    case "retirado":
-      return "status-camino";
 
     case "en_camino":
       return "status-camino";
@@ -257,9 +246,6 @@ function normalizeOrder(order) {
 
   return {
     id: order.id || `order_${Date.now()}`,
-    orderNumber: order.orderNumber || String(order.id || "").replace(/\D/g, "").slice(-6).padStart(6, "0"),
-    deliveryCode: order.deliveryCode || "",
-    deliveryCodeVerifiedAt: order.deliveryCodeVerifiedAt || null,
     restaurantEmail: normalizeText(
       order.restaurantEmail || restaurantObject.email || ""
     ),
@@ -330,7 +316,6 @@ async function createOrder(order) {
       headers: {
         "Content-Type": "application/json"
       },
-      credentials: "include",
       body: JSON.stringify(normalizedOrder)
     });
 
@@ -390,8 +375,7 @@ async function getOrdersByRestaurant(email) {
 
   try {
     const response = await fetch(
-      `${DELI_ORDERS_API_URL}/orders/restaurant/${encodeURIComponent(normalizedEmail)}`,
-      { credentials: "include", cache: "no-store" }
+      `${DELI_ORDERS_API_URL}/orders/restaurant/${encodeURIComponent(normalizedEmail)}`
     );
 
     const data = await response.json();
@@ -429,33 +413,35 @@ async function getOrdersByRestaurant(email) {
 ====================================================== */
 async function getOrdersByCustomer(email) {
   const normalizedEmail = normalizeText(email);
-  const endpoints = [
-    `${DELI_ORDERS_API_URL}/orders/me`,
-    `${DELI_ORDERS_API_URL}/orders/customer/${encodeURIComponent(normalizedEmail)}`
-  ];
-  let lastError = null;
 
-  for (const endpoint of endpoints) {
-    try {
-      const response = await fetch(endpoint, { credentials: "include", cache: "no-store" });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.ok) {
-        lastError = new Error(data.message || `No se pudieron cargar los pedidos (HTTP ${response.status}).`);
-        // Si la sesión no es válida, no ocultar el error probando rutas antiguas.
-        if ([401, 403].includes(response.status)) throw lastError;
-        continue;
-      }
+  try {
+    const response = await fetch(
+      `${DELI_ORDERS_API_URL}/orders/customer/${encodeURIComponent(normalizedEmail)}`
+    );
+
+    const data = await response.json();
+
+    if (response.ok && data.ok) {
       const normalizedOrders = normalizeOrdersList(data.orders);
+
+      // CAMBIO BHUZ LIVE:
+      // La vista de cliente usa getOrdersByCustomer().
+      // Aquí se detectan cambios de estado para mostrar:
+      // - popup premium
+      // - glow neón
+      // - sonidos
       if (window.BHUZ_LIVE_NOTIFICATIONS) {
         window.BHUZ_LIVE_NOTIFICATIONS.processCustomerOrders(normalizedOrders);
       }
+
       return normalizedOrders;
-    } catch (error) {
-      lastError = error;
-      if (/sesión|autoriz|401|403/i.test(String(error.message || ""))) break;
     }
+  } catch (error) {
+    console.warn("No se pudo leer pedidos del cliente desde backend:", error);
   }
-  throw lastError || new Error("No se pudo conectar con el servidor de pedidos.");
+
+  // CAMBIO: conectar frontend con backend Render - no usar backend como fuente principal si falla el backend
+  return [];
 }
 
 /* ======================================================
@@ -473,7 +459,6 @@ async function updateOrderStatus(orderId, status) {
         headers: {
           "Content-Type": "application/json"
         },
-        credentials: "include",
         body: JSON.stringify({ status: normalizedStatus })
       }
     );
