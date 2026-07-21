@@ -290,6 +290,11 @@ function normalizeOrder(order) {
       lng: longitude
     },
     status: normalizeOrderStatus(order.status),
+    deliveryCode: String(order.deliveryCode || order.delivery_code || "").trim(),
+    deliveryCodeUsed:
+      order.deliveryCodeUsed === true ||
+      order.delivery_code_used === true ||
+      String(order.deliveryCodeUsed ?? order.delivery_code_used ?? "").toLowerCase() === "true",
     paymentMethod: order.paymentMethod || "pendiente",
     notes: order.notes || "",
     date: order.date || "",
