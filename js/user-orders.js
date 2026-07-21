@@ -36,14 +36,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     { key: "recibido", label: "Recibido", timeField: "createdAt" },
     { key: "aceptado", label: "Aceptado", timeField: "acceptedAt" },
     { key: "preparando", label: "En preparación", timeField: "preparingAt" },
+    { key: "retirado", label: "Retirado", timeField: "pickedUpAt" },
     { key: "en_camino", label: "En camino", timeField: "enRouteAt" },
     { key: "entregado", label: "Entregado", timeField: "deliveredAt" }
   ];
 
   function getTimelineIndex(status) {
     const normalized = String(status || "").toLowerCase();
-    if (normalized === "entregado") return 4;
-    if (normalized === "en_camino") return 3;
+    if (normalized === "entregado") return 5;
+    if (normalized === "en_camino") return 4;
+    if (normalized === "retirado") return 3;
     if (["preparando", "listo"].includes(normalized)) return 2;
     if (normalized === "aceptado") return 1;
     return 0;
@@ -155,6 +157,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               <div>
                 <strong>Entrega verificada</strong>
                 <span>Pedido entregado correctamente mediante el código de seguridad.</span>
+                ${order.deliveryCode ? `<small class="bhuz-verified-code">Código validado: <b>${order.deliveryCode}</b></small>` : ""}
               </div>
             </div>` : ''}
 

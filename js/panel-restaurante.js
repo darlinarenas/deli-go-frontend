@@ -188,6 +188,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         return "preparando";
       case "ready":
         return "listo";
+      case "picked_up":
+      case "withdrawn":
+      case "retirado por el repartidor":
+        return "retirado";
       case "on_the_way":
       case "on-the-way":
       case "en camino":
@@ -1508,6 +1512,7 @@ function detectNewOrders(orders) {
       case "preparando":
         return "tag tag-prep";
       case "listo":
+      case "retirado":
         return "tag tag-ready";
       case "en_camino":
         return "tag tag-ready";
@@ -1527,7 +1532,9 @@ function detectNewOrders(orders) {
       case "preparando":
         return "Preparando";
       case "listo":
-        return "Listo para entrega";
+        return "Listo para retiro";
+      case "retirado":
+        return "Retirado por el repartidor";
       case "en_camino":
         return "En camino";
       case "entregado":
@@ -1544,7 +1551,7 @@ function detectNewOrders(orders) {
       return status === "aceptado" || status === "preparando";
     }).length;
     const readyCount = orders.filter((order) => normalizeStatus(order.status) === "listo").length;
-    const enRouteCount = orders.filter((order) => normalizeStatus(order.status) === "en_camino").length;
+    const enRouteCount = orders.filter((order) => ["retirado", "en_camino"].includes(normalizeStatus(order.status))).length;
     const deliveredCount = orders.filter((order) => normalizeStatus(order.status) === "entregado").length;
 
     if (els.pendingOrdersCount) els.pendingOrdersCount.textContent = pendingCount;
@@ -1561,6 +1568,7 @@ function detectNewOrders(orders) {
       aceptado: orders.filter((o) => normalizeStatus(o.status) === "aceptado").length,
       preparando: orders.filter((o) => normalizeStatus(o.status) === "preparando").length,
       listo: orders.filter((o) => normalizeStatus(o.status) === "listo").length,
+      retirado: orders.filter((o) => normalizeStatus(o.status) === "retirado").length,
       en_camino: orders.filter((o) => normalizeStatus(o.status) === "en_camino").length,
       entregado: orders.filter((o) => normalizeStatus(o.status) === "entregado").length
     };
@@ -1629,6 +1637,7 @@ function detectNewOrders(orders) {
       { key: "aceptado", label: "Aceptados" },
       { key: "preparando", label: "En preparación" },
       { key: "listo", label: "Listos" },
+      { key: "retirado", label: "Retirados" },
       { key: "en_camino", label: "En camino" },
       { key: "entregado", label: "Entregados" }
     ];
@@ -1768,11 +1777,15 @@ function detectNewOrders(orders) {
             ` : ""}
 
             ${normalizeStatus(order.status) === "listo" ? `
-              <button class="mini-btn secondary" type="button" onclick="window.updateRestaurantOrderStatus('${escapeHtml(order.id)}', 'en_camino')">En camino</button>
+              <button class="mini-btn secondary" type="button" onclick="window.updateRestaurantOrderStatus('${escapeHtml(order.id)}', 'retirado')">Pedido retirado por el repartidor</button>
+            ` : ""}
+
+            ${normalizeStatus(order.status) === "retirado" ? `
+              <button class="mini-btn secondary" type="button" disabled>Esperando salida del repartidor</button>
             ` : ""}
 
             ${normalizeStatus(order.status) === "en_camino" ? `
-              <button class="mini-btn secondary" type="button" onclick="window.updateRestaurantOrderStatus('${escapeHtml(order.id)}', 'entregado')">Marcar entregado</button>
+              <button class="mini-btn secondary" type="button" disabled>Repartidor en camino</button>
             ` : ""}
 
             ${normalizeStatus(order.status) === "entregado" ? `

@@ -90,6 +90,11 @@ function normalizeOrderStatus(status) {
     case "ready":
       return "listo";
 
+    case "picked_up":
+    case "withdrawn":
+    case "retirado por el repartidor":
+      return "retirado";
+
     case "on_the_way":
     case "on-the-way":
     case "en camino":
@@ -104,6 +109,7 @@ function normalizeOrderStatus(status) {
     case "aceptado":
     case "preparando":
     case "listo":
+    case "retirado":
     case "en_camino":
     case "entregado":
       return normalized;
@@ -126,6 +132,9 @@ function getStatusLabel(status) {
 
     case "listo":
       return "Listo";
+
+    case "retirado":
+      return "Retirado";
 
     case "en_camino":
       return "En camino";
@@ -303,6 +312,7 @@ function normalizeOrder(order) {
     acceptedAt: order.acceptedAt || order.accepted_at || "",
     preparingAt: order.preparingAt || order.preparing_at || "",
     readyAt: order.readyAt || order.ready_at || "",
+    pickedUpAt: order.pickedUpAt || order.picked_up_at || "",
     enRouteAt: order.enRouteAt || order.en_route_at || "",
     deliveredAt: order.deliveredAt || order.delivered_at || "",
     updatedAt: order.updatedAt || order.updated_at || ""

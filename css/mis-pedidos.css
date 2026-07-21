@@ -420,7 +420,7 @@ body{
 .bhuz-order-progress{
   position:relative;
   display:grid;
-  grid-template-columns:repeat(5,minmax(0,1fr));
+  grid-template-columns:repeat(6,minmax(0,1fr));
   margin:18px 0 14px;
   padding:4px 2px 0;
 }
@@ -532,6 +532,19 @@ body{
   color:#aeb8c5;
   font-size:12px;
   line-height:1.35;
+}
+
+.bhuz-delivery-verified .bhuz-verified-code{
+  display:block;
+  margin-top:7px;
+  color:var(--green);
+  font-size:12px;
+  letter-spacing:.03em;
+}
+
+.bhuz-delivery-verified .bhuz-verified-code b{
+  letter-spacing:.16em;
+  font-size:13px;
 }
 
 @media(max-width:600px){
