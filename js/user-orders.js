@@ -105,6 +105,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             ${itemsHtml}
           </div>
 
+          ${order.deliveryCode && !order.deliveryCodeUsed && !["entregado","cancelado"].includes(order.status) ? `
+            <div style="margin:14px 0;padding:14px;border-radius:16px;background:rgba(20,255,120,.08);border:1px solid rgba(20,255,120,.28);text-align:center;">
+              <div style="font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;opacity:.75;">Código para entregar al repartidor</div>
+              <strong style="display:block;margin-top:6px;font-size:1.8rem;letter-spacing:.28em;">${order.deliveryCode}</strong>
+              <small style="display:block;margin-top:6px;opacity:.72;">Entrégalo únicamente cuando recibas tu pedido.</small>
+            </div>` : ''}
+
           ${!["entregado","cancelado"].includes(order.status)?`<button class="bhuz-track-btn" data-track-order="${order.id||''}">📍 Ver repartidor en tiempo real</button>`:''}
 
           <div class="order-footer">
