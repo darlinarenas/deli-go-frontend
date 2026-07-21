@@ -299,7 +299,13 @@ function normalizeOrder(order) {
     notes: order.notes || "",
     date: order.date || "",
     time: order.time || "",
-    createdAt: order.createdAt || new Date().toISOString()
+    createdAt: order.createdAt || order.created_at || new Date().toISOString(),
+    acceptedAt: order.acceptedAt || order.accepted_at || "",
+    preparingAt: order.preparingAt || order.preparing_at || "",
+    readyAt: order.readyAt || order.ready_at || "",
+    enRouteAt: order.enRouteAt || order.en_route_at || "",
+    deliveredAt: order.deliveredAt || order.delivered_at || "",
+    updatedAt: order.updatedAt || order.updated_at || ""
   };
 }
 

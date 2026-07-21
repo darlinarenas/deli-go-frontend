@@ -412,3 +412,148 @@ body{
   }
 }
 
+
+
+/* ======================================================
+   BHUZ — PROGRESO HORIZONTAL Y ENTREGA VERIFICADA
+====================================================== */
+.bhuz-order-progress{
+  position:relative;
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  margin:18px 0 14px;
+  padding:4px 2px 0;
+}
+
+.bhuz-order-progress::before{
+  content:"";
+  position:absolute;
+  top:17px;
+  left:10%;
+  right:10%;
+  height:2px;
+  background:rgba(255,255,255,.12);
+}
+
+.bhuz-progress-step{
+  position:relative;
+  z-index:1;
+  min-width:0;
+  text-align:center;
+}
+
+.bhuz-progress-marker{
+  width:28px;
+  height:28px;
+  margin:0 auto 8px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:#111827;
+  border:2px solid rgba(255,255,255,.18);
+  color:#041008;
+  font-size:13px;
+  font-weight:900;
+  transition:.25s ease;
+}
+
+.bhuz-progress-step.is-complete .bhuz-progress-marker,
+.bhuz-progress-step.is-current .bhuz-progress-marker{
+  background:var(--green);
+  border-color:var(--green);
+  box-shadow:0 0 18px rgba(0,210,106,.28);
+}
+
+.bhuz-progress-step.is-current .bhuz-progress-marker{
+  outline:5px solid rgba(0,210,106,.10);
+}
+
+.bhuz-progress-label{
+  color:#7f8998;
+  font-size:11px;
+  font-weight:700;
+  line-height:1.2;
+}
+
+.bhuz-progress-step.is-complete .bhuz-progress-label,
+.bhuz-progress-step.is-current .bhuz-progress-label{
+  color:#eefcf5;
+}
+
+.bhuz-progress-time{
+  min-height:14px;
+  margin-top:4px;
+  color:var(--green);
+  font-size:10px;
+  font-weight:700;
+}
+
+.bhuz-delivery-verified{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  margin:14px 0;
+  padding:15px;
+  border:1px solid rgba(0,210,106,.32);
+  border-radius:18px;
+  background:linear-gradient(135deg,rgba(0,210,106,.12),rgba(0,210,106,.04));
+  text-align:left;
+}
+
+.bhuz-verified-icon{
+  flex:0 0 42px;
+  width:42px;
+  height:42px;
+  border-radius:50%;
+  display:grid;
+  place-items:center;
+  background:var(--green);
+  color:#03140a;
+  font-size:24px;
+  font-weight:900;
+  box-shadow:0 0 24px rgba(0,210,106,.24);
+}
+
+.bhuz-delivery-verified strong,
+.bhuz-delivery-verified span{
+  display:block;
+}
+
+.bhuz-delivery-verified strong{
+  color:#fff;
+  font-size:15px;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+
+.bhuz-delivery-verified span{
+  margin-top:4px;
+  color:#aeb8c5;
+  font-size:12px;
+  line-height:1.35;
+}
+
+@media(max-width:600px){
+  .bhuz-order-progress{
+    margin-left:-6px;
+    margin-right:-6px;
+  }
+
+  .bhuz-progress-label{
+    font-size:9px;
+  }
+
+  .bhuz-progress-time{
+    font-size:9px;
+  }
+
+  .bhuz-progress-marker{
+    width:24px;
+    height:24px;
+  }
+
+  .bhuz-order-progress::before{
+    top:15px;
+  }
+}

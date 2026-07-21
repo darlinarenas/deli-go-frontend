@@ -31,6 +31,48 @@ document.addEventListener("DOMContentLoaded", async () => {
     return window.DELI_ORDERS.getStatusClass(status);
   }
 
+
+  const TIMELINE_STEPS = [
+    { key: "recibido", label: "Recibido", timeField: "createdAt" },
+    { key: "aceptado", label: "Aceptado", timeField: "acceptedAt" },
+    { key: "preparando", label: "En preparación", timeField: "preparingAt" },
+    { key: "en_camino", label: "En camino", timeField: "enRouteAt" },
+    { key: "entregado", label: "Entregado", timeField: "deliveredAt" }
+  ];
+
+  function getTimelineIndex(status) {
+    const normalized = String(status || "").toLowerCase();
+    if (normalized === "entregado") return 4;
+    if (normalized === "en_camino") return 3;
+    if (["preparando", "listo"].includes(normalized)) return 2;
+    if (normalized === "aceptado") return 1;
+    return 0;
+  }
+
+  function formatTimelineTime(value) {
+    if (!value) return "";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toLocaleTimeString("es-CL", { hour: "2-digit", minute: "2-digit" });
+  }
+
+  function renderTimeline(order) {
+    const currentIndex = getTimelineIndex(order.status);
+    return `
+      <div class="bhuz-order-progress" aria-label="Progreso del pedido">
+        ${TIMELINE_STEPS.map((step, index) => {
+          const state = index < currentIndex ? "is-complete" : index === currentIndex ? "is-current" : "is-pending";
+          const time = formatTimelineTime(order[step.timeField]);
+          return `
+            <div class="bhuz-progress-step ${state}">
+              <div class="bhuz-progress-marker"><span>${index < currentIndex ? "✓" : ""}</span></div>
+              <div class="bhuz-progress-label">${step.label}</div>
+              <div class="bhuz-progress-time">${time || "&nbsp;"}</div>
+            </div>`;
+        }).join("")}
+      </div>`;
+  }
+
   async function loadOrders(silent = false){
 
     const currentUser = getCurrentUserSafe();
@@ -104,6 +146,17 @@ document.addEventListener("DOMContentLoaded", async () => {
           <div class="order-items">
             ${itemsHtml}
           </div>
+
+          ${renderTimeline(order)}
+
+          ${order.status === "entregado" ? `
+            <div class="bhuz-delivery-verified">
+              <div class="bhuz-verified-icon">✓</div>
+              <div>
+                <strong>Entrega verificada</strong>
+                <span>Pedido entregado correctamente mediante el código de seguridad.</span>
+              </div>
+            </div>` : ''}
 
           ${order.deliveryCode && !order.deliveryCodeUsed && !["entregado","cancelado"].includes(order.status) ? `
             <div style="margin:14px 0;padding:14px;border-radius:16px;background:rgba(20,255,120,.08);border:1px solid rgba(20,255,120,.28);text-align:center;">
